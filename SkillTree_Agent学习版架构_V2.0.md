@@ -18,6 +18,8 @@
 
 ## 2 总体架构与技术栈
 
+[查看高清架构图](./docs/assets/skilltree-architecture-v2.png)。下方保留可编辑的 Mermaid 源图。
+
 ```mermaid
 flowchart TD
     UI[简单 HTML 页面：目标 课程 答题 结果] <-->|HTTP| API[FastAPI 单进程]

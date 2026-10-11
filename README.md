@@ -40,6 +40,14 @@ D:\conda_envs\edu_agent\python.exe -m tests.support.day8_browser_server
 
 打开 <http://127.0.0.1:8766/>，目标以 `[Fake验收]` 开头。加入 `[追加]` 或 `[前置]` 可触发对应诊断分支；简答题填写「不知道」并选择错误选项可触发补弱，连续三轮未通过则暂停。
 
+## 系统架构
+
+LangGraph 组织 Planner、Tutor、Assessment、Diagnosis 四类 Agent，按测评与诊断结果决定推进、补弱、追加测评或前置复习。SQLite 分别保存业务记录与执行现场，支持等待用户输入和恢复学习。
+
+[![SkillTree AI 系统架构图](./docs/assets/skilltree-architecture-v2.png)](./docs/assets/skilltree-architecture-v2.png)
+
+点击图片查看高清原图；可编辑的 Mermaid 源图与详细设计见 [V2.0 架构文档](./SkillTree_Agent学习版架构_V2.0.md#2-总体架构与技术栈)。
+
 基于 [V2.0 架构](./SkillTree_Agent学习版架构_V2.0.md)逐步实现的 Python 学习项目。当前已有命令行学习闭环、模型工具诊断、SQLite 业务记录与跨进程执行恢复。
 
 ## 快速开始

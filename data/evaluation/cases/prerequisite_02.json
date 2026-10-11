@@ -1,0 +1,400 @@
+{
+  "id": "prerequisite_02",
+  "split": "debug",
+  "category": "prerequisite_issue",
+  "case_version": "day7-v1",
+  "state": {
+    "project_id": "evaluation_prerequisite_02",
+    "goal": "学习列表与循环累计",
+    "tree": [
+      {
+        "id": "python_basics",
+        "title": "Python 基础",
+        "description": "Python 基础",
+        "prerequisite_ids": [],
+        "objectives": [
+          {
+            "id": "python_basics_obj_1",
+            "description": "运行表达式"
+          }
+        ],
+        "difficulty": "beginner",
+        "estimated_minutes": 25
+      },
+      {
+        "id": "python_variables",
+        "title": "变量与赋值",
+        "description": "变量与赋值",
+        "prerequisite_ids": [
+          "python_basics"
+        ],
+        "objectives": [
+          {
+            "id": "python_variables_obj_1",
+            "description": "区分赋值与比较"
+          }
+        ],
+        "difficulty": "beginner",
+        "estimated_minutes": 25
+      },
+      {
+        "id": "python_lists",
+        "title": "列表",
+        "description": "列表",
+        "prerequisite_ids": [
+          "python_variables"
+        ],
+        "objectives": [
+          {
+            "id": "python_lists_obj_1",
+            "description": "遍历列表元素"
+          }
+        ],
+        "difficulty": "beginner",
+        "estimated_minutes": 25
+      },
+      {
+        "id": "python_for_loops",
+        "title": "列表遍历与循环累计",
+        "description": "列表遍历与循环累计",
+        "prerequisite_ids": [
+          "python_variables",
+          "python_lists"
+        ],
+        "objectives": [
+          {
+            "id": "python_for_loops_obj_1",
+            "description": "遍历每个元素"
+          },
+          {
+            "id": "python_for_loops_obj_2",
+            "description": "初始化并更新累加器"
+          }
+        ],
+        "difficulty": "beginner",
+        "estimated_minutes": 25
+      },
+      {
+        "id": "python_conditions",
+        "title": "条件判断",
+        "description": "条件判断",
+        "prerequisite_ids": [
+          "python_variables"
+        ],
+        "objectives": [
+          {
+            "id": "python_conditions_obj_1",
+            "description": "使用条件判断"
+          }
+        ],
+        "difficulty": "beginner",
+        "estimated_minutes": 25
+      },
+      {
+        "id": "python_loop_control",
+        "title": "循环控制",
+        "description": "循环控制",
+        "prerequisite_ids": [
+          "python_for_loops"
+        ],
+        "objectives": [
+          {
+            "id": "python_loop_control_obj_1",
+            "description": "使用 break 和 continue"
+          }
+        ],
+        "difficulty": "beginner",
+        "estimated_minutes": 25
+      },
+      {
+        "id": "python_nested_loops",
+        "title": "嵌套循环",
+        "description": "嵌套循环",
+        "prerequisite_ids": [
+          "python_for_loops"
+        ],
+        "objectives": [
+          {
+            "id": "python_nested_loops_obj_1",
+            "description": "解释嵌套循环"
+          }
+        ],
+        "difficulty": "beginner",
+        "estimated_minutes": 25
+      },
+      {
+        "id": "python_practice",
+        "title": "综合练习",
+        "description": "综合练习",
+        "prerequisite_ids": [
+          "python_loop_control",
+          "python_nested_loops"
+        ],
+        "objectives": [
+          {
+            "id": "python_practice_obj_1",
+            "description": "完成综合程序"
+          }
+        ],
+        "difficulty": "beginner",
+        "estimated_minutes": 25
+      }
+    ],
+    "current_node_id": "python_for_loops",
+    "assessment_id": "prerequisite_02",
+    "quiz": {
+      "assessment_id": "prerequisite_02",
+      "node_id": "python_for_loops",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "short_answer",
+          "objective_id": "python_for_loops_obj_1",
+          "prompt": "说明 for x in [2,4,6] 如何访问元素。",
+          "answer_key": "x依次是2、4、6。",
+          "rubric": "按目标对应概念与操作评分；关键误解必须标记。",
+          "max_score": 50.0
+        },
+        {
+          "id": "q2",
+          "type": "short_answer",
+          "objective_id": "python_for_loops_obj_2",
+          "prompt": "编写或解释累计所有元素的程序，并指出初始化位置。",
+          "answer_key": "total=0；每轮 total += x，最终12。",
+          "rubric": "按目标对应概念与操作评分；关键误解必须标记。",
+          "max_score": 50.0
+        }
+      ]
+    },
+    "answers": {
+      "q1": "for x in [2,4,6] 的 x 是下标0、1、2。",
+      "q2": "累计 x 会把下标加起来得到3。"
+    },
+    "evaluation": {
+      "assessment_id": "prerequisite_02",
+      "question_results": [
+        {
+          "question_id": "q1",
+          "score": 15.0,
+          "error_tags": [],
+          "evidence": "学生原答：for x in [2,4,6] 的 x 是下标0、1、2。",
+          "feedback": "依据目标给分，关注错误标签与覆盖范围。"
+        },
+        {
+          "question_id": "q2",
+          "score": 35.0,
+          "error_tags": [
+            "element_index_confusion"
+          ],
+          "evidence": "学生原答：累计 x 会把下标加起来得到3。",
+          "feedback": "依据目标给分，关注错误标签与覆盖范围。"
+        }
+      ]
+    },
+    "score_summary": {
+      "total_score": 50.0,
+      "total_max_score": 100.0,
+      "percentage": 50.0
+    },
+    "rounds_by_node": {
+      "python_for_loops": 1
+    },
+    "round_limit_by_node": {
+      "python_for_loops": 3
+    }
+  },
+  "tool_context": {
+    "history": [
+      {
+        "assessment_id": "history_prerequisite_02",
+        "node_id": "python_lists",
+        "quiz": {
+          "assessment_id": "history_prerequisite_02",
+          "node_id": "python_lists",
+          "questions": [
+            {
+              "id": "q1",
+              "type": "short_answer",
+              "objective_id": "python_lists_obj_1",
+              "prompt": "说明遍历列表元素。",
+              "answer_key": "直接遍历列表得到元素值；range(len(values)) 得到索引。",
+              "rubric": "按目标对应概念与操作评分；关键误解必须标记。",
+              "max_score": 100.0
+            }
+          ]
+        },
+        "answers": {
+          "q1": "for x in values 中的 x 永远是列表下标。"
+        },
+        "evaluation": {
+          "assessment_id": "history_prerequisite_02",
+          "question_results": [
+            {
+              "question_id": "q1",
+              "score": 40.0,
+              "error_tags": [
+                "element_index_confusion"
+              ],
+              "evidence": "学生原答：for x in values 中的 x 永远是列表下标。",
+              "feedback": "依据目标给分，关注错误标签与覆盖范围。"
+            }
+          ]
+        }
+      }
+    ],
+    "completed_node_ids": [
+      "python_basics",
+      "python_variables",
+      "python_lists"
+    ],
+    "completion_records": [
+      {
+        "assessment_id": "completion_prerequisite_02_python_basics",
+        "node_id": "python_basics",
+        "quiz": {
+          "assessment_id": "completion_prerequisite_02_python_basics",
+          "node_id": "python_basics",
+          "questions": [
+            {
+              "id": "q1",
+              "type": "short_answer",
+              "objective_id": "python_basics_obj_1",
+              "prompt": "说明运行表达式。",
+              "answer_key": "print(1+2) 输出3。",
+              "rubric": "按目标对应概念与操作评分；关键误解必须标记。",
+              "max_score": 100.0
+            }
+          ]
+        },
+        "answers": {
+          "q1": "print(1+2) 输出3。"
+        },
+        "evaluation": {
+          "assessment_id": "completion_prerequisite_02_python_basics",
+          "question_results": [
+            {
+              "question_id": "q1",
+              "score": 100.0,
+              "error_tags": [],
+              "evidence": "学生原答：print(1+2) 输出3。",
+              "feedback": "依据目标给分，关注错误标签与覆盖范围。"
+            }
+          ]
+        }
+      },
+      {
+        "assessment_id": "completion_prerequisite_02_python_variables",
+        "node_id": "python_variables",
+        "quiz": {
+          "assessment_id": "completion_prerequisite_02_python_variables",
+          "node_id": "python_variables",
+          "questions": [
+            {
+              "id": "q1",
+              "type": "short_answer",
+              "objective_id": "python_variables_obj_1",
+              "prompt": "说明区分赋值与比较。",
+              "answer_key": "= 给变量赋值，== 比较两个值是否相等。",
+              "rubric": "按目标对应概念与操作评分；关键误解必须标记。",
+              "max_score": 100.0
+            }
+          ]
+        },
+        "answers": {
+          "q1": "= 赋值，== 比较相等。"
+        },
+        "evaluation": {
+          "assessment_id": "completion_prerequisite_02_python_variables",
+          "question_results": [
+            {
+              "question_id": "q1",
+              "score": 100.0,
+              "error_tags": [],
+              "evidence": "学生原答：= 赋值，== 比较相等。",
+              "feedback": "依据目标给分，关注错误标签与覆盖范围。"
+            }
+          ]
+        }
+      },
+      {
+        "assessment_id": "completion_prerequisite_02_python_lists",
+        "node_id": "python_lists",
+        "quiz": {
+          "assessment_id": "completion_prerequisite_02_python_lists",
+          "node_id": "python_lists",
+          "questions": [
+            {
+              "id": "q1",
+              "type": "short_answer",
+              "objective_id": "python_lists_obj_1",
+              "prompt": "说明遍历列表元素。",
+              "answer_key": "直接遍历列表得到元素值；range(len(values)) 得到索引。",
+              "rubric": "按目标对应概念与操作评分；关键误解必须标记。",
+              "max_score": 100.0
+            }
+          ]
+        },
+        "answers": {
+          "q1": "for x in [2,4,6] 得到元素2、4、6；索引用 range(len(values))。"
+        },
+        "evaluation": {
+          "assessment_id": "completion_prerequisite_02_python_lists",
+          "question_results": [
+            {
+              "question_id": "q1",
+              "score": 100.0,
+              "error_tags": [],
+              "evidence": "学生原答：for x in [2,4,6] 得到元素2、4、6；索引用 range(len(values))。",
+              "feedback": "依据目标给分，关注错误标签与覆盖范围。"
+            }
+          ]
+        }
+      }
+    ],
+    "material_source": "app/tools/knowledge.py 中的现有人工登记材料；无材料时工具明确返回 no_material"
+  },
+  "human_expectation": {
+    "review_status": "approved",
+    "authored_by": "assistant_draft",
+    "reviewed_by": "user",
+    "reviewed_at": "2026-10-11T09:45:24+00:00",
+    "acceptable_actions": [
+      "revisit_prerequisite"
+    ],
+    "expected_review_node_id": "python_lists",
+    "reason": "把列表元素当作下标，前置列表历史亦有同类错误，应复习 python_lists。",
+    "must_not_advance": true,
+    "allowed_evidence_ids": [
+      "assessment:prerequisite_02:q1",
+      "assessment:prerequisite_02:q2",
+      "assessment:history_prerequisite_02:q1",
+      "prerequisite_status:python_for_loops",
+      "material_python_for_loops_v1",
+      "material_python_variables_v1",
+      "material_python_basics_v1",
+      "prerequisite_status:python_basics",
+      "prerequisite_status:python_variables",
+      "prerequisite_status:python_lists",
+      "assessment:completion_prerequisite_02_python_basics:q1",
+      "assessment:completion_prerequisite_02_python_variables:q1",
+      "assessment:completion_prerequisite_02_python_lists:q1"
+    ],
+    "allowed_tools": [
+      "get_learning_history",
+      "get_prerequisite_status",
+      "get_node_material"
+    ],
+    "required_tools": [
+      "get_learning_history"
+    ],
+    "required_tool_queries": [
+      {
+        "tool": "get_learning_history",
+        "node_id": "python_lists"
+      }
+    ],
+    "disagreement_conditions": "如有合理分歧，请在真实运行前由用户修订行动、条件和理由。",
+    "review_basis": "用户在本次对话明确回复“确认 12 例预期”；助手原草案未改动行动、答案、评分或允许证据。"
+  },
+  "notice": "预期由助手起草，已由用户在本次对话确认；本批真实输出早于确认，仅作确认后的描述性评价，不声称预先登记的盲测。"
+}

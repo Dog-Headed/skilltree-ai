@@ -1,9 +1,13 @@
 from pprint import pprint
+from uuid import uuid4
 
 from app.agents.assessment import (
+    assessment_prepare_node,
     assessment_generate_node,
+    assessment_save_answers_node,
     assessment_grade_node,
 )
+from app.db.repository import repository_for_state
 
 
 state = {
@@ -38,6 +42,12 @@ print("\n" + "=" * 70)
 print("生成试卷")
 print("=" * 70)
 
+state["project_id"] = f"grading_demo_{uuid4().hex}"
+with repository_for_state(state) as repo:
+    repo.create_project_with_tree(
+        project_id=state["project_id"], goal=state["goal"], tree=state["tree"],
+    )
+state.update(assessment_prepare_node(state))
 generated = assessment_generate_node(state)
 
 pprint(
@@ -70,6 +80,7 @@ for question in state["quiz"]["questions"]:
 
 
 state["answers"] = answers
+state.update(assessment_save_answers_node(state))
 
 
 print("\n" + "=" * 70)

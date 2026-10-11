@@ -7,6 +7,7 @@ from app.graph import graph
 
 # 同一段学习流程必须一直使用同一个 thread_id
 config = {
+    "recursion_limit": 30,
     "configurable": {
         "thread_id": "learning-demo-001"
     }

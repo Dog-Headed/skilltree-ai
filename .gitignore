@@ -10,10 +10,20 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-data/*.sqlite
-data/*.sqlite-*
-data/*.db
-data/*.db-*
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+data/day7_events.jsonl
+data/evaluation/reports/*.events.jsonl
+# 仅保留 Day 8 的截图和公开验收证据，其他工作文件留在本机。
+work/*
+!work/day8/
+work/day8/*
+!work/day8/screenshots/
+!work/day8/real-public.json
+!work/day8/real-evidence.json
+!work/day8/real-restart-check.json
 *.log
 *.pem
 *.key

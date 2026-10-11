@@ -1,0 +1,1153 @@
+{
+  "generated_at": "2026-10-11T06:51:28.255177+00:00",
+  "mode": "fake",
+  "split": "debug",
+  "purpose": "infrastructure_smoke_only",
+  "model": "fixed_fake_no_api",
+  "prompt_version": "day7-v1",
+  "prompt_source_sha256": "c565cfea445eda1e859093bd894e3b6bfd6992e270b22016d90d4483ebb2ea41",
+  "case_versions": [
+    "day7-v1"
+  ],
+  "cases_sha256": "e69775fd411ce6fa0afc4969b6ab6f605845eeb96bc111b1243d9105b2350b8d",
+  "gold_standard_status": "pending_or_fake_not_gold_standard",
+  "metrics": {
+    "first_structure_valid": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "final_structure_valid": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "repaired_structure_valid": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "accepted": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "evidence_allowlist": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "tools_allowlist": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "required_tools_used": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "official_action_agreement": null,
+    "provisional_action_agreement": {
+      "numerator": 3,
+      "denominator": 8,
+      "rate": 0.375
+    },
+    "official_false_release_count": null,
+    "provisional_false_release_count": 0,
+    "guard_scope": "纯路由推进守卫模拟；不实际解锁学生项目",
+    "total_elapsed_ms": 59.508,
+    "available_usage_records": [],
+    "usage_note": "未提供用量为 null；不估算为0，不以小样本宣称学习效果提升。"
+  },
+  "cases": [
+    {
+      "case_id": "advance_01",
+      "category": "advance",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "advance"
+      ],
+      "expected_reason_pending_review": "两项目标均有完整直接证据，满分且没有关键误解，可推进。",
+      "diagnosis": {
+        "weak_points": [
+          "固定测试建议"
+        ],
+        "evidence_ids": [
+          "assessment:advance_01:q1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "Fake 固定输出，仅验证评价管线。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": false,
+          "error_type": "business_validation"
+        },
+        {
+          "request_number": 2,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": false,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "no_history",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "history",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "no_history",
+            "status": "empty",
+            "result_count": 0,
+            "message": "该节点暂无历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "prerequisite",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 2,
+      "network_retry_count": 0,
+      "output_repair_count": 1,
+      "elapsed_ms": 8.704,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "advance_02",
+      "category": "advance",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "advance"
+      ],
+      "expected_reason_pending_review": "表达不是逐字标准答案但核心方法正确，90分且完整覆盖，可推进。",
+      "diagnosis": {
+        "weak_points": [
+          "固定测试建议"
+        ],
+        "evidence_ids": [
+          "assessment:advance_02:q1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "Fake 固定输出，仅验证评价管线。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": false,
+          "error_type": "business_validation"
+        },
+        {
+          "request_number": 2,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": false,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "no_history",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "history",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "no_history",
+            "status": "empty",
+            "result_count": 0,
+            "message": "该节点暂无历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "prerequisite",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 2,
+      "network_retry_count": 0,
+      "output_repair_count": 1,
+      "elapsed_ms": 6.352,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "critical_01",
+      "category": "critical_misconception",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "remediate"
+      ],
+      "expected_reason_pending_review": "分数虽高但关于变量生命周期存在关键误解，禁止推进，先补弱。",
+      "diagnosis": {
+        "weak_points": [
+          "固定测试建议"
+        ],
+        "evidence_ids": [
+          "assessment:critical_01:q1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "Fake 固定输出，仅验证评价管线。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": false,
+          "error_type": "business_validation"
+        },
+        {
+          "request_number": 2,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": true,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "no_history",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "history",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "no_history",
+            "status": "empty",
+            "result_count": 0,
+            "message": "该节点暂无历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "prerequisite",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 2,
+      "network_retry_count": 0,
+      "output_repair_count": 1,
+      "elapsed_ms": 6.968,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "insufficient_01",
+      "category": "collect_more_evidence",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "collect_more_evidence"
+      ],
+      "expected_reason_pending_review": "仅测了遍历目标，尚无累计目标证据，不能把满分当成完整掌握。",
+      "diagnosis": {
+        "weak_points": [
+          "固定测试建议"
+        ],
+        "evidence_ids": [
+          "assessment:insufficient_01:q1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "Fake 固定输出，仅验证评价管线。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": false,
+          "error_type": "business_validation"
+        },
+        {
+          "request_number": 2,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": false,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "no_history",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "history",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "no_history",
+            "status": "empty",
+            "result_count": 0,
+            "message": "该节点暂无历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "prerequisite",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 2,
+      "network_retry_count": 0,
+      "output_repair_count": 1,
+      "elapsed_ms": 8.498,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "prerequisite_01",
+      "category": "prerequisite_issue",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "revisit_prerequisite"
+      ],
+      "expected_reason_pending_review": "当前答案和变量历史均混淆赋值与比较，复习合法前置 python_variables；完成标签不等于当前永久掌握。",
+      "diagnosis": {
+        "weak_points": [
+          "固定测试建议"
+        ],
+        "evidence_ids": [
+          "assessment:prerequisite_01:q1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "Fake 固定输出，仅验证评价管线。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": false,
+          "error_type": "business_validation"
+        },
+        {
+          "request_number": 2,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": false,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "no_history",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "history",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "no_history",
+            "status": "empty",
+            "result_count": 0,
+            "message": "该节点暂无历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "prerequisite",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 2,
+      "network_retry_count": 0,
+      "output_repair_count": 1,
+      "elapsed_ms": 7.525,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "prerequisite_02",
+      "category": "prerequisite_issue",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "revisit_prerequisite"
+      ],
+      "expected_reason_pending_review": "把列表元素当作下标，前置列表历史亦有同类错误，应复习 python_lists。",
+      "diagnosis": {
+        "weak_points": [
+          "固定测试建议"
+        ],
+        "evidence_ids": [
+          "assessment:prerequisite_02:q1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "Fake 固定输出，仅验证评价管线。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": false,
+          "error_type": "business_validation"
+        },
+        {
+          "request_number": 2,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": false,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "no_history",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "history",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "no_history",
+            "status": "empty",
+            "result_count": 0,
+            "message": "该节点暂无历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "prerequisite",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 2,
+      "network_retry_count": 0,
+      "output_repair_count": 1,
+      "elapsed_ms": 6.346,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "remediate_01",
+      "category": "remediate",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "remediate"
+      ],
+      "expected_reason_pending_review": "遍历正确但累计被覆盖，应针对更新累加器补弱。",
+      "diagnosis": {
+        "weak_points": [
+          "固定测试建议"
+        ],
+        "evidence_ids": [
+          "assessment:remediate_01:q1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "Fake 固定输出，仅验证评价管线。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": false,
+          "error_type": "business_validation"
+        },
+        {
+          "request_number": 2,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": true,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "history",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 1,
+            "message": "读取到 1 条历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "prerequisite",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 2,
+      "network_retry_count": 0,
+      "output_repair_count": 1,
+      "elapsed_ms": 8.046,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "remediate_02",
+      "category": "remediate",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "remediate"
+      ],
+      "expected_reason_pending_review": "少访问最后一项，累计概念基本正确，针对边界补弱。",
+      "diagnosis": {
+        "weak_points": [
+          "固定测试建议"
+        ],
+        "evidence_ids": [
+          "assessment:remediate_02:q1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "Fake 固定输出，仅验证评价管线。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": false,
+          "error_type": "business_validation"
+        },
+        {
+          "request_number": 2,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": true,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "history",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 1,
+            "message": "读取到 1 条历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "prerequisite",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 2,
+      "network_retry_count": 0,
+      "output_repair_count": 1,
+      "elapsed_ms": 7.069,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "tool_selection",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": null
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    }
+  ]
+}

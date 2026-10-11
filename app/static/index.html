@@ -1,0 +1,4171 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1017" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101720'/%3E%3Cpath d='M9 24V7h13M9 16h13M22 7v4M22 16v4' fill='none' stroke='%23c8f36a' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <meta
+      name="description"
+      content="SkillTree AI：从学习目标出发，通过讲解、测验和诊断，逐步点亮你的 Python 技能路径。"
+    />
+    <title>SkillTree AI · 学习工作台</title>
+    <style>
+      /* 01. Design tokens */
+      :root {
+        color-scheme: dark;
+        --bg: #0b1017;
+        --side: #101720;
+        --surface: #141b25;
+        --raised: #1c2633;
+        --line: #273242;
+        --line-soft: #202a37;
+        --text: #e9eef5;
+        --muted: #a8b3c2;
+        --dim: #7b8b9e;
+        --green: #c8f36a;
+        --cyan: #6dd4e7;
+        --amber: #f5bc75;
+        --red: #f28b91;
+        --radius: 14px;
+        --small: 8px;
+        --transition: 180ms;
+        --font:
+          "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+        --mono: "Cascadia Code", Consolas, "SFMono-Regular", monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        font-size: 15px;
+        line-height: 1.6;
+      }
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+      button,
+      a,
+      input,
+      textarea {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.42;
+      }
+      button {
+        border: 0;
+        color: inherit;
+        background: none;
+      }
+      a {
+        color: var(--cyan);
+        text-underline-offset: 4px;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid var(--green);
+        outline-offset: 4px;
+      }
+      ::selection {
+        background: #c8f36a33;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      p {
+        margin-top: 0;
+      }
+      svg {
+        display: block;
+        flex-shrink: 0;
+      }
+      textarea {
+        resize: vertical;
+      }
+      input,
+      textarea {
+        color: var(--text);
+        background: transparent;
+        border: 1px solid var(--line);
+      }
+      input::placeholder,
+      textarea::placeholder {
+        color: var(--dim);
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .skip-link {
+        position: fixed;
+        top: -60px;
+        left: 230px;
+        z-index: 100;
+        background: var(--green);
+        color: var(--bg);
+        padding: 12px 20px;
+      }
+      .skip-link:focus {
+        top: 8px;
+      }
+      .mono {
+        font-family: var(--mono);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .eyebrow {
+        font: 11px/1.5 var(--mono);
+        color: var(--dim);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      .icon {
+        width: 20px;
+        height: 20px;
+      }
+      .btn {
+        white-space: nowrap;
+        min-height: 44px;
+        padding: 11px 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        border-radius: var(--small);
+        border: 1px solid var(--line);
+        font-size: 14px;
+        font-weight: 600;
+        transition:
+          background var(--transition),
+          transform var(--transition),
+          border-color var(--transition);
+      }
+      .btn:hover:not(:disabled) {
+        background: var(--raised);
+        border-color: #455568;
+      }
+      .btn:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+      .btn.primary {
+        background: var(--green);
+        border-color: var(--green);
+        color: #17200d;
+      }
+      .btn.primary:hover:not(:disabled) {
+        background: #d6fa91;
+        border-color: #d6fa91;
+      }
+      .btn.subtle {
+        border-color: transparent;
+        color: var(--muted);
+      }
+      .btn.subtle:hover {
+        color: var(--text);
+      }
+      .icon-button {
+        width: 44px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        color: var(--muted);
+      }
+      .icon-button:hover {
+        background: var(--raised);
+        color: var(--text);
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 3px 8px;
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .chip.green {
+        color: var(--green);
+        background: #c8f36a0b;
+        border-color: #c8f36a30;
+      }
+      .chip.cyan {
+        color: var(--cyan);
+        background: #6dd4e709;
+        border-color: #6dd4e730;
+      }
+      .chip.amber {
+        color: var(--amber);
+        background: #f5bc7509;
+        border-color: #f5bc7530;
+      }
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+      }
+      /* 02. Workspace shell */
+      .app {
+        min-height: 100dvh;
+        display: grid;
+        grid-template-columns: 216px minmax(0, 1fr);
+      }
+      .sidebar {
+        background: var(--side);
+        border-right: 1px solid var(--line-soft);
+        position: sticky;
+        top: 0;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        padding: 28px 16px 20px;
+        z-index: 40;
+      }
+      .brand {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 0 8px;
+        margin-bottom: 32px;
+      }
+      .brand-mark {
+        width: 32px;
+        height: 32px;
+        color: var(--green);
+      }
+      .brand-name {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.7px;
+      }
+      .brand-name span {
+        font-weight: 400;
+        color: var(--green);
+      }
+      .brand-caption {
+        font: 9px/1.5 var(--mono);
+        letter-spacing: 1.8px;
+        color: var(--dim);
+      }
+      .new-project {
+        width: 100%;
+        background: #c8f36a0a;
+        border-color: #c8f36a38;
+        color: var(--green);
+        margin-bottom: 30px;
+      }
+      .sidebar-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 10px;
+        margin-bottom: 12px;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: var(--dim);
+      }
+      .project-list {
+        overflow-y: auto;
+        min-height: 0;
+        flex: 1;
+      }
+      .project-item {
+        width: 100%;
+        text-align: left;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 12px 10px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        margin-bottom: 6px;
+        transition: background var(--transition);
+      }
+      .project-item > .icon {
+        margin-top: 3px;
+        color: var(--dim);
+        width: 17px;
+        height: 17px;
+      }
+      .project-item:hover {
+        background: var(--surface);
+      }
+      .project-item.active {
+        background: #c8f36a08;
+        border-color: #c8f36a20;
+      }
+      .project-item.active > .icon {
+        color: var(--green);
+      }
+      .project-name {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.65;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+      }
+      .project-meta {
+        font-size: 10px;
+        color: var(--dim);
+        margin-top: 6px;
+      }
+      .project-empty {
+        padding: 16px 10px;
+        color: var(--dim);
+        font-size: 12px;
+        line-height: 1.9;
+      }
+      .sidebar-footer {
+        border-top: 1px solid var(--line-soft);
+        padding: 20px 8px 0;
+        margin-top: 16px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .sidebar-footer > .icon {
+        color: var(--dim);
+        width: 18px;
+        height: 18px;
+      }
+      .local-title {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .local-caption {
+        font-size: 10px;
+        color: var(--dim);
+      }
+      .workspace {
+        min-width: 0;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        height: 76px;
+        border-bottom: 1px solid var(--line-soft);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 32px;
+        background: var(--bg);
+      }
+      .topbar-left {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+      .breadcrumb {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+      }
+      .breadcrumb > .icon {
+        width: 16px;
+        height: 16px;
+        color: var(--dim);
+      }
+      .breadcrumb .separator {
+        color: #4b5b6f;
+      }
+      .breadcrumb-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 440px;
+      }
+      .topbar-actions {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: 10px;
+      }
+      .saved-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--dim);
+        white-space: nowrap;
+      }
+      .saved-label .dot {
+        color: var(--green);
+      }
+      .mobile-projects,
+      .mobile-path {
+        display: none;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 304px;
+        min-height: calc(100dvh - 76px);
+      }
+      .main {
+        min-width: 0;
+        padding: 40px 48px 48px;
+      }
+      .main-inner {
+        max-width: 800px;
+        margin: 0 auto;
+        animation: enter 0.2s ease-out;
+      }
+      .path-panel {
+        background: var(--side);
+        border-left: 1px solid var(--line-soft);
+        padding: 32px 24px 24px;
+        position: sticky;
+        top: 76px;
+        height: calc(100dvh - 76px);
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        z-index: 30;
+      }
+      .panel-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+      }
+      .panel-heading h2 {
+        font-size: 15px;
+        letter-spacing: 0.4px;
+        margin: 0;
+      }
+      .panel-heading > .icon {
+        width: 17px;
+        height: 17px;
+        color: var(--dim);
+      }
+      .path-caption {
+        font-size: 11px;
+        color: var(--dim);
+        margin-bottom: 24px;
+      }
+      .progress-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 10px;
+      }
+      .progress-number {
+        font: 36px/1 var(--mono);
+        font-weight: 500;
+        letter-spacing: -2px;
+      }
+      .progress-number small {
+        font: 13px var(--mono);
+        color: var(--dim);
+        letter-spacing: 0;
+        margin-left: 8px;
+      }
+      .progress-note {
+        font-size: 11px;
+        color: var(--dim);
+      }
+      .progress-track {
+        height: 4px;
+        background: var(--line);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 24px;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--green);
+        border-radius: 4px;
+        transition: width 0.2s ease-out;
+      }
+      .path-list {
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+        margin: 0 -12px;
+        padding: 2px 12px 16px;
+      }
+      .path-node {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+        text-align: left;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 12px 10px;
+        margin-bottom: 8px;
+        position: relative;
+        transition:
+          background var(--transition),
+          border-color var(--transition);
+      }
+      .path-node:hover {
+        background: var(--surface);
+      }
+      .path-node.current {
+        background: #6dd4e708;
+        border-color: #6dd4e73d;
+        box-shadow: 0 0 22px #6dd4e703;
+      }
+      .node-symbol {
+        width: 27px;
+        height: 27px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font: 11px var(--mono);
+        color: var(--dim);
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+      .node-symbol .icon {
+        width: 14px;
+        height: 14px;
+      }
+      .completed .node-symbol {
+        color: var(--green);
+        border-color: #c8f36a35;
+        background: #c8f36a0a;
+      }
+      .current .node-symbol {
+        color: var(--cyan);
+        border-color: #6dd4e744;
+        background: #6dd4e712;
+      }
+      .node-copy {
+        min-width: 0;
+        flex: 1;
+      }
+      .node-title {
+        font-size: 13px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+      .locked .node-title {
+        color: var(--muted);
+      }
+      .node-info {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        font-size: 10px;
+        color: var(--dim);
+        margin-top: 4px;
+      }
+      .current .node-state {
+        color: var(--cyan);
+      }
+      .completed .node-state {
+        color: var(--green);
+      }
+      .node-dependencies {
+        font-size: 10px;
+        color: var(--dim);
+        line-height: 1.8;
+        margin-top: 6px;
+        overflow-wrap: anywhere;
+      }
+      .path-legend {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--line-soft);
+        padding: 16px 0;
+        font-size: 10px;
+        color: var(--dim);
+      }
+      .path-legend span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .path-legend .dot {
+        width: 5px;
+        height: 5px;
+      }
+      .current-target {
+        border-top: 1px solid var(--line-soft);
+        padding-top: 18px;
+      }
+      .target-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--cyan);
+        font-size: 11px;
+        margin-bottom: 9px;
+      }
+      .target-label > .icon {
+        width: 14px;
+        height: 14px;
+      }
+      .current-target p {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.85;
+        margin-bottom: 6px;
+      }
+      .close-drawer {
+        display: none;
+      }
+      .backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: #0008;
+        z-index: 35;
+      }
+      .backdrop.visible {
+        display: block;
+      }
+      /* 03. First project */
+      .welcome {
+        padding-top: 28px;
+      }
+      .welcome .eyebrow {
+        color: var(--green);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+      .welcome h1 {
+        font-size: clamp(28px, 2.5vw, 38px);
+        font-weight: 600;
+        line-height: 1.55;
+        letter-spacing: -1px;
+        margin-bottom: 18px;
+      }
+      .welcome h1 span {
+        color: var(--green);
+      }
+      .welcome-intro {
+        color: var(--muted);
+        line-height: 1.9;
+        font-size: 14px;
+        max-width: 520px;
+        margin-bottom: 38px;
+      }
+      .goal-form {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface);
+        padding: 24px;
+        position: relative;
+      }
+      .form-title {
+        display: flex;
+        gap: 9px;
+        align-items: center;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+      .form-title > .icon {
+        color: var(--green);
+        width: 18px;
+        height: 18px;
+      }
+      .goal-form textarea {
+        width: 100%;
+        min-height: 128px;
+        padding: 0;
+        background: transparent;
+        border: 0;
+        line-height: 1.9;
+        font-size: 15px;
+        resize: vertical;
+        display: block;
+      }
+      .goal-form textarea:focus {
+        outline: 0;
+      }
+      .goal-form:focus-within {
+        border-color: #c8f36a75;
+        box-shadow: 0 0 0 3px #c8f36a05;
+      }
+      .goal-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+        margin-top: 16px;
+      }
+      .goal-hint {
+        color: var(--dim);
+        font-size: 11px;
+        line-height: 1.8;
+      }
+      .goal-footer .btn {
+        padding: 12px 20px;
+      }
+      .examples-title {
+        font-size: 11px;
+        color: var(--dim);
+        margin: 24px 0 12px;
+      }
+      .examples {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .example {
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        padding: 14px;
+        text-align: left;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        transition:
+          border-color var(--transition),
+          background var(--transition);
+      }
+      .example:hover {
+        border-color: #c8f36a50;
+        background: var(--surface);
+      }
+      .example > .icon {
+        width: 16px;
+        height: 16px;
+        color: var(--dim);
+        margin-top: 2px;
+      }
+      .example-title {
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+      .example-desc {
+        color: var(--dim);
+        font-size: 10px;
+        line-height: 1.8;
+      }
+      .workflow {
+        margin-top: 44px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        color: var(--dim);
+        font-size: 11px;
+      }
+      .workflow-step {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .workflow-step .icon {
+        width: 15px;
+        height: 15px;
+      }
+      .workflow > .icon {
+        width: 12px;
+        height: 12px;
+        color: #47576a;
+      }
+      .welcome-foot {
+        margin-top: 20px;
+        font-size: 11px;
+        color: var(--dim);
+      }
+      .path-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-bottom: 64px;
+      }
+      .path-empty svg {
+        width: 190px;
+        height: 210px;
+        align-self: center;
+        margin-bottom: 16px;
+      }
+      .path-empty h3 {
+        font-weight: 500;
+        font-size: 14px;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .path-empty p {
+        color: var(--dim);
+        font-size: 12px;
+        text-align: center;
+        line-height: 1.9;
+        margin: 0 12px;
+      }
+      .empty-detail {
+        border-top: 1px solid var(--line-soft);
+        padding-top: 18px;
+        font-size: 11px;
+        line-height: 1.9;
+        color: var(--dim);
+      }
+      /* 04. Lessons and tutor */
+      .lesson-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+      .lesson-index {
+        font: 11px var(--mono);
+        color: var(--dim);
+        letter-spacing: 1.8px;
+      }
+      .lesson-heading h1 {
+        font-size: 34px;
+        font-weight: 600;
+        line-height: 1.5;
+        letter-spacing: -0.7px;
+        overflow-wrap: anywhere;
+        margin: 0 0 12px;
+      }
+      .lesson-description {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.9;
+        margin-bottom: 22px;
+      }
+      .lesson-facts {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 11px;
+        color: var(--dim);
+        margin-bottom: 24px;
+      }
+      .lesson-facts span {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+      .lesson-facts .icon {
+        width: 14px;
+        height: 14px;
+      }
+      .objectives {
+        border-left: 2px solid #c8f36a77;
+        padding: 0 0 0 16px;
+        margin: 24px 0 32px;
+      }
+      .objectives-label {
+        color: var(--green);
+        font-size: 11px;
+        margin-bottom: 8px;
+      }
+      .objectives p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.9;
+        margin: 4px 0;
+      }
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid var(--line);
+        gap: 28px;
+        margin-bottom: 30px;
+      }
+      .tab {
+        min-height: 47px;
+        padding: 0 0 13px;
+        font-size: 13px;
+        color: var(--dim);
+        position: relative;
+      }
+      .tab.active {
+        color: var(--text);
+      }
+      .tab.active:after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--green);
+      }
+      .tab-count {
+        background: var(--raised);
+        color: var(--muted);
+        font: 10px var(--mono);
+        padding: 2px 5px;
+        border-radius: 4px;
+        margin-left: 7px;
+      }
+      .markdown {
+        font-size: 16px;
+        line-height: 1.85;
+        overflow-wrap: anywhere;
+        max-width: 76ch;
+      }
+      .markdown h1 {
+        font-size: 27px;
+        margin: 32px 0 18px;
+      }
+      .markdown h2 {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 30px 0 16px;
+        letter-spacing: -0.4px;
+      }
+      .markdown h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 26px 0 12px;
+      }
+      .markdown h4 {
+        font-size: 16px;
+        margin: 20px 0 10px;
+      }
+      .markdown > h1:first-child,
+      .markdown > h2:first-child,
+      .markdown > h3:first-child {
+        margin-top: 0;
+      }
+      .markdown p {
+        margin-bottom: 18px;
+      }
+      .markdown ul,
+      .markdown ol {
+        padding-left: 24px;
+        margin: 12px 0 22px;
+      }
+      .markdown li {
+        padding-left: 3px;
+        margin: 7px 0;
+      }
+      .markdown li::marker {
+        color: var(--dim);
+      }
+      .markdown strong {
+        font-weight: 600;
+        color: #f5f8fc;
+      }
+      .markdown code {
+        font-family: var(--mono);
+        font-size: 0.85em;
+        color: var(--green);
+        background: #c8f36a08;
+        border: 1px solid #c8f36a16;
+        border-radius: 4px;
+        padding: 2px 6px;
+        overflow-wrap: anywhere;
+      }
+      .markdown blockquote {
+        border-left: 3px solid var(--cyan);
+        background: #6dd4e706;
+        margin: 24px 0;
+        padding: 16px 20px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .markdown blockquote p:last-child {
+        margin-bottom: 0;
+      }
+      .markdown hr {
+        border: 0;
+        border-top: 1px solid var(--line);
+        margin: 30px 0;
+      }
+      .code-block {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        margin: 22px 0 26px;
+        overflow: hidden;
+        background: #101720;
+        min-width: 0;
+      }
+      .code-header {
+        height: 44px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 16px;
+        border-bottom: 1px solid var(--line-soft);
+        font: 10px var(--mono);
+        letter-spacing: 0.5px;
+        color: var(--dim);
+        background: #141c27;
+      }
+      .code-copy {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font);
+        font-size: 10px;
+        color: var(--muted);
+        border-radius: 4px;
+        padding: 3px 7px;
+      }
+      .code-copy:hover {
+        color: var(--text);
+        background: var(--raised);
+      }
+      .code-copy .icon {
+        width: 12px;
+        height: 12px;
+      }
+      .code-block pre {
+        font: 13px/1.85 var(--mono);
+        padding: 18px 20px;
+        margin: 0;
+        overflow-x: auto;
+        tab-size: 4;
+        white-space: pre;
+        max-width: 100%;
+      }
+      .code-block pre code {
+        font: inherit;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: #cbd6e5;
+        overflow-wrap: normal;
+      }
+      .syntax-key {
+        color: #c9a7ed;
+      }
+      .syntax-string {
+        color: var(--green);
+      }
+      .syntax-comment {
+        color: #8497ac;
+      }
+      .syntax-number {
+        color: var(--amber);
+      }
+      .table-scroll {
+        overflow-x: auto;
+        max-width: 100%;
+        margin: 22px 0;
+      }
+      .markdown table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 13px;
+        min-width: 360px;
+      }
+      .markdown th,
+      .markdown td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+      .markdown th {
+        background: var(--surface);
+        font-weight: 600;
+      }
+      .lesson-end {
+        border-top: 1px solid var(--line);
+        padding-top: 24px;
+        margin-top: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+      .lesson-end h3 {
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 5px;
+      }
+      .lesson-end p {
+        color: var(--dim);
+        font-size: 11px;
+        margin: 0;
+      }
+      .ask-area {
+        margin-top: 28px;
+      }
+      .ask-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        margin-bottom: 12px;
+        color: var(--muted);
+      }
+      .ask-label .icon {
+        width: 16px;
+        height: 16px;
+        color: var(--cyan);
+      }
+      .ask-box {
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+        padding: 14px 14px 14px 18px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
+      }
+      .ask-box:focus-within {
+        border-color: #6dd4e75b;
+      }
+      .ask-box textarea {
+        width: 100%;
+        border: 0;
+        resize: none;
+        min-height: 56px;
+        max-height: 160px;
+        font-size: 13px;
+        line-height: 1.9;
+        padding: 0;
+      }
+      .ask-box textarea:focus {
+        outline: 0;
+      }
+      .send-button {
+        background: var(--green);
+        color: #17200d;
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .send-button:hover {
+        background: #d6fa91;
+      }
+      .ask-hint {
+        color: var(--dim);
+        font-size: 10px;
+        margin-top: 8px;
+      }
+      .conversation {
+        margin-top: 28px;
+        border-top: 1px solid var(--line);
+        padding-top: 24px;
+      }
+      .user-question {
+        margin: 20px 0 24px;
+        padding: 14px 18px;
+        background: var(--raised);
+        border-radius: 10px;
+        font-size: 13px;
+        line-height: 1.85;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .turn-label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        color: var(--cyan);
+        margin-bottom: 14px;
+      }
+      .turn-label > .icon {
+        width: 16px;
+        height: 16px;
+      }
+      .notice {
+        display: flex;
+        gap: 12px;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        font-size: 12px;
+        line-height: 1.9;
+        margin-bottom: 24px;
+      }
+      .notice > .icon {
+        color: var(--cyan);
+        margin-top: 2px;
+        width: 18px;
+        height: 18px;
+      }
+      .notice.amber {
+        border-color: #f5bc752b;
+        background: #f5bc7505;
+      }
+      .notice.amber > .icon {
+        color: var(--amber);
+      }
+      .notice.green {
+        border-color: #c8f36a30;
+        background: #c8f36a05;
+      }
+      .notice.green > .icon {
+        color: var(--green);
+      }
+      .notice strong {
+        display: block;
+        margin-bottom: 3px;
+        font-weight: 600;
+      }
+      .notice p {
+        color: var(--muted);
+        margin: 0;
+      }
+      .notice .btn {
+        margin-top: 12px;
+      }
+      .success-flash {
+        animation: complete 0.65s ease-out;
+      }
+      .field-error {
+        color: var(--red);
+        font-size: 12px;
+        line-height: 1.8;
+        margin-top: 12px;
+        margin-bottom: 0;
+      }
+      /* 05. Quiz and results */
+      .quiz-intro {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.9;
+        margin: 0 0 24px;
+      }
+      .quiz-progress {
+        display: flex;
+        gap: 6px;
+        margin: 20px 0 32px;
+      }
+      .quiz-progress span {
+        flex: 1;
+        height: 3px;
+        background: var(--line);
+        border-radius: 3px;
+      }
+      .quiz-progress span.filled {
+        background: var(--green);
+      }
+      .question {
+        padding: 0 0 28px;
+        margin: 0 0 28px;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        min-width: 0;
+      }
+      .question-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .question-number {
+        font: 11px var(--mono);
+        color: var(--green);
+        letter-spacing: 1px;
+      }
+      .question-meta {
+        font-size: 10px;
+        color: var(--dim);
+      }
+      .question-prompt {
+        font-size: 15px;
+        line-height: 1.85;
+        margin-bottom: 18px;
+      }
+      .question-prompt .markdown {
+        font-size: 15px;
+      }
+      .question-prompt .markdown p:last-child {
+        margin-bottom: 0;
+      }
+      .option {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        min-height: 48px;
+        cursor: pointer;
+        font-size: 13px;
+        line-height: 1.8;
+        transition:
+          border-color var(--transition),
+          background var(--transition);
+        overflow-wrap: anywhere;
+      }
+      .option:hover {
+        border-color: #536377;
+        background: var(--surface);
+      }
+      .option:has(input:checked) {
+        border-color: #c8f36a70;
+        background: #c8f36a08;
+      }
+      .option input {
+        appearance: none;
+        position: relative;
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+        border: 1px solid #5a697c;
+        border-radius: 50%;
+        margin: 0;
+        background: transparent;
+      }
+      .option input[type="checkbox"] {
+        border-radius: 4px;
+      }
+      .option input:checked {
+        border-color: var(--green);
+        background: var(--green);
+        box-shadow: inset 0 0 0 4px var(--bg);
+      }
+      .option input[type="checkbox"]:checked {
+        box-shadow: none;
+      }
+      .option input[type="checkbox"]:checked:after {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 5px;
+        height: 9px;
+        border: solid var(--bg);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+      .option-key {
+        font: 11px var(--mono);
+        color: var(--dim);
+        min-width: 12px;
+      }
+      .answer-text {
+        width: 100%;
+        min-height: 144px;
+        padding: 16px;
+        background: var(--surface);
+        border-radius: 10px;
+        line-height: 1.9;
+        font-size: 14px;
+        display: block;
+      }
+      .answer-label {
+        font-size: 11px;
+        color: var(--dim);
+        margin-bottom: 8px;
+        display: block;
+      }
+      .quiz-footer {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        border-top: 1px solid var(--line);
+        background: var(--bg);
+        padding: 18px 0;
+        margin-top: 8px;
+      }
+      .quiz-footer-left {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .quiz-footer-left strong {
+        color: var(--green);
+        font-family: var(--mono);
+        font-weight: 500;
+      }
+      .quiz-footer-buttons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .result-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 22px;
+      }
+      .result-summary {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 24px;
+        background: var(--surface);
+      }
+      .score {
+        color: var(--green);
+        font: 40px/1 var(--mono);
+        letter-spacing: -2px;
+        white-space: nowrap;
+      }
+      .score.amber {
+        color: var(--amber);
+      }
+      .score small {
+        font: 12px var(--mono);
+        color: var(--dim);
+        letter-spacing: 0;
+        margin-left: 6px;
+      }
+      .result-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .result-subtitle {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.8;
+      }
+      .result-body {
+        padding: 22px 24px;
+      }
+      .result-reason {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.9;
+        margin-bottom: 12px;
+      }
+      .weak-points {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 12px 0;
+      }
+      .result-details {
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+        margin-top: 18px;
+      }
+      .result-details summary {
+        font-size: 12px;
+        color: var(--muted);
+        cursor: pointer;
+        min-height: 44px;
+      }
+      .feedback-item {
+        padding: 18px 0;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .feedback-item:last-child {
+        border: 0;
+        padding-bottom: 0;
+      }
+      .feedback-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .feedback-title span:last-child {
+        color: var(--green);
+        font-family: var(--mono);
+        white-space: nowrap;
+      }
+      .feedback-prompt {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 10px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .feedback-item p {
+        font-size: 12px;
+        line-height: 1.9;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .feedback-evidence {
+        color: var(--dim) !important;
+      }
+      .result-inline {
+        margin-bottom: 26px;
+      }
+      .result-inline .result-summary {
+        padding: 18px 22px;
+      }
+      .result-inline .score {
+        font-size: 32px;
+      }
+      .result-inline .result-body {
+        padding: 18px 22px;
+      }
+      .state-card {
+        padding: 56px 0 32px;
+      }
+      .state-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--surface);
+        color: var(--cyan);
+        margin-bottom: 24px;
+      }
+      .state-icon > .icon {
+        width: 27px;
+        height: 27px;
+      }
+      .state-card h1 {
+        font-size: 30px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        line-height: 1.5;
+      }
+      .state-card > p {
+        color: var(--muted);
+        font-size: 14px;
+        max-width: 540px;
+        line-height: 1.9;
+        margin-bottom: 24px;
+      }
+      .state-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+      }
+      .rounds {
+        display: flex;
+        gap: 32px;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 22px 0;
+        margin: 30px 0;
+        color: var(--dim);
+        font-size: 11px;
+      }
+      .rounds strong {
+        display: block;
+        font: 28px var(--mono);
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #c8f36a33;
+        border-top-color: var(--green);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+      }
+      .status-toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        border: 1px solid var(--line);
+        background: var(--raised);
+        border-radius: 10px;
+        max-width: calc(100vw - 32px);
+        padding: 12px 20px;
+        box-shadow: 0 12px 40px #0005;
+        font-size: 12px;
+        line-height: 1.8;
+      }
+      .status-toast.error {
+        border-color: #f28b9144;
+        color: var(--red);
+      }
+      .busy-bar {
+        position: sticky;
+        top: 76px;
+        z-index: 19;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 32px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .modal {
+        max-width: min(540px, calc(100vw - 32px));
+        width: 540px;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 28px 100px #0007;
+      }
+      .modal::backdrop {
+        background: #0009;
+      }
+      .modal h2 {
+        font-size: 21px;
+        margin-bottom: 14px;
+      }
+      .modal p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.9;
+        overflow-wrap: anywhere;
+      }
+      .modal .objectives {
+        margin: 20px 0;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 24px;
+      }
+      .modal-status {
+        margin-bottom: 18px;
+      }
+      .node-detail-deps {
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+      }
+      .deps-label {
+        font-size: 11px;
+        color: var(--dim);
+        margin-bottom: 8px;
+      }
+      .deps-list {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .app-error {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .retry-load {
+        margin-top: 16px;
+      }
+      .fade-in {
+        animation: enter 0.2s ease-out;
+      }
+      @keyframes enter {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes complete {
+        0% {
+          border-color: var(--green);
+          box-shadow: 0 0 30px #c8f36a15;
+        }
+        100% {
+          border-color: var(--line);
+        }
+      }
+      /* 06. Responsive drawers and accessibility */
+      @media (min-width: 1700px) {
+        .main {
+          padding: 48px 64px;
+        }
+        .layout {
+          grid-template-columns: minmax(0, 1fr) 320px;
+        }
+        .topbar {
+          padding: 0 48px;
+        }
+      }
+      @media (max-width: 1199px) {
+        .main {
+          padding: 32px;
+        }
+        .layout {
+          grid-template-columns: minmax(0, 1fr) 280px;
+        }
+        .path-panel {
+          padding: 28px 18px;
+        }
+        .lesson-heading h1 {
+          font-size: 30px;
+        }
+        .breadcrumb-title {
+          max-width: 320px;
+        }
+      }
+      @media (max-width: 1100px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .path-panel {
+          position: fixed;
+          visibility: hidden;
+          top: 0;
+          right: 0;
+          height: 100dvh;
+          width: 320px;
+          max-width: 90vw;
+          transform: translateX(100%);
+          transition: transform 0.2s;
+          z-index: 45;
+          padding-top: 26px;
+        }
+        .path-panel.open {
+          visibility: visible;
+          transform: translateX(0);
+        }
+        .mobile-path {
+          display: inline-flex;
+        }
+        .path-panel .close-drawer {
+          display: inline-flex;
+          margin-left: auto;
+        }
+        .main {
+          padding: 36px 44px;
+        }
+        .main-inner {
+          max-width: 740px;
+        }
+        .topbar {
+          padding: 0 24px;
+        }
+        .breadcrumb-title {
+          max-width: 360px;
+        }
+      }
+      @media (max-width: 700px) {
+        .app {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .sidebar {
+          position: fixed;
+          visibility: hidden;
+          top: 0;
+          left: 0;
+          width: 270px;
+          max-width: 85vw;
+          transform: translateX(-100%);
+          transition: transform 0.2s;
+          z-index: 45;
+        }
+        .sidebar.open {
+          visibility: visible;
+          transform: translateX(0);
+        }
+        .sidebar .close-drawer {
+          display: inline-flex;
+          position: absolute;
+          right: 12px;
+          top: 21px;
+        }
+        .sidebar .brand {
+          margin-bottom: 36px;
+        }
+        .mobile-projects {
+          display: inline-flex;
+        }
+        .topbar {
+          height: 64px;
+          padding: 0 12px;
+          gap: 8px;
+        }
+        .breadcrumb {
+          font-size: 12px;
+          gap: 7px;
+        }
+        .breadcrumb > .icon,
+        .breadcrumb .separator,
+        .breadcrumb-prefix {
+          display: none;
+        }
+        .breadcrumb-title {
+          max-width: none;
+        }
+        .saved-label {
+          display: none;
+        }
+        .topbar-left {
+          gap: 2px;
+        }
+        .topbar-actions {
+          gap: 2px;
+        }
+        .mobile-path {
+          font-size: 11px;
+          padding: 8px 10px;
+          gap: 6px;
+        }
+        .mobile-path .icon {
+          width: 15px;
+          height: 15px;
+        }
+        .layout {
+          min-height: calc(100dvh - 64px);
+        }
+        .main {
+          padding: 24px 20px 32px;
+        }
+        .welcome {
+          padding-top: 18px;
+        }
+        .welcome .eyebrow {
+          font-size: 9px;
+          margin-bottom: 18px;
+          letter-spacing: 1.6px;
+        }
+        .welcome h1 {
+          font-size: 29px;
+          line-height: 1.5;
+        }
+        .welcome-intro {
+          font-size: 13px;
+          margin-bottom: 26px;
+        }
+        .goal-form {
+          padding: 18px;
+        }
+        .goal-form textarea {
+          font-size: 14px;
+          min-height: 140px;
+        }
+        .goal-footer {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .goal-footer .btn {
+          width: 100%;
+        }
+        .examples {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 8px;
+        }
+        .example {
+          padding: 12px 14px;
+          align-items: center;
+        }
+        .example-title {
+          margin-bottom: 2px;
+        }
+        .example-desc {
+          font-size: 11px;
+        }
+        .example > .icon {
+          margin: 0;
+        }
+        .workflow {
+          margin-top: 28px;
+          gap: 12px;
+        }
+        .welcome-foot {
+          font-size: 10px;
+        }
+        .lesson-heading h1 {
+          font-size: 27px;
+        }
+        .lesson-meta {
+          margin-bottom: 16px;
+        }
+        .lesson-description {
+          font-size: 13px;
+        }
+        .lesson-facts {
+          gap: 12px;
+          font-size: 10px;
+        }
+        .markdown {
+          font-size: 15px;
+          line-height: 1.85;
+        }
+        .markdown h2 {
+          font-size: 20px;
+        }
+        .markdown h3 {
+          font-size: 17px;
+        }
+        .objectives {
+          margin: 22px 0 26px;
+        }
+        .objectives p {
+          font-size: 12px;
+        }
+        .tabs {
+          gap: 24px;
+          margin-bottom: 24px;
+        }
+        .tab {
+          font-size: 12px;
+        }
+        .lesson-end {
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+        .lesson-end > .btn {
+          width: 100%;
+        }
+        .ask-box {
+          padding: 14px;
+          gap: 8px;
+        }
+        .ask-box textarea {
+          font-size: 12px;
+        }
+        .quiz-footer {
+          position: static;
+          flex-direction: column;
+          align-items: stretch;
+          padding: 18px 0 0;
+          gap: 12px;
+        }
+        .quiz-footer-buttons {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+        .quiz-footer .btn {
+          padding: 11px 8px;
+          font-size: 12px;
+        }
+        .question {
+          margin-bottom: 24px;
+          padding-bottom: 24px;
+        }
+        .answer-text {
+          font-size: 13px;
+        }
+        .result-summary {
+          padding: 20px;
+          gap: 16px;
+        }
+        .score {
+          font-size: 34px;
+        }
+        .result-body {
+          padding: 20px;
+        }
+        .result-title {
+          font-size: 13px;
+        }
+        .result-subtitle {
+          font-size: 11px;
+        }
+        .state-card {
+          padding-top: 32px;
+        }
+        .state-card h1 {
+          font-size: 26px;
+        }
+        .state-actions .btn {
+          flex: 1;
+        }
+        .busy-bar {
+          top: 64px;
+          padding: 12px 20px;
+        }
+        .modal {
+          padding: 24px;
+        }
+        .notice {
+          padding: 14px;
+          font-size: 12px;
+        }
+        .code-block pre {
+          padding: 16px;
+          font-size: 12px;
+        }
+        .skip-link {
+          left: 12px;
+        }
+        .status-toast {
+          bottom: 16px;
+        }
+        .question-meta {
+          font-size: 10px;
+        }
+        .path-panel {
+          width: 310px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *:before,
+        *:after {
+          animation: none !important;
+          transition: none !important;
+          scroll-behavior: auto !important;
+        }
+        .spinner {
+          border: 2px solid var(--green);
+          border-right-color: transparent;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到学习内容</a>
+    <div class="app">
+      <aside class="sidebar" id="sidebar" aria-label="学习项目">
+        <button
+          class="icon-button close-drawer"
+          data-close-drawer
+          aria-label="关闭项目面板"
+        ></button>
+        <div class="brand" id="brand"></div>
+        <button class="btn new-project" id="newProject"></button>
+        <div class="sidebar-label">
+          <span>我的学习项目</span
+          ><span class="mono" id="projectCount">00</span>
+        </div>
+        <nav class="project-list" id="projectList" aria-label="项目列表">
+          <p class="project-empty">正在读取学习项目…</p>
+        </nav>
+        <div class="sidebar-footer" id="localFooter"></div>
+      </aside>
+      <div class="workspace">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button
+              class="icon-button mobile-projects"
+              id="openProjects"
+              aria-label="打开项目列表"
+              aria-controls="sidebar"
+              aria-expanded="false"
+            ></button>
+            <div class="breadcrumb" id="breadcrumb"></div>
+          </div>
+          <div class="topbar-actions">
+            <span class="saved-label" id="savedLabel"
+              ><span class="dot"></span>本地保存</span
+            ><button
+              class="icon-button"
+              id="refreshState"
+              aria-label="刷新学习状态"
+              title="只刷新状态，不重复生成内容"
+            ></button
+            ><button
+              class="btn mobile-path"
+              id="openPath"
+              aria-controls="pathPanel"
+              aria-expanded="false"
+            ></button>
+          </div>
+        </header>
+        <div id="busyBar" class="busy-bar" role="status" hidden></div>
+        <div class="layout">
+          <main id="main" class="main" tabindex="-1" aria-label="学习内容">
+            <div class="main-inner" id="mainContent"></div>
+          </main>
+          <aside
+            class="path-panel"
+            id="pathPanel"
+            aria-label="技能路径"
+          ></aside>
+        </div>
+      </div>
+    </div>
+    <div class="backdrop" id="backdrop"></div>
+    <dialog
+      class="modal"
+      id="detailDialog"
+      aria-labelledby="detailTitle"
+    ></dialog>
+    <dialog
+      class="modal"
+      id="abandonDialog"
+      aria-labelledby="abandonTitle"
+    ></dialog>
+    <div class="status-toast" id="toast" role="status" hidden></div>
+    <div
+      id="announcement"
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+    ></div>
+    <script>
+      "use strict";
+      /* 07. DOM helpers and a local, safe Markdown renderer. No untrusted innerHTML. */
+      const $ = (id) => document.getElementById(id);
+      function el(tag, attrs = {}, ...children) {
+        const node = document.createElement(tag);
+        for (const [key, value] of Object.entries(attrs)) {
+          if (value == null) continue;
+          if (key === "class") node.className = value;
+          else if (key === "on")
+            for (const [event, handler] of Object.entries(value))
+              node.addEventListener(event, handler);
+          else if (key === "text") node.textContent = value;
+          else if (key === "disabled" || key === "hidden" || key === "checked")
+            node[key] = value;
+          else node.setAttribute(key, String(value));
+        }
+        for (const child of children.flat(Infinity)) {
+          if (child != null)
+            node.append(
+              child instanceof Node
+                ? child
+                : document.createTextNode(String(child)),
+            );
+        }
+        return node;
+      }
+      const paths = {
+        plus: "M12 5v14M5 12h14",
+        arrow: "M5 12h14m-6-6 6 6-6 6",
+        chevron: "m9 5 7 7-7 7",
+        folder: "M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3Z",
+        book: "M12 5v15m0-15C8 2 3 3 3 3v15s5-1 9 2m0-15c4-3 9-2 9-2v15s-5-1-9 2",
+        tree: "M6 19V5h10M6 12h10M16 5v3m0 4v3m0 3v2M3 19h6M13 8h6M13 15h6M13 20h6",
+        check: "m5 12 4 4L19 6",
+        lock: "M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5zm7 5v2",
+        clock: "M12 8v4l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
+        chat: "M4 4h16v12H9l-5 4Z",
+        send: "m4 12 16-8-6 16-3-6Zm7 2 9-10",
+        refresh:
+          "M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5m-4 8a8 8 0 0 0 14 3l3-3m0 5v-5h-5",
+        menu: "M4 6h16M4 12h16M4 18h16",
+        close: "m6 6 12 12M6 18 18 6",
+        code: "m8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18",
+        target:
+          "M12 2v3m0 14v3M2 12h3m14 0h3M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0m-4 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+        spark: "m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z",
+        copy: "M8 8h12v13H8ZM4 16H3V3h12v1",
+        shield: "m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z",
+        flag: "M5 21V3m0 0h13l-3 4 3 4H5",
+        quiz: "M8 4h12v17H4V4h4m0-2h8v4H8ZM8 11h8m-8 5h5",
+        pause: "M8 5v14m8-14v14",
+        alert: "m12 3 10 18H2Zm0 6v5m0 3v1",
+        circle: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
+        branch: "M6 3v13a5 5 0 0 0 5 5h7M6 8h7a5 5 0 0 0 5-5m-3 18 3-3 3 3",
+        list: "M9 5h12M9 12h12M9 19h12M3 5h1m-1 7h1m-1 7h1",
+      };
+      function icon(name, className = "icon") {
+        const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        for (const [k, v] of Object.entries({
+          viewBox: "0 0 24 24",
+          fill: "none",
+          stroke: "currentColor",
+          "stroke-width": "1.5",
+          "stroke-linecap": "round",
+          "stroke-linejoin": "round",
+          "aria-hidden": "true",
+          class: className,
+        }))
+          s.setAttribute(k, v);
+        const p = document.createElementNS(s.namespaceURI, "path");
+        p.setAttribute("d", paths[name] || paths.circle);
+        s.append(p);
+        return s;
+      }
+      function button(label, action, kind = "btn", symbol) {
+        return el(
+          "button",
+          { class: kind, type: "button", on: { click: action } },
+          symbol ? icon(symbol) : null,
+          label,
+        );
+      }
+      function inline(text) {
+        const f = document.createDocumentFragment(),
+          re =
+            /(`[^`\n]+`|\*\*[^*\n]+\*\*|\*[^*\n]+\*|\[[^\]\n]+\]\([^\s)]+\))/g;
+        let last = 0;
+        for (const m of text.matchAll(re)) {
+          f.append(document.createTextNode(text.slice(last, m.index)));
+          const token = m[0];
+          if (token.startsWith("`"))
+            f.append(el("code", {}, token.slice(1, -1)));
+          else if (token.startsWith("**"))
+            f.append(el("strong", {}, token.slice(2, -2)));
+          else if (token.startsWith("*"))
+            f.append(el("em", {}, token.slice(1, -1)));
+          else {
+            const match = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+            let url;
+            try {
+              url = new URL(match[2]);
+            } catch {}
+            if (url && ["http:", "https:"].includes(url.protocol))
+              f.append(
+                el(
+                  "a",
+                  {
+                    href: url.href,
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                  },
+                  match[1],
+                ),
+              );
+            else f.append(document.createTextNode(token));
+          }
+          last = m.index + token.length;
+        }
+        f.append(document.createTextNode(text.slice(last)));
+        return f;
+      }
+      function highlighted(text) {
+        const f = document.createDocumentFragment(),
+          re =
+            /(#[^\n]*|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\b(?:def|class|return|for|in|if|elif|else|while|import|from|as|and|or|not|True|False|None|break|continue|print|range|len|with|try|except|lambda)\b|\b\d+(?:\.\d+)?\b)/g;
+        let last = 0;
+        for (const m of text.matchAll(re)) {
+          f.append(document.createTextNode(text.slice(last, m.index)));
+          const t = m[0],
+            cls = t.startsWith("#")
+              ? "syntax-comment"
+              : /^['"]/.test(t)
+                ? "syntax-string"
+                : /^\d/.test(t)
+                  ? "syntax-number"
+                  : "syntax-key";
+          f.append(el("span", { class: cls }, t));
+          last = m.index + t.length;
+        }
+        f.append(document.createTextNode(text.slice(last)));
+        return f;
+      }
+      function codeBlock(text, language) {
+        const copy = button(
+          "复制",
+          async () => {
+            try {
+              await navigator.clipboard.writeText(text);
+              copy.replaceChildren(icon("check"), "已复制");
+            } catch {
+              showToast("复制不可用，可选中代码后手动复制。");
+            }
+          },
+          "code-copy",
+          "copy",
+        );
+        return el(
+          "div",
+          { class: "code-block" },
+          el(
+            "div",
+            { class: "code-header" },
+            el("span", {}, language || "CODE"),
+            copy,
+          ),
+          el(
+            "pre",
+            {},
+            el(
+              "code",
+              {},
+              ["python", "py", ""].includes(language.toLowerCase())
+                ? highlighted(text)
+                : text,
+            ),
+          ),
+        );
+      }
+      function markdown(source) {
+        const root = el("div", { class: "markdown" }),
+          lines = String(source || "")
+            .replace(/\r\n/g, "\n")
+            .split("\n");
+        let i = 0;
+        const isSpecial = (l) =>
+          /^(#{1,4}\s|\s*```|\s*~~~|>\s?|\s*[-*+]\s|\s*\d+[.)]\s|\s*---+\s*$)/.test(
+            l,
+          );
+        while (i < lines.length) {
+          let line = lines[i];
+          if (!line.trim()) {
+            i++;
+            continue;
+          }
+          const fence = line.trimStart().match(/^(```|~~~)(.*)$/);
+          if (fence) {
+            const content = [];
+            i++;
+            while (
+              i < lines.length &&
+              !lines[i].trimStart().startsWith(fence[1])
+            )
+              content.push(lines[i++]);
+            i++;
+            root.append(codeBlock(content.join("\n"), fence[2].trim()));
+            continue;
+          }
+          const heading = line.match(/^(#{1,4})\s+(.+)$/);
+          if (heading) {
+            root.append(el("h" + heading[1].length, {}, inline(heading[2])));
+            i++;
+            continue;
+          }
+          if (/^\s*---+\s*$/.test(line)) {
+            root.append(el("hr"));
+            i++;
+            continue;
+          }
+          if (/^>/.test(line)) {
+            const quoted = [];
+            while (i < lines.length && /^>/.test(lines[i]))
+              quoted.push(lines[i++].replace(/^>\s?/, ""));
+            root.append(el("blockquote", {}, inline(quoted.join("\n"))));
+            continue;
+          }
+          if (/^\s*([-*+]|\d+[.)])\s+/.test(line)) {
+            const ordered = /^\s*\d+[.)]/.test(line),
+              list = el(
+                ordered ? "ol" : "ul",
+                ordered ? { start: Number(line.match(/^\s*(\d+)/)[1]) } : {},
+              );
+            while (
+              i < lines.length &&
+              /^\s*([-*+]|\d+[.)])\s+/.test(lines[i]) &&
+              /^\s*\d+[.)]/.test(lines[i]) === ordered
+            )
+              list.append(
+                el(
+                  "li",
+                  {},
+                  inline(lines[i++].replace(/^\s*([-*+]|\d+[.)])\s+/, "")),
+                ),
+              );
+            root.append(list);
+            continue;
+          }
+          if (
+            line.includes("|") &&
+            i + 1 < lines.length &&
+            /^\s*\|?\s*:?-{3,}/.test(lines[i + 1])
+          ) {
+            const cells = (l) =>
+                l
+                  .trim()
+                  .replace(/^\||\|$/g, "")
+                  .split("|")
+                  .map((s) => s.trim()),
+              table = el("table"),
+              head = el(
+                "tr",
+                {},
+                cells(line).map((c) => el("th", {}, inline(c))),
+              );
+            table.append(el("thead", {}, head));
+            i += 2;
+            const body = el("tbody");
+            while (i < lines.length && lines[i].includes("|"))
+              body.append(
+                el(
+                  "tr",
+                  {},
+                  cells(lines[i++]).map((c) => el("td", {}, inline(c))),
+                ),
+              );
+            table.append(body);
+            root.append(el("div", { class: "table-scroll" }, table));
+            continue;
+          }
+          const paragraph = [line];
+          i++;
+          while (
+            i < lines.length &&
+            lines[i].trim() &&
+            !isSpecial(lines[i]) &&
+            !(
+              i + 1 < lines.length &&
+              lines[i].includes("|") &&
+              /^\s*\|?\s*:?-{3,}/.test(lines[i + 1])
+            )
+          )
+            paragraph.push(lines[i++]);
+          const p = el("p");
+          paragraph.forEach((s, n) => {
+            if (n) p.append(el("br"));
+            p.append(inline(s));
+          });
+          root.append(p);
+        }
+        return root;
+      }
+      /* 08. Public-state client. A lost response is resolved by GET, never by replaying POST. */
+      let projects = [],
+        activeId = null,
+        current = null,
+        viewTab = "lesson",
+        generation = 0,
+        toastTimer,
+        drawerOrigin = null,
+        goalDraft = "",
+        questionDraft = "";
+      const busyProjects = new Set(),
+        drafts = new Map();
+      const storage = {
+        get: (key) => {
+          try {
+            return sessionStorage.getItem(key);
+          } catch {
+            return null;
+          }
+        },
+        set: (key, value) => {
+          try {
+            sessionStorage.setItem(key, value);
+          } catch {}
+        },
+        remove: (key) => {
+          try {
+            sessionStorage.removeItem(key);
+          } catch {}
+        },
+      };
+      const stateLabels = {
+        learning: "学习中",
+        quiz: "测验中",
+        paused: "已暂停",
+        completed: "已完成",
+        error: "待恢复",
+        running: "处理中",
+      };
+      const nodeLabels = {
+        completed: "已完成",
+        learning: "学习中",
+        available: "可学习",
+        locked: "未解锁",
+      };
+      const actionLabels = {
+        advance: "继续下一节点",
+        remediate: "针对薄弱点补强",
+        collect_more_evidence: "追加一次测评",
+        revisit_prerequisite: "复习前置知识",
+      };
+      async function api(path, options = {}) {
+        let response;
+        try {
+          response = await fetch(path, {
+            headers: { "Content-Type": "application/json" },
+            ...options,
+          });
+        } catch {
+          throw {
+            network: true,
+            message: "连接中断，正在确认已保存的学习状态。",
+          };
+        }
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          throw {
+            network: true,
+            message: "响应未完整接收，正在确认已保存的学习状态。",
+          };
+        }
+        if (!response.ok)
+          throw {
+            status: response.status,
+            code: data.error?.code,
+            message: data.error?.message || "操作暂时未完成，请查看最新状态。",
+          };
+        return data;
+      }
+      function showToast(message, error = false) {
+        clearTimeout(toastTimer);
+        $("toast").textContent = message;
+        $("toast").className = "status-toast" + (error ? " error" : "");
+        $("toast").hidden = false;
+        toastTimer = setTimeout(() => {
+          $("toast").hidden = true;
+        }, 6000);
+      }
+      function isBusy() {
+        return (
+          !!activeId &&
+          (busyProjects.has(activeId) || current?.page_state === "running")
+        );
+      }
+      function can(action) {
+        return current?.allowed_actions.includes(action) && !isBusy();
+      }
+      function announce(text) {
+        $("announcement").textContent = text;
+      }
+      async function refreshProjects() {
+        try {
+          projects = await api("/projects");
+          renderProjects();
+        } catch {
+          projects = [];
+          renderProjects();
+          $("projectList").replaceChildren(
+            el("p", { class: "project-empty" }, "暂时无法读取项目列表。"),
+            button("重新读取", refreshProjects, "btn subtle", "refresh"),
+          );
+        }
+      }
+      function rememberView(data) {
+        const index = projects.findIndex(
+            (p) => p.project_id === data.project_id,
+          ),
+          summary = {
+            project_id: data.project_id,
+            goal: data.goal,
+            completed_count: data.completed_count,
+            total_count: data.total_count,
+            page_state: data.page_state,
+          };
+        if (index < 0) projects.unshift(summary);
+        else projects[index] = summary;
+        renderProjects();
+      }
+      function setCurrent(data) {
+        // 只保留公开状态仍在作答的本项目草稿；覆盖其他标签页结束测验的情况。
+        const prefix = "skilltree.draft." + data.project_id + ".";
+        const retained = data.quiz ? prefix + data.quiz.assessment_id : null;
+        for (const key of drafts.keys()) {
+          if (key.startsWith(prefix) && key !== retained) drafts.delete(key);
+        }
+        try {
+          const staleKeys = [];
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key.startsWith(prefix) && key !== retained) staleKeys.push(key);
+          }
+          staleKeys.forEach((key) => storage.remove(key));
+        } catch {}
+        current = data;
+        rememberView(data);
+        storage.set("skilltree.active", data.project_id);
+        render();
+        if (data.page_state === "running") scheduleQuery(data.project_id);
+      }
+      let queryTimer;
+      function scheduleQuery(id) {
+        clearTimeout(queryTimer);
+        queryTimer = setTimeout(async () => {
+          if (activeId !== id || busyProjects.has(id)) return;
+          await loadProject(id, false);
+        }, 2000);
+      }
+      async function loadProject(id, moveFocus = true) {
+        const token = ++generation;
+        activeId = id;
+        current = null;
+        viewTab = "lesson";
+        questionDraft = "";
+        render();
+        closeDrawers();
+        try {
+          const data = await api("/projects/" + encodeURIComponent(id));
+          if (token !== generation || activeId !== id) return;
+          setCurrent(data);
+          if (moveFocus) {
+            $("main").focus({ preventScroll: true });
+            window.scrollTo({ top: 0, behavior: "instant" });
+          }
+        } catch (error) {
+          if (token !== generation || activeId !== id) return;
+          renderLoadError(error.message, () => loadProject(id));
+        }
+      }
+      async function perform(action, extras = {}) {
+        if (!can(action)) return;
+        const id = activeId,
+          token = generation,
+          old = current,
+          expected = old.pending_input_id;
+        busyProjects.add(id);
+        updateBusy();
+        let data;
+        try {
+          const path = action === "retry" ? "/retry" : "/resume",
+            body =
+              action === "retry"
+                ? { retry_token: old.retry_token }
+                : { pending_input_id: expected, action, ...extras };
+          data = await api("/projects/" + encodeURIComponent(id) + path, {
+            method: "POST",
+            body: JSON.stringify(body),
+          });
+        } catch (error) {
+          showToast(error.message, true);
+          if (error.network || error.status === 409) {
+            try {
+              data = await api("/projects/" + encodeURIComponent(id));
+            } catch {
+              if (id === activeId && token === generation) {
+                current = null;
+                renderLoadError(
+                  "无法确认操作是否已完成。请先重新读取状态，再继续操作。",
+                  () => loadProject(id),
+                );
+              }
+            }
+          }
+        } finally {
+          busyProjects.delete(id);
+          if (id === activeId && token === generation) {
+            if (data) {
+              questionDraft = "";
+              setCurrent(data);
+              if (action !== "ask" && action !== "rest") {
+                $("main").focus({ preventScroll: true });
+                window.scrollTo({ top: 0, behavior: "instant" });
+              } else if (action === "ask") {
+                $("mainContent")
+                  .querySelectorAll(".turn-label")
+                  .item(
+                    $("mainContent").querySelectorAll(".turn-label").length - 1,
+                  )
+                  ?.scrollIntoView({ block: "start", behavior: "instant" });
+              }
+              if (data.completed_count > old.completed_count) {
+                showToast("节点已完成，下一段学习路径已解锁。");
+                $("mainContent").classList.add("success-flash");
+              } else if (action === "rest")
+                showToast("进度已保留，随时可以回来继续。");
+              announce(stateLabels[data.page_state] || "状态已更新");
+            } else updateBusy();
+          }
+          await refreshProjects();
+        }
+      }
+      async function createProject(event) {
+        event.preventDefault();
+        if (isBusy() || busyProjects.has("creating")) return;
+        const field = $("goalInput"),
+          goal = field.value.trim();
+        goalDraft = field.value;
+        if (goal.length < 2) {
+          $("goalError").textContent = "请用至少两个字描述你的学习目标。";
+          field.setAttribute("aria-invalid", "true");
+          field.focus();
+          return;
+        }
+        const requestId = crypto.randomUUID(),
+          id = "project_" + requestId.replaceAll("-", ""),
+          token = ++generation;
+        activeId = id;
+        busyProjects.add(id);
+        busyProjects.add("creating");
+        storage.set("skilltree.active", id);
+        current = null;
+        render();
+        let data;
+        try {
+          data = await api("/projects", {
+            method: "POST",
+            body: JSON.stringify({ goal, request_id: requestId }),
+          });
+        } catch (error) {
+          showToast(error.message, true);
+          if (error.network || error.status === 409) {
+            try {
+              data = await api("/projects/" + id);
+            } catch {
+              if (token === generation)
+                renderLoadError(
+                  "创建结果尚未确认。请先读取这个项目的状态，避免重复创建。",
+                  () => loadProject(id),
+                );
+            }
+          } else if (token === generation)
+            renderLoadError(error.message, () => startNew());
+        } finally {
+          busyProjects.delete(id);
+          busyProjects.delete("creating");
+          if (data && activeId === id && token === generation) {
+            goalDraft = "";
+            setCurrent(data);
+            $("main").focus({ preventScroll: true });
+          } else updateBusy();
+          await refreshProjects();
+        }
+      }
+      function startNew() {
+        generation++;
+        activeId = null;
+        current = null;
+        viewTab = "lesson";
+        questionDraft = "";
+        storage.remove("skilltree.active");
+        clearTimeout(queryTimer);
+        closeDrawers();
+        render();
+        window.scrollTo({ top: 0, behavior: "instant" });
+        $("goalInput")?.focus({ preventScroll: true });
+      }
+      function draftKey(id, assessment) {
+        return "skilltree.draft." + id + "." + assessment;
+      }
+      function getDraft() {
+        if (!current?.quiz) return {};
+        const key = draftKey(activeId, current.quiz.assessment_id);
+        if (!drafts.has(key)) {
+          let stored;
+          try {
+            stored = JSON.parse(storage.get(key) || "{}");
+          } catch {
+            stored = {};
+          }
+          const result = { ...current.answers };
+          for (const q of current.quiz.questions) {
+            const value = stored[q.id];
+            if (
+              q.type === "multiple_choice" &&
+              Array.isArray(value) &&
+              value.every((v) => q.options?.includes(v))
+            )
+              result[q.id] = value;
+            else if (
+              q.type === "single_choice" &&
+              typeof value === "string" &&
+              q.options?.includes(value)
+            )
+              result[q.id] = value;
+            else if (q.type === "short_answer" && typeof value === "string")
+              result[q.id] = value;
+          }
+          drafts.set(key, result);
+        }
+        return drafts.get(key);
+      }
+      function saveDraft() {
+        if (!current?.quiz) return;
+        storage.set(
+          draftKey(activeId, current.quiz.assessment_id),
+          JSON.stringify(getDraft()),
+        );
+        updateQuizCount();
+      }
+      function clearDraft(id, assessment) {
+        const key = draftKey(id, assessment);
+        drafts.delete(key);
+        storage.remove(key);
+      }
+      function filledCount() {
+        return (
+          current?.quiz?.questions.filter((q) => {
+            const value = getDraft()[q.id];
+            return Array.isArray(value)
+              ? value.length > 0
+              : typeof value === "string" && value.trim().length > 0;
+          }).length || 0
+        );
+      }
+      /* 09. Render shell and real project/path panels. */
+      $("brand").append(
+        icon("tree", "brand-mark"),
+        el(
+          "div",
+          {},
+          el(
+            "div",
+            { class: "brand-name" },
+            "SkillTree ",
+            el("span", {}, "AI"),
+          ),
+          el("div", { class: "brand-caption" }, "ONE SKILL AT A TIME"),
+        ),
+      );
+      $("newProject").append(icon("plus"), "新建学习项目");
+      $("newProject").addEventListener("click", startNew);
+      $("localFooter").append(
+        icon("shield"),
+        el(
+          "div",
+          {},
+          el("div", { class: "local-title" }, "本地学习空间"),
+          el("div", { class: "local-caption" }, "进度保存在当前设备"),
+        ),
+      );
+      $("openProjects").append(icon("menu"));
+      $("refreshState").append(icon("refresh"));
+      $("openPath").append(icon("tree"), "技能路径");
+      $("refreshState").addEventListener("click", async () => {
+        if (activeId) await loadProject(activeId, false);
+        else await refreshProjects();
+      });
+      $("openProjects").addEventListener("click", () =>
+        openDrawer("sidebar", "openProjects"),
+      );
+      $("openPath").addEventListener("click", () =>
+        openDrawer("pathPanel", "openPath"),
+      );
+      document.querySelectorAll("[data-close-drawer]").forEach((b) => {
+        b.append(icon("close"));
+        b.addEventListener("click", closeDrawers);
+      });
+      $("backdrop").addEventListener("click", closeDrawers);
+      function openDrawer(id, trigger) {
+        closeDrawers();
+        drawerOrigin = trigger;
+        $(id).classList.add("open");
+        $("backdrop").classList.add("visible");
+        $(trigger).setAttribute("aria-expanded", "true");
+        document.body.style.overflow = "hidden";
+        $(id).querySelector("button")?.focus();
+      }
+      function closeDrawers() {
+        for (const id of ["sidebar", "pathPanel"])
+          $(id).classList.remove("open");
+        $("backdrop").classList.remove("visible");
+        for (const id of ["openProjects", "openPath"])
+          $(id).setAttribute("aria-expanded", "false");
+        document.body.style.overflow = "";
+        if (drawerOrigin) {
+          $(drawerOrigin).focus({ preventScroll: true });
+          drawerOrigin = null;
+        }
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeDrawers();
+        if (e.key === "Tab" && drawerOrigin) {
+          const panel = document.querySelector(
+              ".sidebar.open,.path-panel.open",
+            ),
+            focusables = [
+              ...panel.querySelectorAll("button:not(:disabled),a[href]"),
+            ].filter((n) => n.getClientRects().length);
+          if (!focusables.length) return;
+          if (e.shiftKey && document.activeElement === focusables[0]) {
+            e.preventDefault();
+            focusables.at(-1).focus();
+          } else if (
+            !e.shiftKey &&
+            document.activeElement === focusables.at(-1)
+          ) {
+            e.preventDefault();
+            focusables[0].focus();
+          }
+        }
+      });
+      function renderProjects() {
+        $("projectCount").textContent = String(projects.length).padStart(
+          2,
+          "0",
+        );
+        const items = projects.map((p) =>
+          button(
+            el(
+              "div",
+              {},
+              el("div", { class: "project-name" }, p.goal),
+              el(
+                "div",
+                { class: "project-meta" },
+                p.total_count
+                  ? `${p.completed_count} / ${p.total_count} 节点 · ${stateLabels[p.page_state] || "待恢复"}`
+                  : stateLabels[p.page_state] || "待恢复",
+              ),
+            ),
+            () => loadProject(p.project_id),
+            "project-item" + (p.project_id === activeId ? " active" : ""),
+            "folder",
+          ),
+        );
+        $("projectList").replaceChildren(
+          ...(items.length
+            ? items
+            : [
+                el(
+                  "p",
+                  { class: "project-empty" },
+                  "还没有学习项目。",
+                  el("br"),
+                  "写下目标，开启第一段路径。",
+                ),
+              ]),
+        );
+      }
+      function updateBusy() {
+        const busy = isBusy() || busyProjects.has("creating");
+        $("busyBar").hidden = !busy;
+        $("busyBar").replaceChildren(
+          el("span", { class: "spinner", "aria-hidden": "true" }),
+          "正在处理，请稍候。学习进度会自动保存。",
+        );
+        $("savedLabel").replaceChildren(
+          el("span", { class: "dot" }),
+          busy ? "处理中" : "本地保存",
+        );
+        $("main").setAttribute("aria-busy", String(busy));
+        $("mainContent")
+          .querySelectorAll("[data-action]")
+          .forEach((b) => {
+            b.disabled =
+              busy || !current?.allowed_actions.includes(b.dataset.action);
+          });
+        $("goalSubmit") && ($("goalSubmit").disabled = busy);
+      }
+      function actionButton(
+        label,
+        action,
+        kind = "btn primary",
+        symbol = "arrow",
+        extras,
+      ) {
+        const b = button(
+          label,
+          () =>
+            perform(
+              action,
+              typeof extras === "function" ? extras() : extras || {},
+            ),
+          kind,
+          symbol,
+        );
+        b.dataset.action = action;
+        b.disabled = !can(action);
+        return b;
+      }
+      function render() {
+        renderProjects();
+        $("breadcrumb").replaceChildren(
+          icon("folder"),
+          el("span", { class: "breadcrumb-prefix muted" }, "学习工作台"),
+          el("span", { class: "separator" }, "/"),
+          el(
+            "span",
+            { class: "breadcrumb-title" },
+            current?.goal || (activeId ? "正在读取项目" : "新的学习起点"),
+          ),
+        );
+        renderPath();
+        const root = $("mainContent");
+        root.replaceChildren();
+        root.classList.remove("success-flash");
+        if (!activeId) renderWelcome(root);
+        else if (!current) renderWaiting(root);
+        else if (current.page_state === "learning") renderLesson(root);
+        else if (current.page_state === "quiz") renderQuiz(root);
+        else renderState(root);
+        updateBusy();
+      }
+      function renderPath() {
+        const panel = $("pathPanel"),
+          close = button("", closeDrawers, "icon-button close-drawer", "close");
+        close.setAttribute("aria-label", "关闭技能路径");
+        panel.replaceChildren(
+          el(
+            "div",
+            { class: "panel-heading" },
+            el("h2", {}, "技能路径"),
+            icon("branch"),
+            close,
+          ),
+          el("div", { class: "path-caption" }, "一步一步，让知识连成能力"),
+        );
+        if (!current?.nodes.length) {
+          panel.append(
+            emptyTree(),
+            el(
+              "div",
+              { class: "empty-detail" },
+              "围绕你的目标生成路径，",
+              el("br"),
+              "每个节点通过测评后，再解锁下一步。",
+            ),
+          );
+          return;
+        }
+        const ratio = current.total_count
+          ? (current.completed_count / current.total_count) * 100
+          : 0;
+        panel.append(
+          el(
+            "div",
+            { class: "progress-heading" },
+            el(
+              "div",
+              { class: "progress-number" },
+              current.completed_count,
+              el("small", {}, "/ " + current.total_count),
+            ),
+            el("span", { class: "progress-note" }, "节点已完成"),
+          ),
+          el(
+            "div",
+            {
+              class: "progress-track",
+              role: "progressbar",
+              "aria-label": "已完成节点",
+              "aria-valuenow": current.completed_count,
+              "aria-valuemin": 0,
+              "aria-valuemax": current.total_count,
+            },
+            el("div", {
+              class: "progress-fill",
+              style: "width:" + ratio + "%",
+            }),
+          ),
+        );
+        const list = el("div", { class: "path-list" }),
+          map = new Map(current.nodes.map((n) => [n.id, n]));
+        current.nodes.forEach((node, i) => {
+          const symbol = el(
+              "span",
+              { class: "node-symbol" },
+              node.status === "completed"
+                ? icon("check")
+                : node.status === "locked"
+                  ? icon("lock")
+                  : String(i + 1).padStart(2, "0"),
+            ),
+            b = button(
+              el(
+                "div",
+                { class: "node-copy" },
+                el("div", { class: "node-title" }, node.title),
+                el(
+                  "div",
+                  { class: "node-info" },
+                  el("span", { class: "node-state" }, nodeLabels[node.status]),
+                  el("span", {}, node.estimated_minutes + " 分钟"),
+                ),
+                node.prerequisite_ids.length
+                  ? el(
+                      "div",
+                      { class: "node-dependencies" },
+                      "前置：" +
+                        node.prerequisite_ids
+                          .map((id) => map.get(id)?.title || id)
+                          .join(" + "),
+                    )
+                  : el(
+                      "div",
+                      { class: "node-dependencies" },
+                      "起点 · 无前置要求",
+                    ),
+              ),
+              () => showNode(node),
+              "path-node " +
+                node.status +
+                (node.id === current.current_node_id ? " current" : ""),
+            );
+          b.prepend(symbol);
+          b.setAttribute(
+            "aria-label",
+            node.title + "，" + nodeLabels[node.status] + "，查看节点详情",
+          );
+          if (node.id === current.current_node_id)
+            b.setAttribute("aria-current", "step");
+          list.append(b);
+        });
+        panel.append(
+          list,
+          el(
+            "div",
+            { class: "path-legend" },
+            el(
+              "span",
+              {},
+              el("i", { class: "dot", style: "color:var(--green)" }),
+              "已完成",
+            ),
+            el(
+              "span",
+              {},
+              el("i", { class: "dot", style: "color:var(--cyan)" }),
+              "当前学习",
+            ),
+            el("span", {}, icon("lock"), "未解锁"),
+          ),
+        );
+        const teaching = map.get(current.teaching_node_id);
+        if (teaching)
+          panel.append(
+            el(
+              "div",
+              { class: "current-target" },
+              el(
+                "div",
+                { class: "target-label" },
+                icon("target"),
+                current.lesson_mode === "revisit"
+                  ? "正在复习的目标"
+                  : "当前教学目标",
+              ),
+              teaching.objectives.map((o) => el("p", {}, o.description)),
+            ),
+          );
+      }
+      function emptyTree() {
+        const art = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "svg",
+        );
+        art.setAttribute("viewBox", "0 0 190 210");
+        art.setAttribute("aria-hidden", "true");
+        const shapes = [
+          [
+            "path",
+            {
+              d: "M95 22v40M95 62H45v38M95 62h50v38M45 128v28h50v28M145 128v28H95",
+              fill: "none",
+              stroke: "#2a3949",
+              "stroke-width": 1.5,
+              "stroke-dasharray": "4 5",
+            },
+          ],
+          [
+            "rect",
+            {
+              x: 77,
+              y: 4,
+              width: 36,
+              height: 36,
+              rx: 10,
+              fill: "#c8f36a0a",
+              stroke: "#c8f36a50",
+            },
+          ],
+          [
+            "path",
+            { d: "M89 22h12m-6-6v12", stroke: "#c8f36a", "stroke-width": 1.5 },
+          ],
+          ...[
+            [27, 99],
+            [127, 99],
+            [77, 174],
+          ].map(([x, y]) => [
+            "rect",
+            {
+              x,
+              y,
+              width: 36,
+              height: 36,
+              rx: 10,
+              fill: "#141b25",
+              stroke: "#2a3443",
+            },
+          ]),
+          ...[
+            [45, 117],
+            [145, 117],
+            [95, 192],
+          ].map(([cx, cy]) => ["circle", { cx, cy, r: 3, fill: "#4a5a6f" }]),
+        ];
+        for (const [tag, attrs] of shapes) {
+          const s = document.createElementNS(art.namespaceURI, tag);
+          for (const [k, v] of Object.entries(attrs)) s.setAttribute(k, v);
+          art.append(s);
+        }
+        return el(
+          "div",
+          { class: "path-empty" },
+          art,
+          el("h3", {}, "路径会在这里生长"),
+          el(
+            "p",
+            {},
+            "输入你想实现的目标，",
+            el("br"),
+            "我们把它拆成可以抵达的每一步。",
+          ),
+        );
+      }
+      /* 10. Welcome and learning views. */
+      function renderWelcome(root) {
+        const form = el("form", {
+            class: "goal-form",
+            on: { submit: createProject },
+          }),
+          input = el("textarea", {
+            id: "goalInput",
+            maxlength: 500,
+            placeholder:
+              "例如：我想掌握 Python 循环，能够独立写出一个记账小程序。",
+            "aria-describedby": "goalHint goalError",
+            on: {
+              input: (e) => {
+                goalDraft = e.target.value;
+                $("goalError").textContent = "";
+                e.target.removeAttribute("aria-invalid");
+              },
+            },
+          });
+        input.value = goalDraft;
+        form.append(
+          el(
+            "label",
+            { class: "form-title", for: "goalInput" },
+            icon("target"),
+            "你想学会什么？",
+          ),
+          input,
+          el(
+            "div",
+            { class: "goal-footer" },
+            el(
+              "span",
+              { class: "goal-hint", id: "goalHint" },
+              "写下目标、当前基础，或一个想完成的小项目。",
+              el("br"),
+              "路径会按你的学习表现继续调整。",
+            ),
+            el(
+              "button",
+              { class: "btn primary", id: "goalSubmit", type: "submit" },
+              "生成学习路径",
+              icon("arrow"),
+            ),
+          ),
+          el("p", { class: "field-error", id: "goalError", role: "alert" }),
+        );
+        const examples = [
+          [
+            "Python 从零开始",
+            "变量、条件与循环，建立基础",
+            "我没有编程基础，想从零学习 Python，掌握变量、条件判断和循环。",
+            "code",
+          ],
+          [
+            "把重复工作交给 Python",
+            "用脚本处理日常数据",
+            "我会一点 Python，希望掌握列表、字典和循环，用脚本整理日常数据。",
+            "list",
+          ],
+          [
+            "做一个自己的小工具",
+            "在练习中串起知识",
+            "我想学会 Python，独立做一个命令行记账工具，理解函数和数据处理。",
+            "quiz",
+          ],
+        ];
+        root.append(
+          el(
+            "section",
+            { class: "welcome" },
+            el(
+              "div",
+              { class: "eyebrow" },
+              el("span", { class: "dot" }),
+              "YOUR NEXT SKILL STARTS HERE",
+            ),
+            el(
+              "h1",
+              {},
+              "从一个目标，",
+              el("br"),
+              "开始你的",
+              el("span", {}, "学习路径。"),
+            ),
+            el(
+              "p",
+              { class: "welcome-intro" },
+              "不必一次学会所有知识。让 AI 拆解目标、解释难点，",
+              el("br"),
+              "通过一次次练习，点亮属于你的技能树。",
+            ),
+            form,
+            el(
+              "div",
+              { class: "examples-title" },
+              "还没想好？从一个 Python 目标开始",
+            ),
+            el(
+              "div",
+              { class: "examples" },
+              examples.map(([title, desc, value, symbol]) =>
+                button(
+                  el(
+                    "div",
+                    {},
+                    el("div", { class: "example-title" }, title),
+                    el("div", { class: "example-desc" }, desc),
+                  ),
+                  () => {
+                    input.value = value;
+                    goalDraft = value;
+                    input.focus();
+                  },
+                  "example",
+                  symbol,
+                ),
+              ),
+            ),
+            el(
+              "div",
+              { class: "workflow" },
+              el("span", { class: "workflow-step" }, icon("tree"), "拆解目标"),
+              icon("chevron"),
+              el("span", { class: "workflow-step" }, icon("book"), "理解知识"),
+              icon("chevron"),
+              el(
+                "span",
+                { class: "workflow-step" },
+                icon("quiz"),
+                "测验与反馈",
+              ),
+              icon("chevron"),
+              el("span", { class: "workflow-step" }, icon("flag"), "继续前进"),
+            ),
+            el(
+              "p",
+              { class: "welcome-foot" },
+              "专注 Python 学习 · 自动保存进度 · 随时回来继续",
+            ),
+          ),
+        );
+      }
+      function lessonHeader(node, stage, caption) {
+        const index = current.nodes.findIndex((n) => n.id === node?.id) + 1;
+        return el(
+          "section",
+          { class: "lesson-heading" },
+          el(
+            "div",
+            { class: "lesson-meta" },
+            el(
+              "span",
+              { class: "lesson-index" },
+              "NODE " +
+                String(index).padStart(2, "0") +
+                " / " +
+                String(current.total_count).padStart(2, "0"),
+            ),
+            el(
+              "span",
+              {
+                class:
+                  "chip " +
+                  (current.lesson_mode === "normal" ? "cyan" : "amber"),
+              },
+              el("span", { class: "dot" }),
+              stage,
+            ),
+          ),
+          el("h1", {}, node?.title || "当前学习节点"),
+          el(
+            "p",
+            { class: "lesson-description" },
+            caption || node?.description || "",
+          ),
+          el(
+            "div",
+            { class: "lesson-facts" },
+            el(
+              "span",
+              {},
+              icon("clock"),
+              (node?.estimated_minutes || 0) + " 分钟",
+            ),
+            el(
+              "span",
+              {},
+              icon("target"),
+              (node?.objectives.length || 0) + " 个学习目标",
+            ),
+            el("span", {}, icon("quiz"), "已评分 " + current.rounds + " 轮"),
+          ),
+        );
+      }
+      function objectives(node) {
+        return el(
+          "div",
+          { class: "objectives" },
+          el("div", { class: "objectives-label" }, "学完这一节，你将能够"),
+          (node?.objectives || []).map((o) => el("p", {}, o.description)),
+        );
+      }
+      function notice(title, text, kind = "amber", symbol = "alert", action) {
+        return el(
+          "div",
+          { class: "notice " + kind },
+          icon(symbol),
+          el("div", {}, el("strong", {}, title), el("p", {}, text), action),
+        );
+      }
+      function renderLesson(root) {
+        const node = current.nodes.find(
+            (n) => n.id === current.teaching_node_id,
+          ),
+          assessment = current.nodes.find(
+            (n) => n.id === current.current_node_id,
+          ),
+          mode = current.lesson_mode;
+        const last = current.results[0];
+        if (last?.completed && last.node_id !== current.current_node_id)
+          root.append(
+            notice(
+              "上一节点已完成 · " + last.node_title,
+              `本轮得分 ${formatScore(last.total_score)} / ${formatScore(last.total_max_score)}。下一节点已经就绪，你仍可以查看刚刚完成的测评。`,
+              "green",
+              "check",
+            ),
+          );
+        if (mode === "revisit")
+          root.append(
+            notice(
+              "当前考核：" + assessment.title,
+              "正在复习前置知识「" +
+                node.title +
+                "」。完成复习后将返回当前考核节点。",
+              "amber",
+              "branch",
+              actionButton("返回当前节点", "return_to_current", "btn", "arrow"),
+            ),
+          );
+        root.append(
+          lessonHeader(
+            node,
+            mode === "remediate"
+              ? "补弱学习"
+              : mode === "revisit"
+                ? "前置复习"
+                : "正在学习",
+          ),
+        );
+        const tabs = el("div", { class: "tabs" }),
+          course = button(
+            "课程讲解",
+            () => {
+              viewTab = "lesson";
+              render();
+            },
+            "tab" + (viewTab === "lesson" ? " active" : ""),
+          ),
+          results = button(
+            el(
+              "span",
+              {},
+              "测评记录",
+              el("span", { class: "tab-count" }, current.results.length),
+            ),
+            () => {
+              viewTab = "results";
+              render();
+            },
+            "tab" + (viewTab === "results" ? " active" : ""),
+          );
+        results.disabled = !current.results.length;
+        results.title = current.results.length
+          ? "查看已结束测评"
+          : "完成一次测评后可查看";
+        tabs.append(course, results);
+        root.append(tabs);
+        if (viewTab === "results") {
+          root.append(...current.results.map((r) => resultCard(r)));
+          return;
+        }
+        if (last && !last.completed && last.node_id === current.current_node_id)
+          root.append(resultCard(last, true));
+        root.append(objectives(node));
+        const turns = current.conversation;
+        const first = turns.find((t) => t.role === "assistant");
+        root.append(markdown(first?.content || current.lesson));
+        if (turns.length > 1) {
+          const conv = el("div", { class: "conversation" });
+          let skipped = false;
+          for (const turn of turns) {
+            if (turn === first && !skipped) {
+              skipped = true;
+              continue;
+            }
+            if (turn.role === "user")
+              conv.append(
+                el(
+                  "div",
+                  { class: "user-question" },
+                  el("div", { class: "eyebrow" }, "我的追问"),
+                  turn.content,
+                ),
+              );
+            else
+              conv.append(
+                el(
+                  "div",
+                  { class: "turn-label" },
+                  icon("spark"),
+                  "SKILLTREE 导师",
+                ),
+                markdown(turn.content),
+              );
+          }
+          root.append(conv);
+        }
+        root.append(
+          el(
+            "div",
+            { class: "lesson-end" },
+            el(
+              "div",
+              {},
+              el(
+                "h3",
+                {},
+                mode === "revisit"
+                  ? "准备回到当前节点了吗？"
+                  : "把理解，变成一次练习。",
+              ),
+              el(
+                "p",
+                {},
+                mode === "revisit"
+                  ? "也可以直接开始当前考核节点的测验。"
+                  : "测验会围绕本节目标，帮助你发现还没理解的地方。",
+              ),
+            ),
+            actionButton("开始测验", "start_quiz", "btn primary", "arrow"),
+          ),
+        );
+        const input = el("textarea", {
+          id: "questionInput",
+          rows: 2,
+          maxlength: 4000,
+          placeholder: "还有不理解的地方？在这里问问学习导师…",
+          "aria-describedby": "questionHint",
+          on: {
+            input: (e) => {
+              questionDraft = e.target.value;
+            },
+            keydown: (e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                submitAsk();
+              }
+            },
+          },
+        });
+        input.value = questionDraft;
+        const submitAsk = () => {
+            if (!input.value.trim()) {
+              showToast("先写下你想问的问题。");
+              input.focus();
+              return;
+            }
+            perform("ask", { message: input.value });
+          },
+          send = button("", submitAsk, "send-button", "send");
+        send.dataset.action = "ask";
+        send.setAttribute("aria-label", "发送追问");
+        root.append(
+          el(
+            "form",
+            {
+              class: "ask-area",
+              on: {
+                submit: (e) => {
+                  e.preventDefault();
+                  submitAsk();
+                },
+              },
+            },
+            el(
+              "label",
+              { class: "ask-label", for: "questionInput" },
+              icon("chat"),
+              "和学习导师聊聊",
+            ),
+            el("div", { class: "ask-box" }, input, send),
+            el(
+              "div",
+              { class: "ask-hint", id: "questionHint" },
+              "Ctrl / ⌘ + Enter 发送 · 提问不会占用测评轮数",
+            ),
+          ),
+        );
+      }
+      /* 11. Interactive quiz, evaluation and exceptional states. */
+      function formatScore(value) {
+        return Number.isInteger(value)
+          ? String(value)
+          : Number(value).toFixed(1);
+      }
+      function renderQuiz(root) {
+        const node = current.nodes.find(
+            (n) => n.id === current.current_node_id,
+          ),
+          quiz = current.quiz;
+        if (!quiz) {
+          renderLoadError("当前试卷暂时无法读取，请刷新状态。", () =>
+            loadProject(activeId),
+          );
+          return;
+        }
+        root.append(
+          lessonHeader(
+            node,
+            "节点测验",
+            "用这次练习，检验你对当前知识的理解。",
+          ),
+          el(
+            "p",
+            { class: "quiz-intro" },
+            `共 ${quiz.questions.length} 题，请独立作答。答案草稿会在当前页面会话中保存。返回教学会放弃这张试卷，下次会生成新题。`,
+          ),
+        );
+        if (current.results[0]?.node_id === node.id)
+          root.append(resultCard(current.results[0], true));
+        if (current.answer_error)
+          root.append(
+            notice("请补充答案", current.answer_error, "amber", "alert"),
+          );
+        root.append(
+          el(
+            "div",
+            {
+              class: "quiz-progress",
+              id: "quizProgress",
+              "aria-hidden": "true",
+            },
+            quiz.questions.map(() => el("span")),
+          ),
+        );
+        const form = el("form", {
+          id: "quizForm",
+          on: {
+            submit: (e) => {
+              e.preventDefault();
+              perform("submit_answer", { answers: getDraft() });
+            },
+          },
+        });
+        quiz.questions.forEach((q, i) => {
+          const kind = {
+              single_choice: "单选题",
+              multiple_choice: "多选题",
+              short_answer: "简答题",
+            }[q.type],
+            field = el("fieldset", { class: "question" });
+          field.append(
+            el(
+              "legend",
+              { class: "sr-only" },
+              "第 " + (i + 1) + " 题，" + kind,
+            ),
+            el(
+              "div",
+              { class: "question-top" },
+              el(
+                "span",
+                { class: "question-number" },
+                "QUESTION " + String(i + 1).padStart(2, "0"),
+              ),
+              el(
+                "span",
+                { class: "question-meta" },
+                kind + " · " + formatScore(q.max_score) + " 分",
+              ),
+            ),
+            el(
+              "div",
+              { class: "question-prompt", id: "prompt_" + i },
+              markdown(q.prompt),
+            ),
+          );
+          if (q.type === "short_answer") {
+            const area = el("textarea", {
+              class: "answer-text",
+              id: "answer_" + i,
+              rows: 5,
+              maxlength: 12000,
+              placeholder: "写下你的思路、解释，或 Python 代码…",
+              "aria-labelledby": "prompt_" + i,
+              on: {
+                input: (e) => {
+                  getDraft()[q.id] = e.target.value;
+                  saveDraft();
+                },
+              },
+            });
+            area.value = getDraft()[q.id] || "";
+            field.append(
+              el(
+                "label",
+                { class: "answer-label", for: "answer_" + i },
+                "你的答案",
+              ),
+              area,
+            );
+          } else {
+            (q.options || []).forEach((option, j) => {
+              const selected = getDraft()[q.id],
+                input = el("input", {
+                  type: q.type === "multiple_choice" ? "checkbox" : "radio",
+                  name: "question_" + i,
+                  value: option,
+                  checked: Array.isArray(selected)
+                    ? selected.includes(option)
+                    : selected === option,
+                  on: {
+                    change: (e) => {
+                      if (q.type === "multiple_choice") {
+                        const checked = new Set(getDraft()[q.id] || []);
+                        if (e.target.checked) checked.add(option);
+                        else checked.delete(option);
+                        getDraft()[q.id] = [...checked];
+                      } else getDraft()[q.id] = option;
+                      saveDraft();
+                    },
+                  },
+                });
+              const stripped = option.replace(
+                /^\s*[A-Z]{1,2}(?:[.．]\s+|[、):：]\s*)/i,
+                "",
+              );
+              field.append(
+                el(
+                  "label",
+                  { class: "option" },
+                  input,
+                  el(
+                    "span",
+                    { class: "option-key" },
+                    String.fromCharCode(65 + j),
+                  ),
+                  el("span", {}, stripped),
+                ),
+              );
+            });
+          }
+          form.append(field);
+        });
+        const abandon = button(
+          "返回教学",
+          confirmAbandon,
+          "btn subtle",
+          "book",
+        );
+        abandon.dataset.action = "return_to_teaching";
+        const submit = el(
+          "button",
+          {
+            class: "btn primary",
+            type: "submit",
+            "data-action": "submit_answer",
+          },
+          "提交答案",
+          icon("arrow"),
+        );
+        form.append(
+          el(
+            "div",
+            { class: "quiz-footer" },
+            el("div", {
+              class: "quiz-footer-left",
+              id: "quizCount",
+              role: "status",
+            }),
+            el("div", { class: "quiz-footer-buttons" }, abandon, submit),
+          ),
+        );
+        root.append(form);
+        updateQuizCount();
+      }
+      function updateQuizCount() {
+        if (!$("quizCount") || !current?.quiz) return;
+        const filled = filledCount(),
+          total = current.quiz.questions.length;
+        $("quizCount").replaceChildren(
+          "已填写 ",
+          el("strong", {}, filled),
+          " / " + total + " 题",
+        );
+        [...$("quizProgress").children].forEach((span, i) => {
+          const value = getDraft()[current.quiz.questions[i].id];
+          span.classList.toggle(
+            "filled",
+            Array.isArray(value) ? value.length > 0 : !!value?.trim(),
+          );
+        });
+      }
+      function confirmAbandon() {
+        if (!can("return_to_teaching")) return;
+        const d = $("abandonDialog");
+        d.replaceChildren(
+          el("h2", { id: "abandonTitle" }, "返回教学，重新理解"),
+          el(
+            "p",
+            {},
+            "当前试卷会被放弃，这次不计入有效评分轮数。重新开始测验时会生成新题，当前答案草稿也会清除。",
+          ),
+          el(
+            "div",
+            { class: "modal-actions" },
+            button("继续答题", () => d.close(), "btn"),
+            button(
+              "返回教学",
+              () => {
+                d.close();
+                perform("return_to_teaching");
+              },
+              "btn primary",
+              "book",
+            ),
+          ),
+        );
+        d.showModal();
+      }
+      function resultCard(result, compact = false) {
+        const passed = result.completed,
+          full = result.percentage >= 80,
+          details = el("details", { class: "result-details" });
+        details.append(
+          el(
+            "summary",
+            {},
+            "逐题反馈 · " + result.question_results.length + " 题",
+          ),
+          ...result.question_results.map((q, i) =>
+            el(
+              "div",
+              { class: "feedback-item" },
+              el(
+                "div",
+                { class: "feedback-title" },
+                el("span", {}, "第 " + (i + 1) + " 题"),
+                el(
+                  "span",
+                  {},
+                  formatScore(q.score) + " / " + formatScore(q.max_score),
+                ),
+              ),
+              el("div", { class: "feedback-prompt" }, q.prompt),
+              el("p", {}, q.feedback),
+              el("p", { class: "feedback-evidence" }, q.evidence),
+            ),
+          ),
+        );
+        return el(
+          "section",
+          {
+            class: "result-card" + (compact ? " result-inline" : ""),
+            "aria-label": result.node_title + "测评结果",
+          },
+          el(
+            "div",
+            { class: "result-summary" },
+            el(
+              "div",
+              { class: "score" + (full ? "" : " amber") },
+              formatScore(result.total_score),
+              el("small", {}, "/ " + formatScore(result.total_max_score)),
+            ),
+            el(
+              "div",
+              {},
+              el(
+                "div",
+                { class: "result-title" },
+                passed
+                  ? "节点已通过 · " + result.node_title
+                  : "本轮测评 · " + result.node_title,
+              ),
+              el(
+                "div",
+                { class: "result-subtitle" },
+                actionLabels[result.recommended_action] ||
+                  "评分已保存，等待完成诊断",
+              ),
+            ),
+          ),
+          el(
+            "div",
+            { class: "result-body" },
+            el("p", { class: "result-reason" }, result.reason),
+            result.weak_points.length
+              ? el(
+                  "div",
+                  { class: "weak-points" },
+                  result.weak_points.map((p) =>
+                    el("span", { class: "chip amber" }, p),
+                  ),
+                )
+              : null,
+            details,
+          ),
+        );
+      }
+      function renderWaiting(root) {
+        root.append(
+          el(
+            "section",
+            { class: "state-card" },
+            el(
+              "div",
+              { class: "state-icon" },
+              el("span", { class: "spinner" }),
+            ),
+            el("div", { class: "eyebrow" }, "LEARNING WORKSPACE"),
+            el("h1", {}, isBusy() ? "正在准备你的下一步" : "正在读取学习记录"),
+            el(
+              "p",
+              {},
+              isBusy()
+                ? "请稍候，正在处理你的学习请求。你可以稍后回来继续，项目状态会保存在本地。"
+                : "正在确认课程、试卷和已保存的学习进度。",
+            ),
+          ),
+        );
+      }
+      function renderState(root) {
+        const page = current.page_state;
+        if (page === "running") {
+          renderWaiting(root);
+          return;
+        }
+        const paused = page === "paused",
+          complete = page === "completed",
+          symbol = complete ? "check" : paused ? "pause" : "alert",
+          title = complete
+            ? "每一步，都算数。"
+            : paused
+              ? "休息一下，再继续前进。"
+              : "学习进度还在。",
+          description = complete
+            ? `你已完成这条路径的全部 ${current.total_count} 个节点。回顾反馈，或者带着新的目标，开启下一段学习。`
+            : paused
+              ? "当前节点已达到本次测评轮数上限。可以休息，也可以主动增加 3 轮，给自己多一点练习的空间。"
+              : current.error?.message ||
+                "当前步骤未能完成，请查看状态后继续。";
+        const card = el(
+          "section",
+          { class: "state-card" },
+          el(
+            "div",
+            {
+              class: "state-icon",
+              style:
+                "color:var(--" +
+                (complete ? "green" : paused ? "amber" : "red") +
+                ")",
+            },
+            icon(symbol),
+          ),
+          el(
+            "div",
+            { class: "eyebrow" },
+            complete
+              ? "PATH COMPLETED"
+              : paused
+                ? "TAKE YOUR TIME"
+                : "PROGRESS SAVED",
+          ),
+          el("h1", {}, title),
+          el("p", {}, description),
+        );
+        if (paused)
+          card.append(
+            el(
+              "div",
+              { class: "rounds" },
+              el("div", {}, el("strong", {}, current.rounds), "已评分轮数"),
+              el(
+                "div",
+                {},
+                el("strong", {}, current.round_limit),
+                "当前轮数上限",
+              ),
+            ),
+            el(
+              "div",
+              { class: "state-actions" },
+              actionButton("先休息", "rest", "btn", "pause"),
+              actionButton("再试 3 轮", "retry_3", "btn primary", "arrow"),
+            ),
+          );
+        else if (complete)
+          card.append(
+            el(
+              "div",
+              { class: "state-actions" },
+              button("开启新的学习目标", startNew, "btn primary", "plus"),
+            ),
+          );
+        else
+          card.append(
+            el(
+              "div",
+              { class: "state-actions" },
+              current.allowed_actions.includes("retry")
+                ? actionButton(
+                    "重试当前步骤",
+                    "retry",
+                    "btn primary",
+                    "refresh",
+                  )
+                : null,
+              button("刷新状态", () => loadProject(activeId), "btn", "refresh"),
+              button("新建学习项目", startNew, "btn subtle", "plus"),
+            ),
+          );
+        root.append(card);
+        if (current.results.length)
+          root.append(
+            el(
+              "div",
+              { class: "tabs" },
+              el("div", { class: "tab active" }, "已保存的测评记录"),
+            ),
+            ...current.results.map((r) => resultCard(r)),
+          );
+      }
+      function renderLoadError(message, retry) {
+        $("mainContent").replaceChildren(
+          el(
+            "section",
+            { class: "state-card app-error" },
+            el(
+              "div",
+              { class: "state-icon", style: "color:var(--red)" },
+              icon("alert"),
+            ),
+            el("h1", {}, "暂时无法读取学习状态"),
+            el("p", {}, message),
+            el(
+              "div",
+              { class: "state-actions" },
+              button("重新读取状态", retry, "btn primary", "refresh"),
+              button("返回新建项目", startNew, "btn", "plus"),
+            ),
+          ),
+        );
+        updateBusy();
+      }
+      function showNode(node) {
+        const d = $("detailDialog"),
+          map = new Map(current.nodes.map((n) => [n.id, n]));
+        d.replaceChildren(
+          el(
+            "div",
+            { class: "modal-status" },
+            el(
+              "span",
+              {
+                class:
+                  "chip " +
+                  (node.status === "completed"
+                    ? "green"
+                    : node.status === "learning"
+                      ? "cyan"
+                      : ""),
+              },
+              nodeLabels[node.status],
+            ),
+          ),
+          el("h2", { id: "detailTitle" }, node.title),
+          el("p", {}, node.description),
+          objectives(node),
+          el(
+            "div",
+            { class: "node-detail-deps" },
+            el(
+              "div",
+              { class: "deps-label" },
+              node.prerequisite_ids.length
+                ? "前置条件 · 以下节点全部完成后解锁"
+                : "起点节点 · 无前置条件",
+            ),
+            el(
+              "div",
+              { class: "deps-list" },
+              node.prerequisite_ids.map((id) =>
+                el(
+                  "span",
+                  {
+                    class:
+                      "chip " +
+                      (map.get(id)?.status === "completed" ? "green" : ""),
+                  },
+                  map.get(id)?.status === "completed"
+                    ? icon("check")
+                    : icon("lock"),
+                  map.get(id)?.title || id,
+                ),
+              ),
+            ),
+          ),
+          el(
+            "p",
+            { class: "muted", style: "margin-top:20px;font-size:11px" },
+            "学习顺序由当前进度决定。这里可以查看节点目标与依赖。",
+          ),
+          el(
+            "div",
+            { class: "modal-actions" },
+            button("知道了", () => d.close(), "btn primary"),
+          ),
+        );
+        d.showModal();
+      }
+      /* 12. Initial read and visibility synchronization. */
+      document.addEventListener("visibilitychange", async () => {
+        if (
+          document.visibilityState === "visible" &&
+          activeId &&
+          !busyProjects.has(activeId)
+        ) {
+          const id = activeId,
+            token = generation;
+          try {
+            const data = await api("/projects/" + encodeURIComponent(id));
+            if (
+              id === activeId &&
+              token === generation &&
+              (data.pending_input_id !== current?.pending_input_id ||
+                data.page_state !== current?.page_state ||
+                data.retry_token !== current?.retry_token)
+            ) {
+              setCurrent(data);
+              showToast("已同步这个项目的最新进度。");
+            }
+          } catch {}
+        }
+      });
+      async function boot() {
+        render();
+        await refreshProjects();
+        const saved = storage.get("skilltree.active");
+        if (saved && projects.some((p) => p.project_id === saved))
+          await loadProject(saved, false);
+      }
+      boot();
+    </script>
+  </body>
+</html>

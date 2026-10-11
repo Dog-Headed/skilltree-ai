@@ -1,0 +1,46 @@
+{
+  "project_id": "day6_step5_acceptance_20261011",
+  "assessment_id": "assessment_8313c5a00088",
+  "original_node_id": "python_basics",
+  "first_question": "下面这段脚本保存为 hello.py 后运行，终端会输出什么？\n\nname = \"小明\"\nage = 12\nprint(name)\nprint(age)",
+  "quiz_sha256": "c7a7bed702c3549eacffedccb3047f4752b5374c0df4804bf416dd259ad2b0c8",
+  "original_lesson_sha256": "7ebbf04487366df3d79debe9c4297b56690b2a93d7107e5d97a805bf3cc90e60",
+  "teaching_restore_passed": true,
+  "answer_wait_restore_passed": true,
+  "original_private_quiz_matches_business_db": true,
+  "inspect_model_calls": 0,
+  "grading_method": "Acceptance answers use the original reference answers; this is a separate QA project.",
+  "score_percentage": 100.0,
+  "diagnosis_action": "advance",
+  "next_node_id": "sequence_types",
+  "next_wait": [
+    "wait_learning"
+  ],
+  "completion_progress": {
+    "project_id": "day6_step5_acceptance_20261011",
+    "node_id": "python_basics",
+    "started_at": "2026-10-10T16:35:08.950179+00:00",
+    "completed_at": "2026-10-10T16:39:51.095035+00:00",
+    "completion_assessment_id": "assessment_8313c5a00088"
+  },
+  "old_round_kept_in_business_db": true,
+  "round_state_cleared_after_advance": true,
+  "post_grading_process_restore_passed": true,
+  "completion_idempotency_passed": true,
+  "post_grading_inspect_model_calls": 0,
+  "pytest_command": "D:\\conda_envs\\edu_agent\\python.exe -m pytest -s",
+  "pytest_passed": 121,
+  "pytest_failed": 0,
+  "pytest_log": "data/day6_step5_pytest.log",
+  "completed_at_utc": "2026-10-10T16:43:24.782027+00:00",
+  "automated_acceptance": {
+    "teaching_wait_restore": true,
+    "answer_wait_restore": true,
+    "evaluation_and_diagnosis_restore": true,
+    "quiz_commit_retry": true,
+    "evaluation_commit_retry": true,
+    "project_isolation": true,
+    "completion_idempotency": true,
+    "no_repeated_planning_or_quiz": true
+  }
+}

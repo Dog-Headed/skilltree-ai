@@ -70,7 +70,8 @@ def test_multiline_answers_and_menu_retry(
     submissions = []
     original_invoke = graph.invoke
 
-    def track_invoke(event, *, config):
+    def track_invoke(event, *, config, durability):
+        assert durability == "sync"
         if isinstance(event, Command):
             events.append(event.resume)
             if event.resume["action"] == "submit_answer":
@@ -82,7 +83,7 @@ def test_multiline_answers_and_menu_retry(
                     )
                 else:
                     mock_assessment_grade_llm["score_ratio"] = 1.0
-        return original_invoke(event, config=config)
+        return original_invoke(event, config=config, durability=durability)
 
     monkeypatch.setattr(graph, "invoke", track_invoke)
     namespace = runpy.run_path(str(DEMO_PATH), run_name="__main__")
@@ -112,11 +113,12 @@ def test_eof_does_not_submit_unfinished_multiline_answer(monkeypatch):
     configs = []
     original_invoke = graph.invoke
 
-    def track_invoke(event, *, config):
+    def track_invoke(event, *, config, durability):
+        assert durability == "sync"
         configs.append(config)
         if isinstance(event, Command):
             events.append(event.resume["action"])
-        return original_invoke(event, config=config)
+        return original_invoke(event, config=config, durability=durability)
 
     monkeypatch.setattr(graph, "invoke", track_invoke)
 
@@ -135,7 +137,8 @@ def test_partial_answers_retry_same_quiz_in_demo(monkeypatch, capsys):
     original_invoke = graph.invoke
     submissions = []
 
-    def submit_partial_once(event, *, config):
+    def submit_partial_once(event, *, config, durability):
+        assert durability == "sync"
         if isinstance(event, Command) and event.resume["action"] == "submit_answer":
             submissions.append(event.resume["answers"])
             if len(submissions) == 1:
@@ -145,7 +148,7 @@ def test_partial_answers_retry_same_quiz_in_demo(monkeypatch, capsys):
                         "answers": {"q1": event.resume["answers"]["q1"]},
                     }
                 )
-        return original_invoke(event, config=config)
+        return original_invoke(event, config=config, durability=durability)
 
     monkeypatch.setattr(graph, "invoke", submit_partial_once)
     namespace = runpy.run_path(str(DEMO_PATH), run_name="__main__")

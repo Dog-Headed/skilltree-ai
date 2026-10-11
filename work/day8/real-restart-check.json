@@ -1,0 +1,9 @@
+{
+  "project_id": true,
+  "current_node_id": true,
+  "pending_input_id": true,
+  "completed_count": true,
+  "total_count": true,
+  "results_preserved": true,
+  "score_preserved": true
+}

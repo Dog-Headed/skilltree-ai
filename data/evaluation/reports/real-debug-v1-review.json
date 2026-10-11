@@ -1,0 +1,1566 @@
+{
+  "generated_at": "2026-10-11T09:30:54.870543+00:00",
+  "mode": "real",
+  "split": "debug",
+  "purpose": "real_model_evaluation",
+  "model": "deepseek-flash",
+  "prompt_version": "day7-v1",
+  "prompt_source_sha256": "c565cfea445eda1e859093bd894e3b6bfd6992e270b22016d90d4483ebb2ea41",
+  "case_versions": [
+    "day7-v1"
+  ],
+  "cases_sha256": "e69775fd411ce6fa0afc4969b6ab6f605845eeb96bc111b1243d9105b2350b8d",
+  "gold_standard_status": "pending_or_fake_not_gold_standard",
+  "metrics": {
+    "first_structure_valid": {
+      "numerator": 7,
+      "denominator": 8,
+      "rate": 0.875
+    },
+    "final_structure_valid": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "repaired_structure_valid": {
+      "numerator": 1,
+      "denominator": 1,
+      "rate": 1.0
+    },
+    "accepted": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "evidence_allowlist": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "tools_allowlist": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "required_tools_used": {
+      "numerator": 8,
+      "denominator": 8,
+      "rate": 1.0
+    },
+    "official_action_agreement": null,
+    "provisional_action_agreement": {
+      "numerator": 6,
+      "denominator": 8,
+      "rate": 0.75
+    },
+    "official_false_release_count": null,
+    "provisional_false_release_count": 0,
+    "guard_scope": "纯路由推进守卫模拟；不实际解锁学生项目",
+    "total_elapsed_ms": 92370.972,
+    "available_usage_records": [
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 943,
+          "output_tokens": 427,
+          "total_tokens": 1370,
+          "input_token_details": {
+            "cache_read": 512
+          },
+          "output_token_details": {
+            "reasoning": 62
+          }
+        }
+      },
+      {
+        "phase": "final_diagnosis",
+        "usage": {
+          "input_tokens": 1258,
+          "output_tokens": 181,
+          "total_tokens": 1439,
+          "input_token_details": {
+            "cache_read": 256
+          },
+          "output_token_details": {
+            "reasoning": 30
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 934,
+          "output_tokens": 854,
+          "total_tokens": 1788,
+          "input_token_details": {
+            "cache_read": 512
+          },
+          "output_token_details": {
+            "reasoning": 440
+          }
+        }
+      },
+      {
+        "phase": "final_diagnosis",
+        "usage": {
+          "input_tokens": 1240,
+          "output_tokens": 318,
+          "total_tokens": 1558,
+          "input_token_details": {
+            "cache_read": 384
+          },
+          "output_token_details": {
+            "reasoning": 200
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 937,
+          "output_tokens": 304,
+          "total_tokens": 1241,
+          "input_token_details": {
+            "cache_read": 640
+          },
+          "output_token_details": {
+            "reasoning": 208
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 1467,
+          "output_tokens": 695,
+          "total_tokens": 2162,
+          "input_token_details": {
+            "cache_read": 1152
+          },
+          "output_token_details": {
+            "reasoning": 137
+          }
+        }
+      },
+      {
+        "phase": "final_diagnosis",
+        "usage": {
+          "input_tokens": 1598,
+          "output_tokens": 420,
+          "total_tokens": 2018,
+          "input_token_details": {
+            "cache_read": 384
+          },
+          "output_token_details": {
+            "reasoning": 146
+          }
+        }
+      },
+      {
+        "phase": "final_diagnosis",
+        "usage": {
+          "input_tokens": 1725,
+          "output_tokens": 468,
+          "total_tokens": 2193,
+          "input_token_details": {
+            "cache_read": 1536
+          },
+          "output_token_details": {
+            "reasoning": 204
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 867,
+          "output_tokens": 322,
+          "total_tokens": 1189,
+          "input_token_details": {
+            "cache_read": 640
+          },
+          "output_token_details": {
+            "reasoning": 277
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 1358,
+          "output_tokens": 767,
+          "total_tokens": 2125,
+          "input_token_details": {
+            "cache_read": 1152
+          },
+          "output_token_details": {
+            "reasoning": 173
+          }
+        }
+      },
+      {
+        "phase": "final_diagnosis",
+        "usage": {
+          "input_tokens": 1274,
+          "output_tokens": 374,
+          "total_tokens": 1648,
+          "input_token_details": {
+            "cache_read": 384
+          },
+          "output_token_details": {
+            "reasoning": 175
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 928,
+          "output_tokens": 758,
+          "total_tokens": 1686,
+          "input_token_details": {
+            "cache_read": 512
+          },
+          "output_token_details": {
+            "reasoning": 601
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 1912,
+          "output_tokens": 588,
+          "total_tokens": 2500,
+          "input_token_details": {
+            "cache_read": 1664
+          },
+          "output_token_details": {
+            "reasoning": 439
+          }
+        }
+      },
+      {
+        "phase": "final_diagnosis",
+        "usage": {
+          "input_tokens": 1807,
+          "output_tokens": 701,
+          "total_tokens": 2508,
+          "input_token_details": {
+            "cache_read": 384
+          },
+          "output_token_details": {
+            "reasoning": 311
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 942,
+          "output_tokens": 726,
+          "total_tokens": 1668,
+          "input_token_details": {
+            "cache_read": 512
+          },
+          "output_token_details": {
+            "reasoning": 454
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 1892,
+          "output_tokens": 829,
+          "total_tokens": 2721,
+          "input_token_details": {
+            "cache_read": 1664
+          },
+          "output_token_details": {
+            "reasoning": 291
+          }
+        }
+      },
+      {
+        "phase": "final_diagnosis",
+        "usage": {
+          "input_tokens": 1582,
+          "output_tokens": 723,
+          "total_tokens": 2305,
+          "input_token_details": {
+            "cache_read": 384
+          },
+          "output_token_details": {
+            "reasoning": 390
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 938,
+          "output_tokens": 902,
+          "total_tokens": 1840,
+          "input_token_details": {
+            "cache_read": 512
+          },
+          "output_token_details": {
+            "reasoning": 681
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 2254,
+          "output_tokens": 781,
+          "total_tokens": 3035,
+          "input_token_details": {
+            "cache_read": 1792
+          },
+          "output_token_details": {
+            "reasoning": 580
+          }
+        }
+      },
+      {
+        "phase": "final_diagnosis",
+        "usage": {
+          "input_tokens": 1938,
+          "output_tokens": 529,
+          "total_tokens": 2467,
+          "input_token_details": {
+            "cache_read": 384
+          },
+          "output_token_details": {
+            "reasoning": 164
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 932,
+          "output_tokens": 552,
+          "total_tokens": 1484,
+          "input_token_details": {
+            "cache_read": 512
+          },
+          "output_token_details": {
+            "reasoning": 456
+          }
+        }
+      },
+      {
+        "phase": "tool_selection",
+        "usage": {
+          "input_tokens": 1896,
+          "output_tokens": 735,
+          "total_tokens": 2631,
+          "input_token_details": {
+            "cache_read": 1408
+          },
+          "output_token_details": {
+            "reasoning": 234
+          }
+        }
+      },
+      {
+        "phase": "final_diagnosis",
+        "usage": {
+          "input_tokens": 1702,
+          "output_tokens": 533,
+          "total_tokens": 2235,
+          "input_token_details": {
+            "cache_read": 384
+          },
+          "output_token_details": {
+            "reasoning": 265
+          }
+        }
+      }
+    ],
+    "usage_note": "未提供用量为 null；不估算为0，不以小样本宣称学习效果提升。"
+  },
+  "cases": [
+    {
+      "case_id": "advance_01",
+      "category": "advance",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "advance"
+      ],
+      "expected_reason_pending_review": "两项目标均有完整直接证据，满分且没有关键误解，可推进。",
+      "diagnosis": {
+        "weak_points": [],
+        "evidence_ids": [
+          "assessment:advance_01:q1",
+          "assessment:advance_01:q2"
+        ],
+        "recommended_action": "advance",
+        "reason": "学生在两个目标上均满分：q1 正确写出遍历列表并打印每个元素的 for 循环，覆盖 obj_1（遍历每个元素）；q2 正确初始化累加器 total=0 并在循环中累加得到 12，覆盖 obj_2（初始化并更新累加器）。两题 error_tags 均为空，无薄弱点证据，前置知识（变量、列表）在本节点应用中也未暴露问题，支持进入下一学习节点。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": true,
+      "guarded_route": "advance",
+      "would_unlock": true,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [],
+      "tool_summary": {
+        "calls": [],
+        "tool_call_count": 0,
+        "tool_round_count": 0,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 1,
+      "network_retry_count": 0,
+      "output_repair_count": 0,
+      "elapsed_ms": 6387.324,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 943,
+            "output_tokens": 427,
+            "total_tokens": 1370,
+            "input_token_details": {
+              "cache_read": 512
+            },
+            "output_token_details": {
+              "reasoning": 62
+            }
+          }
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": {
+            "input_tokens": 1258,
+            "output_tokens": 181,
+            "total_tokens": 1439,
+            "input_token_details": {
+              "cache_read": 256
+            },
+            "output_token_details": {
+              "reasoning": 30
+            }
+          }
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "advance_02",
+      "category": "advance",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "advance"
+      ],
+      "expected_reason_pending_review": "表达不是逐字标准答案但核心方法正确，90分且完整覆盖，可推进。",
+      "diagnosis": {
+        "weak_points": [],
+        "evidence_ids": [
+          "assessment:advance_02:q1",
+          "assessment:advance_02:q2"
+        ],
+        "recommended_action": "advance",
+        "reason": "当前测评总分 90/100，两个目标题目均得 45/50，且没有错误标签。证据显示学生能正确说明 for 循环遍历列表元素，也能在循环外初始化累加器并在循环内更新，符合 python_for_loops 的两个学习目标，支持进入下一节点。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": true,
+      "guarded_route": "advance",
+      "would_unlock": true,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [],
+      "tool_summary": {
+        "calls": [],
+        "tool_call_count": 0,
+        "tool_round_count": 0,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 1,
+      "network_retry_count": 0,
+      "output_repair_count": 0,
+      "elapsed_ms": 8252.783,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 934,
+            "output_tokens": 854,
+            "total_tokens": 1788,
+            "input_token_details": {
+              "cache_read": 512
+            },
+            "output_token_details": {
+              "reasoning": 440
+            }
+          }
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": {
+            "input_tokens": 1240,
+            "output_tokens": 318,
+            "total_tokens": 1558,
+            "input_token_details": {
+              "cache_read": 384
+            },
+            "output_token_details": {
+              "reasoning": 200
+            }
+          }
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "critical_01",
+      "category": "critical_misconception",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "remediate"
+      ],
+      "expected_reason_pending_review": "分数虽高但关于变量生命周期存在关键误解，禁止推进，先补弱。",
+      "diagnosis": {
+        "weak_points": [
+          "误认为循环体内累加变量每轮独立重置，未理解累加器需在循环外初始化并在每轮持续更新",
+          "误认为循环退出后变量会自动归零，缺乏对变量作用域与生命周期的正确认识",
+          "将正确的累计结果（12）归因于碰巧，未建立对循环累计过程的因果解释"
+        ],
+        "evidence_ids": [
+          "assessment:critical_01:q1",
+          "assessment:critical_01:q2"
+        ],
+        "recommended_action": "remediate",
+        "reason": "总分虽为 90，但 q2（对应目标 python_for_loops_obj_2“初始化并更新累加器”）带有 critical_error 标签：学生认为每轮循环中 total 都是独立变量、循环退出后会自动归零，并把正确的输出 12 视为碰巧，说明尚未掌握累加器的初始化与跨轮持久更新这一核心机制，需要在当前节点针对性补弱。q1（obj_1 遍历每个元素）无错误标签，掌握较好；前置节点 python_variables、python_lists 均已完成（prerequisite_status 显示 all_completed=true），因此问题并非来自前置知识缺失，无需回退复习。",
+        "review_node_id": null
+      },
+      "first_structure_valid": false,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": false,
+          "business_valid": false,
+          "error_type": "OutputParserException"
+        },
+        {
+          "request_number": 2,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": true,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "no_history",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "call_00_MWIvDf99SMQKHBBXqtfU7382",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "no_history",
+            "status": "empty",
+            "result_count": 0,
+            "message": "该节点暂无历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "call_01_X4yBsibu2YtDqvSwoa8C8678",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 2,
+      "network_retry_count": 0,
+      "output_repair_count": 1,
+      "elapsed_ms": 14314.826,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 937,
+            "output_tokens": 304,
+            "total_tokens": 1241,
+            "input_token_details": {
+              "cache_read": 640
+            },
+            "output_token_details": {
+              "reasoning": 208
+            }
+          }
+        },
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 1467,
+            "output_tokens": 695,
+            "total_tokens": 2162,
+            "input_token_details": {
+              "cache_read": 1152
+            },
+            "output_token_details": {
+              "reasoning": 137
+            }
+          }
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": {
+            "input_tokens": 1598,
+            "output_tokens": 420,
+            "total_tokens": 2018,
+            "input_token_details": {
+              "cache_read": 384
+            },
+            "output_token_details": {
+              "reasoning": 146
+            }
+          }
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": {
+            "input_tokens": 1725,
+            "output_tokens": 468,
+            "total_tokens": 2193,
+            "input_token_details": {
+              "cache_read": 1536
+            },
+            "output_token_details": {
+              "reasoning": 204
+            }
+          }
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "insufficient_01",
+      "category": "collect_more_evidence",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "collect_more_evidence"
+      ],
+      "expected_reason_pending_review": "仅测了遍历目标，尚无累计目标证据，不能把满分当成完整掌握。",
+      "diagnosis": {
+        "weak_points": [],
+        "evidence_ids": [
+          "assessment:insufficient_01:q1",
+          "material_python_for_loops_v1"
+        ],
+        "recommended_action": "collect_more_evidence",
+        "reason": "当前测评仅包含 1 道题（q1），且只覆盖目标 python_for_loops_obj_1（遍历每个元素），学生作答正确、得分 100，说明遍历元素这一目标已有正向证据。但目标 python_for_loops_obj_2（初始化并更新累加器）在本次测评中完全没有题目覆盖，现有证据无法判断学生是否掌握了累加器的初始化与循环内更新（材料中也强调循环体内重新赋值为 0 会丢失累积结果）。由于缺少该目标的任何作答证据，既不能判定需要补弱，也不足以支撑直接进入下一节点，因此建议追加针对累加器目标的测评以补足证据。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": true,
+      "guarded_route": "collect_more_evidence",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_node_material",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "call_00_NseW7jlrGSFSGn0ILVSb3889",
+            "tool_name": "get_node_material",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "message": "已读取本地材料"
+          }
+        ],
+        "tool_call_count": 1,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 1,
+      "network_retry_count": 0,
+      "output_repair_count": 0,
+      "elapsed_ms": 9920.183,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 867,
+            "output_tokens": 322,
+            "total_tokens": 1189,
+            "input_token_details": {
+              "cache_read": 640
+            },
+            "output_token_details": {
+              "reasoning": 277
+            }
+          }
+        },
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 1358,
+            "output_tokens": 767,
+            "total_tokens": 2125,
+            "input_token_details": {
+              "cache_read": 1152
+            },
+            "output_token_details": {
+              "reasoning": 173
+            }
+          }
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": {
+            "input_tokens": 1274,
+            "output_tokens": 374,
+            "total_tokens": 1648,
+            "input_token_details": {
+              "cache_read": 384
+            },
+            "output_token_details": {
+              "reasoning": 175
+            }
+          }
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "prerequisite_01",
+      "category": "prerequisite_issue",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "revisit_prerequisite"
+      ],
+      "expected_reason_pending_review": "当前答案和变量历史均混淆赋值与比较，复习合法前置 python_variables；完成标签不等于当前永久掌握。",
+      "diagnosis": {
+        "weak_points": [
+          "for 循环遍历元素的语义理解不完整，仅笼统描述为“循环取每个值”",
+          "累加器初始化与在循环体内更新（total += value）掌握不足",
+          "赋值、相等比较与增量赋值运算符混淆（assignment_confusion：把 total += x 表达为 total == total + x）",
+          "缺少对每轮执行过程的追踪能力，易导致累加结果丢失"
+        ],
+        "evidence_ids": [
+          "assessment:prerequisite_01:q1",
+          "assessment:prerequisite_01:q2",
+          "prerequisite_status:python_for_loops",
+          "material_python_for_loops_v1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "本轮总分 55/100，两个目标均未达标：q1（遍历每个元素）仅 40 分，学生答“循环取每个值”，对 for 逐个访问可迭代对象的语义描述不完整；q2（初始化并更新累加器）仅 15 分，且带 assignment_confusion 错误标签，学生把 total += x 写成/理解为 total == total + x，混淆赋值与相等比较，未掌握累加器的初始化与循环体内更新方式（材料明确要求在循环体内用 total += value 更新）。前置节点 python_variables 与 python_lists 均已完成，因此问题不在前置知识缺失，而是当前节点自身技能未掌握，需要针对性补弱练习（区分 =/==/+=，并追踪每轮累加结果）。该节点暂无历史测评（no_history），无法据历史判断已掌握；受工具调用与轮数上限限制未再收集更多证据，但现有两题证据已足以定位薄弱点。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": false,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "no_history",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        },
+        {
+          "tool": "get_node_material",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "call_00_QX7OJ8GfLOs048lYsgFU7084",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "no_history",
+            "status": "empty",
+            "result_count": 0,
+            "message": "该节点暂无历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "call_01_1bWqXw5htIrrsx4ydpxl0397",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          },
+          {
+            "round": 2,
+            "tool_call_id": "call_00_fTTfPZHeQ9dPRYkvDvRY4180",
+            "tool_name": "get_node_material",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "message": "已读取本地材料"
+          }
+        ],
+        "tool_call_count": 3,
+        "tool_round_count": 2,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": true,
+        "round_limit_reached": true,
+        "stopped_reason": "max_tool_rounds"
+      },
+      "final_request_count": 1,
+      "network_retry_count": 0,
+      "output_repair_count": 0,
+      "elapsed_ms": 13411.367,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 928,
+            "output_tokens": 758,
+            "total_tokens": 1686,
+            "input_token_details": {
+              "cache_read": 512
+            },
+            "output_token_details": {
+              "reasoning": 601
+            }
+          }
+        },
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 1912,
+            "output_tokens": 588,
+            "total_tokens": 2500,
+            "input_token_details": {
+              "cache_read": 1664
+            },
+            "output_token_details": {
+              "reasoning": 439
+            }
+          }
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": {
+            "input_tokens": 1807,
+            "output_tokens": 701,
+            "total_tokens": 2508,
+            "input_token_details": {
+              "cache_read": 384
+            },
+            "output_token_details": {
+              "reasoning": 311
+            }
+          }
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "prerequisite_02",
+      "category": "prerequisite_issue",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "revisit_prerequisite"
+      ],
+      "expected_reason_pending_review": "把列表元素当作下标，前置列表历史亦有同类错误，应复习 python_lists。",
+      "diagnosis": {
+        "weak_points": [
+          "混淆遍历变量与下标：误认为 for x in [2,4,6] 中 x 是 0、1、2 而非元素值 2、4、6",
+          "累加器语义错误：把累加的对象当作下标而非元素值（element_index_confusion），得到错误累计结果 3",
+          "未掌握累加变量的正确初始化与 total += value 逐轮更新机制"
+        ],
+        "evidence_ids": [
+          "assessment:prerequisite_02:q1",
+          "assessment:prerequisite_02:q2",
+          "material_python_for_loops_v1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "当前节点总分 50%，两个目标均未达标：q1 中学生认为 `for x in [2,4,6]` 中的 x 是下标 0、1、2，说明未理解 for 直接遍历元素（目标1“遍历每个元素”）；q2 中带有 element_index_confusion 标签并称“累计 x 会把下标加起来得到3”，说明累加器语义与元素/下标混淆叠加（目标2“初始化并更新累加器”）。节点材料明确说明 for 逐个访问可迭代对象、累加变量应在循环前初始化并用 total += value 更新，可直接用于针对性补弱。该节点历史测评查询为空、无失败证据，本轮证据足以定位问题且均属当前节点目标，因此不需要回退前置节点，也无须追加测评，建议在本节点进行针对性重讲与练习。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": false,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "no_history",
+          "error_type": null
+        },
+        {
+          "tool": "get_node_material",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "call_00_otnTWx4TvWOUfOGaGVcp3742",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "no_history",
+            "status": "empty",
+            "result_count": 0,
+            "message": "该节点暂无历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "call_01_s9zotxmLAcgca1xBfkrX1993",
+            "tool_name": "get_node_material",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "message": "已读取本地材料"
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 1,
+      "network_retry_count": 0,
+      "output_repair_count": 0,
+      "elapsed_ms": 14222.92,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 942,
+            "output_tokens": 726,
+            "total_tokens": 1668,
+            "input_token_details": {
+              "cache_read": 512
+            },
+            "output_token_details": {
+              "reasoning": 454
+            }
+          }
+        },
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 1892,
+            "output_tokens": 829,
+            "total_tokens": 2721,
+            "input_token_details": {
+              "cache_read": 1664
+            },
+            "output_token_details": {
+              "reasoning": 291
+            }
+          }
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": {
+            "input_tokens": 1582,
+            "output_tokens": 723,
+            "total_tokens": 2305,
+            "input_token_details": {
+              "cache_read": 384
+            },
+            "output_token_details": {
+              "reasoning": 390
+            }
+          }
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "remediate_01",
+      "category": "remediate",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "remediate"
+      ],
+      "expected_reason_pending_review": "遍历正确但累计被覆盖，应针对更新累加器补弱。",
+      "diagnosis": {
+        "weak_points": [
+          "累加器变量在循环体内被整体覆盖（total=x 而非 total += x），丢失历史累计值",
+          "累加器初始化与更新时机混淆：未理解循环前初始化、循环内增量更新的执行顺序",
+          "循环每轮执行过程的追踪能力不足，无法预判最终变量值"
+        ],
+        "evidence_ids": [
+          "assessment:remediate_01:q1",
+          "assessment:remediate_01:q2",
+          "material_python_for_loops_v1",
+          "prerequisite_status:python_for_loops",
+          "assessment:history_remediate_01:q1"
+        ],
+        "recommended_action": "remediate",
+        "reason": "前置知识 python_variables 与 python_lists 均已完成（prerequisite_status:python_for_loops 显示 all_completed=true），因此问题不在前置节点，无需回退复习。当前节点总得分 60%，其中 q2（对应目标“初始化并更新累加器”）仅得 20 分，错误标签为 accumulator_overwritten，学生原答在循环体内写成 total=x，导致累加结果被覆盖、最终只保留最后一个元素 6，与材料中“循环体内应使用 total += value 更新，重新赋值为 0/覆盖会丢失前面累积结果”的要求直接冲突；历史测评 history_remediate_01:q1 也出现同类 accumulator_overwritten 标签，说明该错误具有持续性。q1（遍历元素）得 40 分，虽无错误标签，但仍未完全达标。证据足以定位为当前节点内部技能缺失，且预算已用尽（call_limit_reached、round_limit_reached），无需追加测评，故选择 remediate 进行针对性补弱。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": true,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        },
+        {
+          "tool": "get_node_material",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "call_00_9juw56Dh0285iNhuPrji3134",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 1,
+            "message": "读取到 1 条历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "call_01_Vl3oAR5rs5D7koHovMKw4825",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          },
+          {
+            "round": 2,
+            "tool_call_id": "call_00_6YIRCQq7jXc6dBb7pIFM1205",
+            "tool_name": "get_node_material",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "message": "已读取本地材料"
+          }
+        ],
+        "tool_call_count": 3,
+        "tool_round_count": 2,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": true,
+        "round_limit_reached": true,
+        "stopped_reason": "max_tool_rounds"
+      },
+      "final_request_count": 1,
+      "network_retry_count": 0,
+      "output_repair_count": 0,
+      "elapsed_ms": 13643.007,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 938,
+            "output_tokens": 902,
+            "total_tokens": 1840,
+            "input_token_details": {
+              "cache_read": 512
+            },
+            "output_token_details": {
+              "reasoning": 681
+            }
+          }
+        },
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 2254,
+            "output_tokens": 781,
+            "total_tokens": 3035,
+            "input_token_details": {
+              "cache_read": 1792
+            },
+            "output_token_details": {
+              "reasoning": 580
+            }
+          }
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": {
+            "input_tokens": 1938,
+            "output_tokens": 529,
+            "total_tokens": 2467,
+            "input_token_details": {
+              "cache_read": 384
+            },
+            "output_token_details": {
+              "reasoning": 164
+            }
+          }
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    },
+    {
+      "case_id": "remediate_02",
+      "category": "remediate",
+      "split": "debug",
+      "expectation_approved": false,
+      "expected_actions": [
+        "remediate"
+      ],
+      "expected_reason_pending_review": "少访问最后一项，累计概念基本正确，针对边界补弱。",
+      "diagnosis": {
+        "weak_points": [
+          "for 循环遍历边界错误：使用 range(len(values)-1) 导致漏掉最后一个元素（off-by-one）",
+          "累加器更新逻辑不稳定：历史与当前测评均出现 off_by_one，total 未能正确累计全部元素"
+        ],
+        "evidence_ids": [
+          "assessment:remediate_02:q1",
+          "assessment:remediate_02:q2",
+          "assessment:history_remediate_02:q1",
+          "prerequisite_status:python_for_loops"
+        ],
+        "recommended_action": "remediate",
+        "reason": "节点总得分 70%，两个目标均未达标：q1 仅 25 分，学生使用 range(len(values)-1) 遍历，存在漏掉最后一个元素的边界错误；q2 仅 45 分并带 off_by_one 标签，历史测评 history_remediate_02:q1 同样出现 off_by_one（total=x，最后只剩最后一个元素）。两轮证据一致指向循环边界与累加器更新的稳定性问题，说明当前节点仍需针对性补弱，而非直接进入下一节点。前置 python_variables 与 python_lists 均已完成（all_completed=true），问题根源不在前置知识，故不回退复习。",
+        "review_node_id": null
+      },
+      "first_structure_valid": true,
+      "final_structure_valid": true,
+      "accepted": true,
+      "attempts": [
+        {
+          "request_number": 1,
+          "structure_valid": true,
+          "business_valid": true,
+          "error_type": null
+        }
+      ],
+      "action_match_provisional": true,
+      "guarded_route": "remediate",
+      "would_unlock": false,
+      "false_release_provisional": false,
+      "evidence_within_expected_allowlist": true,
+      "tools_within_expected_allowlist": true,
+      "required_tools_used": true,
+      "tool_logs": [
+        {
+          "tool": "get_learning_history",
+          "args": {
+            "node_id": "python_for_loops",
+            "limit": 3
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        },
+        {
+          "tool": "get_prerequisite_status",
+          "args": {
+            "node_id": "python_for_loops"
+          },
+          "executed": true,
+          "ok": true,
+          "status": "found",
+          "error_type": null
+        }
+      ],
+      "tool_summary": {
+        "calls": [
+          {
+            "round": 1,
+            "tool_call_id": "call_00_gH7K69cJVciuh3bvpD1V5360",
+            "tool_name": "get_learning_history",
+            "tool_args": {
+              "node_id": "python_for_loops",
+              "limit": 3
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 1,
+            "message": "读取到 1 条历史有效测评"
+          },
+          {
+            "round": 1,
+            "tool_call_id": "call_01_aSl6qoLcrNzmv9A5Da9S0116",
+            "tool_name": "get_prerequisite_status",
+            "tool_args": {
+              "node_id": "python_for_loops"
+            },
+            "executed": true,
+            "ok": true,
+            "query_status": "found",
+            "status": "success",
+            "result_count": 2
+          }
+        ],
+        "tool_call_count": 2,
+        "tool_round_count": 1,
+        "max_tool_calls": 3,
+        "max_tool_rounds": 2,
+        "call_limit_reached": false,
+        "round_limit_reached": false,
+        "stopped_reason": "model_finished"
+      },
+      "final_request_count": 1,
+      "network_retry_count": 0,
+      "output_repair_count": 0,
+      "elapsed_ms": 12218.562,
+      "requests_and_available_usage": [
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 932,
+            "output_tokens": 552,
+            "total_tokens": 1484,
+            "input_token_details": {
+              "cache_read": 512
+            },
+            "output_token_details": {
+              "reasoning": 456
+            }
+          }
+        },
+        {
+          "phase": "tool_selection",
+          "usage": {
+            "input_tokens": 1896,
+            "output_tokens": 735,
+            "total_tokens": 2631,
+            "input_token_details": {
+              "cache_read": 1408
+            },
+            "output_token_details": {
+              "reasoning": 234
+            }
+          }
+        },
+        {
+          "phase": "final_diagnosis",
+          "usage": {
+            "input_tokens": 1702,
+            "output_tokens": 533,
+            "total_tokens": 2235,
+            "input_token_details": {
+              "cache_read": 384
+            },
+            "output_token_details": {
+              "reasoning": 265
+            }
+          }
+        }
+      ],
+      "error_type": null,
+      "manual_review": {
+        "reason_supported": null,
+        "tool_choice_reasonable": null,
+        "evidence_reference_reasonable": null,
+        "difference_analysis": "待用户逐例复核"
+      }
+    }
+  ]
+}

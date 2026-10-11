@@ -1,9 +1,13 @@
 # 当前 Python 3.11 环境中已验证的直接依赖。
 langgraph==1.0.9
 langgraph-checkpoint==2.1.2
+langgraph-checkpoint-sqlite==2.0.11
 langchain-core==1.2.16
 langchain-openai==1.1.10
 pydantic==2.11.4
 python-dotenv==1.0.1
 typing-extensions==4.16.0
 pytest==8.3.4
+fastapi==0.117.1
+uvicorn==0.32.1
+httpx==0.28.1

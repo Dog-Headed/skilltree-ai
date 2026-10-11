@@ -14,10 +14,13 @@ def branch_graph(monkeypatch):
     def controlled_diagnosis_node(state):
         update = real_diagnosis_node(state)
         update["diagnosis"]["recommended_action"] = state["test_action"]
+        if state["test_action"] == "revisit_prerequisite":
+            update["diagnosis"]["review_node_id"] = "variables"
         return update
 
     monkeypatch.setattr(graph_module, "diagnosis_node", controlled_diagnosis_node)
-    return graph_module.build_graph()
+    # 这里独立验证一个考核节点的四个分支；完整跨节点推进另有回归测试。
+    return graph_module.build_graph(stop_after_advance=True)
 
 
 def run_to_diagnosis(graph, test_action, answers_for_quiz):
@@ -32,6 +35,10 @@ def run_to_diagnosis(graph, test_action, answers_for_quiz):
         config=config,
     )
     assert result["__interrupt__"][0].value["type"] == "wait_learning"
+
+    if test_action == "revisit_prerequisite":
+        # 复习只能指向真实前置节点，选择有 variables 前置的 lists 进行考核。
+        graph.update_state(config, {"current_node_id": "lists"})
 
     result = graph.invoke(
         Command(resume={"action": "start_quiz"}),

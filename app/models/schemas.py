@@ -1,3 +1,4 @@
+import math
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Literal
 
@@ -44,7 +45,7 @@ class AssessmentQuestion(BaseModel):
     rubric: str
 
     # 本题满分
-    max_score: float = Field(gt=0)
+    max_score: float = Field(gt=0, allow_inf_nan=False)
 
 
 class LearningObjective(BaseModel):
@@ -127,7 +128,7 @@ class QuestionEvaluation(BaseModel):
     question_id: str
 
     # 本题实际得分
-    score: float = Field(ge=0)
+    score: float = Field(ge=0, allow_inf_nan=False)
 
     # 比如：
     # accumulator_overwritten
@@ -147,7 +148,7 @@ class ShortAnswerGrade(BaseModel):
         strict=True,
     )
 
-    score: float = Field(ge=0)
+    score: float = Field(ge=0, allow_inf_nan=False)
     error_tags: list[str] = Field(default_factory=list)
     evidence: str
     feedback: str
@@ -229,7 +230,8 @@ def validate_and_score_evaluation(
     }
 
     # 必须恰好把这一轮所有题都评完
-    if result_question_ids != quiz_question_ids:
+    if (result_question_ids != quiz_question_ids
+            or len(evaluation.question_results) != len(quiz.questions)):
         raise ValueError(
             "评价结果没有完整对应本次试卷题目"
         )
@@ -239,6 +241,10 @@ def validate_and_score_evaluation(
 
     for result in evaluation.question_results:
         question = question_map[result.question_id]
+
+        if (not math.isfinite(result.score) or result.score < 0
+                or not math.isfinite(question.max_score) or question.max_score <= 0):
+            raise ValueError(f"题目 {result.question_id} 的分数必须是合法有限数值")
 
         if result.score > question.max_score:
             raise ValueError(
@@ -250,6 +256,9 @@ def validate_and_score_evaluation(
         total_score += result.score
         total_max_score += question.max_score
 
+    if not math.isfinite(total_score) or not math.isfinite(total_max_score):
+        raise ValueError("总分必须是有限数值")
+
     percentage = (
         total_score / total_max_score * 100
     )
@@ -259,3 +268,158 @@ def validate_and_score_evaluation(
         "total_max_score": total_max_score,
         "percentage": percentage,
     }
+
+
+class DiagnosisResult(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        strict=True,
+    )
+
+    weak_points: list[str] = Field(
+        default_factory=list
+    )
+
+    evidence_ids: list[str] = Field(
+        min_length=1
+    )
+
+    recommended_action: Literal[
+        "advance",
+        "remediate",
+        "collect_more_evidence",
+        "revisit_prerequisite",
+    ]
+
+    reason: str = Field(
+        min_length=1
+    )
+
+    review_node_id: str | None = None
+
+    @model_validator(mode="after")
+    def validate_action_fields(self):
+        # evidence_id 不允许重复
+        if len(self.evidence_ids) != len(
+            set(self.evidence_ids)
+        ):
+            raise ValueError(
+                "evidence_ids 不能重复"
+            )
+
+        # revisit_prerequisite 必须指定复习节点
+        if (
+            self.recommended_action
+            == "revisit_prerequisite"
+            and self.review_node_id is None
+        ):
+            raise ValueError(
+                "选择 revisit_prerequisite 时，"
+                "必须提供 review_node_id"
+            )
+
+        # 其他 action 不应该偷偷携带 review_node_id
+        if (
+            self.recommended_action
+            != "revisit_prerequisite"
+            and self.review_node_id is not None
+        ):
+            raise ValueError(
+                "只有 revisit_prerequisite "
+                "可以提供 review_node_id"
+            )
+
+        return self
+
+
+def validate_diagnosis_against_context(
+    diagnosis: DiagnosisResult,
+    *,
+    valid_evidence_ids: set[str],
+    prerequisite_closure: set[str],
+) -> None:
+    """
+    校验 DiagnosisResult 中引用的外部证据和节点关系。
+    """
+
+    # ========================================================
+    # 1. 所有 evidence_id 必须真实存在
+    # ========================================================
+
+    unknown_evidence_ids = (
+        set(diagnosis.evidence_ids)
+        - valid_evidence_ids
+    )
+
+    if unknown_evidence_ids:
+        raise ValueError(
+            "Diagnosis 引用了不存在的证据 ID："
+            f"{sorted(unknown_evidence_ids)}"
+        )
+
+    # ========================================================
+    # 2. revisit_prerequisite 时，只能回到前置闭包中的节点
+    # ========================================================
+
+    if (
+        diagnosis.recommended_action
+        == "revisit_prerequisite"
+    ):
+        review_node_id = diagnosis.review_node_id
+
+        if review_node_id not in prerequisite_closure:
+            raise ValueError(
+                "review_node_id 不属于当前节点的"
+                "前置闭包："
+                f"{review_node_id}"
+            )
+
+
+def get_prerequisite_closure(
+    tree: list[dict],
+    current_node_id: str,
+) -> set[str]:
+    """
+    返回当前节点所有直接 / 间接前置节点。
+    """
+
+    node_map = {
+        node["id"]: node
+        for node in tree
+    }
+
+    if current_node_id not in node_map:
+        raise ValueError(
+            f"当前节点不存在：{current_node_id}"
+        )
+
+    closure: set[str] = set()
+
+    stack = list(
+        node_map[current_node_id].get(
+            "prerequisite_ids",
+            [],
+        )
+    )
+
+    while stack:
+        node_id = stack.pop()
+
+        if node_id in closure:
+            continue
+
+        if node_id not in node_map:
+            raise ValueError(
+                f"前置节点不存在：{node_id}"
+            )
+
+        closure.add(node_id)
+
+        stack.extend(
+            node_map[node_id].get(
+                "prerequisite_ids",
+                [],
+            )
+        )
+
+    return closure

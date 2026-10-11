@@ -6,6 +6,7 @@ from app.graph import graph
 
 
 config = {
+    "recursion_limit": 30,
     "configurable": {
         "thread_id": "real-planner-demo-001"
     }

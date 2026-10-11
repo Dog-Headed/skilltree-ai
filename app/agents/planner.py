@@ -1,9 +1,21 @@
 import json
+from uuid import uuid4
+
+from langchain_core.exceptions import OutputParserException
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
+from pydantic import ValidationError
 
 from app.models.schemas import TreePlan
-from app.services.llm import get_llm
+from app.services.llm import (
+    ModelCallBudget,
+    ModelOutputValidationError,
+    RepairContext,
+    get_llm,
+    invoke_with_shared_budget,
+)
 from app.state import LearningState
-
+from app.services.observability import observed_node
 
 def validate_plan_dag(plan: TreePlan) -> tuple[list[str], list[str]]:
     """
@@ -151,45 +163,84 @@ PLANNER_PROMPT = """
 """
 
 
-def generate_plan(goal: str) -> TreePlan:
-    llm = get_llm()
-
-    structured_llm = llm.with_structured_output(
-        TreePlan,
-        method="json_mode",
-    )
-
-    plan = structured_llm.invoke(
-        PLANNER_PROMPT.format(
-            goal=goal,
-            schema=json.dumps(TreePlan.model_json_schema(), ensure_ascii=False),
-        )
-    )
-
+def validate_planner_output(plan: TreePlan) -> TreePlan:
+    """将 DAG 业务错误归入可修复输出错误，程序错误继续向外抛出。"""
+    try:
+        validate_plan_dag(plan)
+    except ValueError as exc:
+        raise ModelOutputValidationError(
+            f"Planner 业务校验失败：{exc}"
+        ) from exc
     return plan
 
 
-def planner_node(state: LearningState):
-    goal = state["goal"]
+def build_planner_messages(
+    *, goal: str, repair_context: RepairContext | None = None,
+):
+    messages = [
+        SystemMessage(content="你是学习技能树规划 Agent，请按契约返回完整 JSON 学习计划。"),
+        HumanMessage(content=PLANNER_PROMPT.format(
+            goal=goal,
+            schema=json.dumps(TreePlan.model_json_schema(), ensure_ascii=False),
+        )),
+    ]
+    if repair_context is not None:
+        repair_message = (
+            "你上一次生成的学习计划未通过系统校验。\n\n"
+            f"校验错误：\n{repair_context.error_message}\n\n"
+        )
+        if repair_context.previous_output is not None:
+            previous_output = repair_context.previous_output
+            if isinstance(previous_output, TreePlan):
+                previous_output = previous_output.model_dump()
+            repair_message += (
+                "上一次输出：\n"
+                + json.dumps(previous_output, ensure_ascii=False, default=str)
+                + "\n\n"
+            )
+        repair_message += (
+            "请修复这些具体问题，保持原学习目标不变。"
+            "返回完整的修正版 TreePlan JSON，重新满足全部结构和 DAG 要求，不要解释。"
+        )
+        messages.append(HumanMessage(content=repair_message))
+    return messages
 
-    # 1. 让真实模型生成结构化规划
-    plan = generate_plan(goal)
 
-    # 2. 检查节点关系是否合法
-    topological_order, start_nodes = validate_plan_dag(plan)
+def generate_plan(goal: str) -> TreePlan:
+    structured_llm = get_llm().with_structured_output(
+        TreePlan, method="json_mode",
+    )
 
-    # 3. 理论上合法 DAG 至少应该存在一个起点
-    if not start_nodes:
-        raise ValueError("技能规划不存在可开始学习的节点")
+    def invoke_once(repair_context: RepairContext | None) -> TreePlan:
+        messages = build_planner_messages(goal=goal, repair_context=repair_context)
+        try:
+            return structured_llm.invoke(messages)
+        except (ValidationError, OutputParserException) as exc:
+            raise ModelOutputValidationError(
+                f"Planner 结构化输出校验失败：{exc}"
+            ) from exc
 
-    # 4. 选择拓扑顺序中的第一个节点开始
-    current_node_id = topological_order[0]
+    return invoke_with_shared_budget(
+        invoke_fn=invoke_once,
+        validate_fn=validate_planner_output,
+        budget=ModelCallBudget(),
+    )
 
-    # 5. 仍然只返回自己修改的 State 字段
+
+@observed_node
+def planner_node(state: LearningState, config: RunnableConfig | None = None):
+    plan = generate_plan(state["goal"])
+    _, start_nodes = validate_plan_dag(plan)
+    project_id = (
+        state.get("project_id")
+        or (config or {}).get("configurable", {}).get("thread_id")
+        or f"project_{uuid4().hex}"
+    )
+    # 仅返回通过全部校验的 State；业务写入留给后续 persist_plan 节点。
     return {
-        "tree": [
-            node.model_dump()
-            for node in plan.nodes
-        ],
-        "current_node_id": current_node_id,
+        "project_id": project_id,
+        "tree": plan.model_dump()["nodes"],
+        "current_node_id": start_nodes[0],
+        "round_limit_by_node": {node.id: state.get("round_limit_by_node", {}).get(node.id, 3)
+                                for node in plan.nodes},
     }

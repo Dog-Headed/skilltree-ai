@@ -1,0 +1,21 @@
+{
+  "project_id": "project_75a684733d6d4eef97c2d15c164e75c6",
+  "goal": "[Day8真实验收] 从零学习 Python 变量、基本数据类型和条件判断，能写一个简单的记账程序",
+  "page_state": "learning",
+  "current_node_id": "variables",
+  "pending_input_id": "learning_c48f6eadd82a49b4bc43f92f0fd8a67a",
+  "completed_count": 1,
+  "total_count": 10,
+  "results": [
+    {
+      "assessment_id": "assessment_2375d187b0bb",
+      "node_id": "python_intro_env",
+      "node_title": "Python 环境搭建与第一个程序",
+      "total_score": 15.0,
+      "total_max_score": 15.0,
+      "percentage": 100.0,
+      "recommended_action": "advance",
+      "completed": true
+    }
+  ]
+}

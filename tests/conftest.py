@@ -3,6 +3,23 @@ import pytest
 from app.models.schemas import TreePlan
 from app.models.schemas import AssessmentQuiz
 from app.models.schemas import ShortAnswerGrade
+from app.models.schemas import DiagnosisResult
+
+
+@pytest.fixture(autouse=True)
+def isolated_learning_database(monkeypatch, tmp_path):
+    # 测试走实际 Repository，但不读写用户已有的 learning.sqlite。
+    monkeypatch.setattr("app.db.repository.DEFAULT_DB_PATH", tmp_path / "learning.sqlite")
+
+
+@pytest.fixture
+def tool_database(isolated_learning_database):
+    from app.db import repository
+    from tests.support.tool_database import create_tool_project
+
+    with repository.LearningRepository(repository.DEFAULT_DB_PATH) as repo:
+        create_tool_project(repo)
+    return repository.DEFAULT_DB_PATH
 
 
 @pytest.fixture(autouse=True)
@@ -15,6 +32,7 @@ def block_real_llm(monkeypatch):
         "app.agents.planner",
         "app.agents.tutor",
         "app.agents.assessment",
+        "app.agents.diagnosis",
     ):
         monkeypatch.setattr(f"{module}.get_llm", fail_if_called)
 
@@ -280,3 +298,53 @@ def mock_assessment_grade_llm(
     )
 
     return grading
+
+
+@pytest.fixture(autouse=True)
+def mock_real_diagnosis(monkeypatch):
+    """
+    Graph 相关测试中，不调用真实 Diagnosis LLM。
+
+    专门的 Diagnosis / Tool Calling 测试
+    会自己测试真实逻辑。
+    """
+
+    def fake_run_real_diagnosis(
+        state,
+        **kwargs,
+    ):
+        percentage = (
+            state
+            .get("score_summary", {})
+            .get("percentage", 0)
+        )
+
+        # >= 80：建议 advance
+        if percentage >= 80:
+            return DiagnosisResult(
+                weak_points=[],
+                evidence_ids=[
+                    "test_evidence"
+                ],
+                recommended_action="advance",
+                reason="测试环境固定通过。",
+                review_node_id=None,
+            )
+
+        # < 80：建议 remediate
+        return DiagnosisResult(
+            weak_points=[
+                "test_weak_point"
+            ],
+            evidence_ids=[
+                "test_evidence"
+            ],
+            recommended_action="remediate",
+            reason="测试环境固定补弱。",
+            review_node_id=None,
+        )
+
+    monkeypatch.setattr(
+        "app.agents.diagnosis.run_real_diagnosis",
+        fake_run_real_diagnosis,
+    )

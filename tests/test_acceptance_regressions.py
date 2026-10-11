@@ -11,6 +11,7 @@ import app.agents.assessment as assessment
 import app.agents.tutor as tutor
 from app.graph import graph
 from app.models.schemas import AssessmentQuiz, SkillNode
+from app.db.repository import repository_for_state
 
 
 # 保存业务函数，避免通用测试夹具把需要验证的模型调用替换掉。
@@ -60,7 +61,8 @@ def make_quiz(node, assessment_id, prefix):
 
 def make_retest_state(node, prefix="旧题"):
     quiz = make_quiz(node, "assessment_previous", prefix).model_dump()
-    return {
+    state = {
+        "project_id": "retest_project",
         "tree": [node.model_dump()],
         "current_node_id": node.id,
         "assessment_id": quiz["assessment_id"],
@@ -82,6 +84,23 @@ def make_retest_state(node, prefix="旧题"):
         "diagnosis": {"weak_points": ["accumulator_overwritten"]},
         "score_summary": {"percentage": 75.0},
     }
+    with repository_for_state(state) as repo:
+        repo.create_project_with_tree(
+            project_id=state["project_id"], goal="复测测试", tree=state["tree"]
+        )
+        repo.create_prepared_assessment(
+            assessment_id=quiz["assessment_id"], project_id=state["project_id"],
+            node_id=node.id, round_no=1,
+        )
+        repo.save_quiz_if_absent(assessment_id=quiz["assessment_id"], quiz=quiz)
+        repo.save_answers_if_absent(
+            assessment_id=quiz["assessment_id"],
+            answers={question["id"]: question["answer_key"] for question in quiz["questions"]},
+        )
+        repo.save_evaluation_if_absent(assessment_id=quiz["assessment_id"], evaluation=state["evaluation"])
+    # 稳定的本轮 ID 由准备节点先产生，旧题仍保留供复测上下文使用。
+    state.update(assessment.assessment_prepare_node(state))
+    return state
 
 
 class RecordingQuizLLM:
@@ -90,11 +109,16 @@ class RecordingQuizLLM:
         self.prefixes = prefixes
         self.returned_id = returned_id
         self.prompts = []
+        self.messages = []
 
     def with_structured_output(self, schema, **kwargs):
+        assert schema is AssessmentQuiz
+        assert kwargs == {"method": "json_mode"}
         return self
 
-    def invoke(self, prompt):
+    def invoke(self, messages):
+        self.messages.append(messages)
+        prompt = messages[1].content
         self.prompts.append(prompt)
         expected_id = re.search(r"assessment_id 必须严格使用：\s*(\S+)", prompt).group(1)
         prefix = self.prefixes[min(len(self.prompts) - 1, len(self.prefixes) - 1)]
@@ -113,7 +137,7 @@ def install_quiz_llm(monkeypatch, node, prefixes, returned_id=None):
 
 
 def extract_retest_context(prompt):
-    return json.loads(prompt.split("复测上下文：", 1)[1].strip())
+    return json.JSONDecoder().raw_decode(prompt.split("复测上下文：", 1)[1].lstrip())[0]
 
 
 @pytest.mark.parametrize(
@@ -233,7 +257,7 @@ def test_fixed_model_repeating_old_quiz_is_rejected(monkeypatch, node):
     with pytest.raises(ValueError, match="复测试卷重复了旧题"):
         assessment.assessment_generate_node(state)
 
-    assert len(llm.prompts) == 3
+    assert len(llm.prompts) == 2
     assert state == unchanged
 
 
@@ -243,7 +267,7 @@ def test_repeated_quiz_is_regenerated_before_it_is_accepted(monkeypatch, node):
     result = assessment.assessment_generate_node(state)
 
     assert len(llm.prompts) == 2
-    assert extract_retest_context(llm.prompts[1])["retry_feedback"]
+    assert "复测试卷重复了旧题" in llm.messages[1][-1].content
     assert all("新的应用题" in question["prompt"] for question in result["quiz"]["questions"])
     assert len(result["assessment_history"]) == 2
 
@@ -265,8 +289,21 @@ def test_retest_also_avoids_questions_from_earlier_rounds(monkeypatch, node):
 
 
 def test_questions_from_another_node_do_not_trigger_retest(monkeypatch, node):
-    state = make_retest_state(node)
-    state["quiz"]["node_id"] = "another_node"
+    other_node = node.model_copy(deep=True)
+    other_node.id = "another_node"
+    quiz = make_quiz(other_node, "assessment_other_node", "旧题").model_dump()
+    state = {
+        "project_id": "retest_project", "tree": [node.model_dump(), other_node.model_dump()],
+        "current_node_id": node.id, "quiz": quiz,
+    }
+    with repository_for_state(state) as repo:
+        repo.create_project_with_tree(project_id=state["project_id"], goal="节点隔离", tree=state["tree"])
+        repo.create_prepared_assessment(
+            assessment_id=quiz["assessment_id"], project_id=state["project_id"],
+            node_id=other_node.id, round_no=1,
+        )
+        repo.save_quiz_if_absent(assessment_id=quiz["assessment_id"], quiz=quiz)
+    state.update(assessment.assessment_prepare_node(state))
     llm = install_quiz_llm(monkeypatch, node, ["旧题"])
     result = assessment.assessment_generate_node(state)
 
@@ -284,7 +321,7 @@ def test_wrong_assessment_id_cannot_enter_state(monkeypatch, node, returned_id):
     with pytest.raises(ValueError, match="assessment_id.*不一致"):
         assessment.assessment_generate_node(state)
 
-    assert len(llm.prompts) == 1
+    assert len(llm.prompts) == 2
     assert state == unchanged
 
 

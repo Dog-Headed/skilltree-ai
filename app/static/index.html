@@ -303,8 +303,14 @@
         min-height: 0;
         flex: 1;
       }
+      .project-row {
+        display: flex;
+        align-items: stretch;
+        margin-bottom: 6px;
+      }
       .project-item {
-        width: 100%;
+        min-width: 0;
+        flex: 1;
         text-align: left;
         display: flex;
         gap: 10px;
@@ -312,7 +318,6 @@
         padding: 12px 10px;
         border: 1px solid transparent;
         border-radius: 8px;
-        margin-bottom: 6px;
         transition: background var(--transition);
       }
       .project-item > .icon {
@@ -331,6 +336,25 @@
       .project-item.active > .icon {
         color: var(--green);
       }
+      .project-item > div { min-width: 0; }
+      .project-more {
+        flex-shrink: 0;
+        width: 32px;
+        font-size: 23px;
+        color: var(--dim);
+        border-radius: 6px;
+      }
+      .project-more:hover { color: var(--text); background: var(--surface); }
+      .project-more:disabled { opacity: .4; cursor: not-allowed; }
+      .btn.danger, .menu-danger { color: var(--red); }
+      .project-menu {
+        position: fixed; z-index: 110; min-width: 148px; padding: 5px;
+        background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+        box-shadow: 0 8px 28px #0005;
+      }
+      .project-menu button { display: block; width: 100%; padding: 10px 12px; text-align: left; border-radius: 6px; font-size: 13px; }
+      .project-menu button:hover, .project-menu button:focus-visible { background: var(--surface); }
+      .rename-input { width: 100%; box-sizing: border-box; margin: 10px 0; padding: 11px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 7px; }
       .project-name {
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -1470,12 +1494,20 @@
         color: var(--muted);
         line-height: 1.9;
         margin-bottom: 12px;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
       }
       .weak-points {
         display: flex;
         gap: 6px;
         flex-wrap: wrap;
         margin: 12px 0;
+      }
+      .weak-points .chip {
+        max-width: 100%;
+        white-space: normal;
+        line-height: 1.7;
+        overflow-wrap: anywhere;
       }
       .result-details {
         border-top: 1px solid var(--line);
@@ -2124,7 +2156,14 @@
       id="abandonDialog"
       aria-labelledby="abandonTitle"
     ></dialog>
+    <dialog
+      class="modal"
+      id="deleteDialog"
+      aria-labelledby="deleteTitle"
+      aria-describedby="deleteDescription"
+    ></dialog>
     <div class="status-toast" id="toast" role="status" hidden></div>
+    <dialog class="modal" id="renameDialog" aria-labelledby="renameTitle"></dialog>
     <div
       id="announcement"
       class="sr-only"
@@ -2441,8 +2480,10 @@
         toastTimer,
         drawerOrigin = null,
         goalDraft = "",
-        questionDraft = "";
+        questionDraft = "",
+        projectMenu = null;
       const busyProjects = new Set(),
+        deletedProjectIds = new Set(),
         drafts = new Map();
       const storage = {
         get: (key) => {
@@ -2536,7 +2577,7 @@
       }
       async function refreshProjects() {
         try {
-          projects = await api("/projects");
+          projects = (await api("/projects")).filter(p => !deletedProjectIds.has(p.project_id));
           renderProjects();
         } catch {
           projects = [];
@@ -2554,6 +2595,7 @@
           summary = {
             project_id: data.project_id,
             goal: data.goal,
+            display_name: data.display_name,
             completed_count: data.completed_count,
             total_count: data.total_count,
             page_state: data.page_state,
@@ -2563,6 +2605,7 @@
         renderProjects();
       }
       function setCurrent(data) {
+        if (deletedProjectIds.has(data.project_id)) return;
         // 只保留公开状态仍在作答的本项目草稿；覆盖其他标签页结束测验的情况。
         const prefix = "skilltree.draft." + data.project_id + ".";
         const retained = data.quiz ? prefix + data.quiz.assessment_id : null;
@@ -2609,6 +2652,11 @@
           }
         } catch (error) {
           if (token !== generation || activeId !== id) return;
+          if (error.status === 404) {
+            removeProjectLocally(id);
+            showToast("这个学习项目已删除或不存在。");
+            return;
+          }
           renderLoadError(error.message, () => loadProject(id));
         }
       }
@@ -2739,6 +2787,132 @@
         window.scrollTo({ top: 0, behavior: "instant" });
         $("goalInput")?.focus({ preventScroll: true });
       }
+      function removeProjectLocally(id) {
+        deletedProjectIds.add(id);
+        projects = projects.filter(p => p.project_id !== id);
+        const prefix = "skilltree.draft." + id + ".";
+        for (const key of drafts.keys()) if (key.startsWith(prefix)) drafts.delete(key);
+        try {
+          const staleKeys = [];
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key.startsWith(prefix)) staleKeys.push(key);
+          }
+          staleKeys.forEach(key => storage.remove(key));
+        } catch {}
+        if (storage.get("skilltree.active") === id) storage.remove("skilltree.active");
+        if (activeId === id) startNew();
+        else renderProjects();
+      }
+      function confirmDeleteProject(project) {
+        closeProjectMenu();
+        const id = project.project_id;
+        if (busyProjects.has(id) || project.page_state === "running") return;
+        const d = $("deleteDialog"), keep = button("保留项目", () => d.close(), "btn");
+        keep.autofocus = true;
+        d.replaceChildren(
+          el("h2", { id: "deleteTitle" }, "删除这个学习项目？"),
+          el("p", {}, el("strong", {}, projectName(project))),
+          el("p", { id: "deleteDescription" }, "此项目的学习进度、测验和历史对话将被删除，无法继续。其他项目不受影响。"),
+          el("div", { class: "modal-actions" }, keep,
+            button("确认删除", () => { d.close(); deleteProject(id); }, "btn danger")),
+        );
+        d.showModal();
+        keep.focus();
+      }
+      function projectName(project) { return project?.display_name || project?.goal || "学习项目"; }
+      function closeProjectMenu(focus = false) {
+        if (!projectMenu) return;
+        const { menu, trigger } = projectMenu;
+        projectMenu = null;
+        menu.remove();
+        trigger.setAttribute("aria-expanded", "false");
+        if (focus && trigger.isConnected) trigger.focus();
+      }
+      function toggleProjectMenu(project, trigger) {
+        const same = projectMenu?.trigger === trigger;
+        closeProjectMenu();
+        if (same) return;
+        const rename = button("重命名", () => renameProject(project), "menu-item");
+        const remove = button("删除", () => confirmDeleteProject(project), "menu-item menu-danger");
+        [rename, remove].forEach(item => item.setAttribute("role", "menuitem"));
+        const menu = el("div", { class: "project-menu", role: "menu", "aria-label": "项目操作" }, rename, remove);
+        document.body.append(menu);
+        const rect = trigger.getBoundingClientRect();
+        menu.style.left = Math.max(8, Math.min(rect.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 8)) + "px";
+        menu.style.top = Math.max(8, rect.bottom + menu.offsetHeight + 4 > window.innerHeight ? rect.top - menu.offsetHeight - 4 : rect.bottom + 4) + "px";
+        trigger.setAttribute("aria-expanded", "true");
+        projectMenu = { menu, trigger };
+        menu.addEventListener("keydown", event => {
+          if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+            event.preventDefault();
+            const items = [rename, remove], index = items.indexOf(document.activeElement);
+            items[event.key === "Home" ? 0 : event.key === "End" ? 1 : (index + (event.key === "ArrowDown" ? 1 : -1) + 2) % 2].focus();
+          }
+          if (event.key === "Tab") closeProjectMenu();
+        });
+        rename.focus();
+      }
+      function renameProject(project) {
+        closeProjectMenu();
+        const id = project.project_id, dialog = $("renameDialog");
+        const input = el("input", { id: "renameInput", class: "rename-input", maxlength: "80", required: true, autocomplete: "off" });
+        input.value = projectName(project);
+        const error = el("p", { class: "field-error", role: "alert" });
+        const save = el("button", { class: "btn primary", type: "submit" }, "保存名称");
+        const cancel = button("取消", () => dialog.close(), "btn");
+        const form = el("form", { on: { submit: async event => {
+          event.preventDefault();
+          const name = input.value.trim();
+          if (!name || name.length > 80) { error.textContent = "请输入1至80个字符。"; return; }
+          if (busyProjects.has(id)) return;
+          busyProjects.add(id); save.disabled = true; cancel.disabled = true; input.disabled = true; updateBusy();
+          try {
+            const result = await api("/projects/" + encodeURIComponent(id), { method: "PATCH", body: JSON.stringify({ display_name: name }) });
+            const item = projects.find(p => p.project_id === id);
+            if (item) item.display_name = result.display_name;
+            if (current?.project_id === id) current.display_name = result.display_name;
+            dialog.close(); render(); showToast("项目名称已更新。");
+          } catch (failure) { error.textContent = failure.message; }
+          finally { busyProjects.delete(id); save.disabled = false; cancel.disabled = false; input.disabled = false; updateBusy(); }
+        } } },
+          el("h2", { id: "renameTitle" }, "重命名项目"),
+          el("p", {}, "只修改显示名称，原学习目标和进度保持不变。"),
+          el("label", { for: "renameInput" }, "项目名称"), input, error,
+          el("div", { class: "modal-actions" }, cancel, save));
+        dialog.replaceChildren(form); dialog.showModal(); input.focus(); input.select();
+      }
+      document.addEventListener("click", event => {
+        if (projectMenu && !projectMenu.menu.contains(event.target) && !projectMenu.trigger.contains(event.target)) closeProjectMenu();
+      });
+      async function deleteProject(id) {
+        if (busyProjects.has(id)) return;
+        busyProjects.add(id);
+        renderProjects();
+        updateBusy();
+        try {
+          await api("/projects/" + encodeURIComponent(id), {
+            method: "DELETE", body: JSON.stringify({ confirm_project_id: id }),
+          });
+          removeProjectLocally(id);
+          showToast("学习项目已删除。");
+          announce("学习项目已删除。");
+        } catch (error) {
+          let confirmedDeleted = false;
+          if (error.network || error.status === 500) {
+            try { await api("/projects/" + encodeURIComponent(id)); }
+            catch (readError) { confirmedDeleted = readError.status === 404; }
+          }
+          if (confirmedDeleted || error.status === 404) {
+            removeProjectLocally(id);
+            showToast("学习项目已删除。");
+          } else showToast(error.message, true);
+        } finally {
+          busyProjects.delete(id);
+          updateBusy();
+          await refreshProjects();
+        }
+      }
       function draftKey(id, assessment) {
         return "skilltree.draft." + id + "." + assessment;
       }
@@ -2863,6 +3037,7 @@
         }
       }
       document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && projectMenu) { closeProjectMenu(true); return; }
         if (e.key === "Escape") closeDrawers();
         if (e.key === "Tab" && drawerOrigin) {
           const panel = document.querySelector(
@@ -2885,16 +3060,22 @@
         }
       });
       function renderProjects() {
+        closeProjectMenu();
         $("projectCount").textContent = String(projects.length).padStart(
           2,
           "0",
         );
-        const items = projects.map((p) =>
-          button(
+        const items = projects.map((p) => {
+          const more = button("⋯", event => toggleProjectMenu(p, event.currentTarget), "project-more");
+          more.setAttribute("aria-label", "项目选项：" + projectName(p));
+          more.setAttribute("aria-haspopup", "menu");
+          more.setAttribute("aria-expanded", "false");
+          more.disabled = busyProjects.has(p.project_id) || p.page_state === "running";
+          return el("div", { class: "project-row", "data-project-id": p.project_id }, button(
             el(
               "div",
               {},
-              el("div", { class: "project-name" }, p.goal),
+              el("div", { class: "project-name" }, projectName(p)),
               el(
                 "div",
                 { class: "project-meta" },
@@ -2906,8 +3087,8 @@
             () => loadProject(p.project_id),
             "project-item" + (p.project_id === activeId ? " active" : ""),
             "folder",
-          ),
-        );
+          ), more);
+        });
         $("projectList").replaceChildren(
           ...(items.length
             ? items
@@ -2923,6 +3104,10 @@
         );
       }
       function updateBusy() {
+        $("projectList").querySelectorAll(".project-row").forEach(row => {
+          const id = row.dataset.projectId;
+          row.querySelector(".project-more").disabled = busyProjects.has(id) || projects.find(p => p.project_id === id)?.page_state === "running";
+        });
         const busy = isBusy() || busyProjects.has("creating");
         $("busyBar").hidden = !busy;
         $("busyBar").replaceChildren(
@@ -2972,7 +3157,7 @@
           el(
             "span",
             { class: "breadcrumb-title" },
-            current?.goal || (activeId ? "正在读取项目" : "新的学习起点"),
+            current ? projectName(current) : (activeId ? "正在读取项目" : "新的学习起点"),
           ),
         );
         renderPath();
@@ -4155,7 +4340,12 @@
               setCurrent(data);
               showToast("已同步这个项目的最新进度。");
             }
-          } catch {}
+          } catch (error) {
+            if (id === activeId && token === generation && error.status === 404) {
+              removeProjectLocally(id);
+              showToast("这个学习项目已在其他页面删除。");
+            }
+          }
         }
       });
       async function boot() {

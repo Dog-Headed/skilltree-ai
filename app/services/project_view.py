@@ -5,10 +5,13 @@ from langchain_core.messages import AIMessage, HumanMessage
 from app.agents.assessment import build_public_quiz
 from app.models.schemas import AssessmentEvaluation, AssessmentQuiz, validate_and_score_evaluation
 from app.models.web import ProjectView, PublicNode, PublicResult
+from app.services.learner_feedback import LearnerFeedback
 
 
-def public_results(repo, project_id, completed_ids, titles):
+def public_results(repo, project_id, completed_ids, nodes):
     results = []
+    validated = []
+    titles = {node.id: node.title for node in nodes}
     for record in repo.list_project_evaluations(project_id):
         try:
             quiz = AssessmentQuiz.model_validate(record["quiz"])
@@ -17,24 +20,32 @@ def public_results(repo, project_id, completed_ids, titles):
         except (ValueError, TypeError):
             # 旧演示中无效记录不是有效学习成绩。
             continue
+        validated.append((record, quiz, evaluation, summary))
+    records = [record for record, *_ in validated]
+    for record, quiz, evaluation, summary in validated:
         questions = {question.id: question for question in quiz.questions}
+        question_order = {question.id: number for number, question in enumerate(quiz.questions)}
         diagnosis = record["diagnosis"] or {}
+        display = LearnerFeedback(nodes, records, record)
+        reason, weak_points = display.diagnosis(diagnosis, completed=record["id"] in completed_ids)
         results.append(PublicResult(
             assessment_id=record["id"], node_id=record["node_id"],
             node_title=titles.get(record["node_id"], "知识节点"), **summary,
             question_results=[{
                 "question_id": item.question_id, "prompt": questions[item.question_id].prompt,
                 "score": item.score, "max_score": questions[item.question_id].max_score,
-                "feedback": item.feedback, "evidence": item.evidence, "error_tags": item.error_tags,
-            } for item in evaluation.question_results],
-            weak_points=diagnosis.get("weak_points", []),
-            recommended_action=diagnosis.get("recommended_action"), reason=diagnosis.get("reason", "评分已保存，诊断等待恢复。"),
+                "feedback": display.text(item.feedback), "evidence": display.text(item.evidence), "error_tags": item.error_tags,
+            } for item in sorted(evaluation.question_results, key=lambda item: question_order[item.question_id])],
+            weak_points=weak_points,
+            recommended_action=diagnosis.get("recommended_action"), reason=reason,
             completed=record["id"] in completed_ids,
         ))
     return results
 
 
 def build_project_view(session, repo, *, running=False):
+    if repo.is_project_deleted(session.project_id):
+        return None
     snapshot = session.snapshot()
     state = snapshot.values
     project = repo.get_project(session.project_id)
@@ -98,6 +109,7 @@ def build_project_view(session, repo, *, running=False):
             conversation.append({"role": "assistant", "content": message.content})
     return ProjectView(
         project_id=session.project_id, goal=project["goal"] if project else state.get("goal", "学习项目"),
+        display_name=repo.get_display_name(session.project_id),
         nodes=nodes, completed_count=len(completed), total_count=len(nodes), current_node_id=current,
         teaching_node_id=teaching, lesson_mode=state.get("lesson_mode", "normal"), page_state=page,
         pending_input_id=state.get("pending_input_id") if snapshot.interrupts else None,
@@ -105,7 +117,7 @@ def build_project_view(session, repo, *, running=False):
         conversation=conversation if page == "learning" else [],
         quiz=build_public_quiz(state["quiz"]) if page == "quiz" and state.get("quiz") else None,
         answers=state.get("answers", {}) if page == "quiz" else {}, answer_error=state.get("answer_error", "") if page == "quiz" else "",
-        results=public_results(repo, session.project_id, completion_assessments, {node.id: node.title for node in nodes}),
+        results=public_results(repo, session.project_id, completion_assessments, nodes),
         rounds=state.get("rounds_by_node", {}).get(current, 0), round_limit=state.get("round_limit_by_node", {}).get(current, 3),
         error=error, retry_token=retry_token,
     )

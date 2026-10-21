@@ -90,6 +90,17 @@ class LearningRepository:
                 created_at TEXT NOT NULL
             );
 
+            -- 删除标记独立于项目外键，在两个数据库清理中断时也不能恢复旧线程。
+            CREATE TABLE IF NOT EXISTS deleted_projects (
+                project_id TEXT PRIMARY KEY,
+                deleted_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS project_labels (
+                project_id TEXT PRIMARY KEY REFERENCES learning_projects(id) ON DELETE CASCADE,
+                display_name TEXT NOT NULL CHECK(length(display_name) BETWEEN 1 AND 80)
+            );
+
 
             CREATE TABLE IF NOT EXISTS knowledge_nodes (
                 project_id TEXT NOT NULL,
@@ -200,6 +211,8 @@ class LearningRepository:
         tree: list[dict[str, Any]],
     ) -> None:
 
+        if self.is_project_deleted(project_id):
+            raise ValueError("这个学习项目已删除，请使用新的项目 ID。")
         now = utc_now()
 
         # 一个 with = 一个事务
@@ -279,6 +292,9 @@ class LearningRepository:
             FROM learning_projects
 
             WHERE id = ?
+              AND NOT EXISTS (
+                  SELECT 1 FROM deleted_projects WHERE project_id = learning_projects.id
+              )
             """,
             (
                 project_id,
@@ -292,9 +308,42 @@ class LearningRepository:
 
     def list_projects(self) -> list[dict[str, Any]]:
         rows = self.conn.execute(
-            "SELECT id, goal, created_at FROM learning_projects ORDER BY created_at DESC, id DESC"
+            "SELECT id, goal, created_at FROM learning_projects "
+            "WHERE NOT EXISTS (SELECT 1 FROM deleted_projects WHERE project_id = learning_projects.id) "
+            "ORDER BY created_at DESC, id DESC"
         ).fetchall()
         return [dict(row) for row in rows]
+
+    def is_project_deleted(self, project_id: str) -> bool:
+        return self.conn.execute(
+            "SELECT 1 FROM deleted_projects WHERE project_id = ?", (project_id,)
+        ).fetchone() is not None
+
+    def deleted_project_ids(self) -> set[str]:
+        return {row[0] for row in self.conn.execute("SELECT project_id FROM deleted_projects")}
+
+    def get_display_name(self, project_id: str) -> str | None:
+        row = self.conn.execute('SELECT display_name FROM project_labels WHERE project_id = ?', (project_id,)).fetchone()
+        return row[0] if row else None
+
+    def rename_project(self, project_id: str, display_name: str) -> None:
+        name = display_name.strip()
+        if not 1 <= len(name) <= 80 or any(ord(char) < 32 or ord(char) == 127 for char in name):
+            raise ValueError('项目名称须为1至80个字符，不能包含控制字符。')
+        if self.get_project(project_id) is None:
+            raise KeyError(project_id)
+        with self.conn:
+            self.conn.execute('INSERT INTO project_labels VALUES (?,?) ON CONFLICT(project_id) DO UPDATE SET display_name=excluded.display_name',
+                              (project_id, name))
+
+    def delete_project(self, project_id: str) -> None:
+        """先留下不可恢复的 ID 标记，并在同一事务中级联清理业务事实。"""
+        with self.conn:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO deleted_projects (project_id, deleted_at) VALUES (?, ?)",
+                (project_id, utc_now()),
+            )
+            self.conn.execute("DELETE FROM learning_projects WHERE id = ?", (project_id,))
 
     def create_project_if_absent(self, *, project_id: str, goal: str, tree: list[dict]) -> list[dict]:
         """规划已落库但 Checkpoint 落后时，复用原项目和技能树。"""

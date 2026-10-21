@@ -1,0 +1,201 @@
+[
+  {
+    "capability_id": "text_explanation",
+    "version": "1.0.0",
+    "kind": "teaching",
+    "input_types": [
+      "text"
+    ],
+    "task_description": "文字讲解",
+    "output_contract": "text",
+    "availability": "available",
+    "evaluator_id": null,
+    "formal_assessment_available": false,
+    "limitations": [
+      "Day 9 仅声明文字通道；V3 教学闭环尚未接入。",
+      "探索讲解不形成正式通过记录。"
+    ]
+  },
+  {
+    "capability_id": "text_question_answer",
+    "version": "1.0.0",
+    "kind": "teaching",
+    "input_types": [
+      "text"
+    ],
+    "task_description": "文字问答",
+    "output_contract": "text",
+    "availability": "available",
+    "evaluator_id": null,
+    "formal_assessment_available": false,
+    "limitations": [
+      "Day 9 仅声明文字通道；V3 问答闭环尚未接入。",
+      "普通问答不能代替正式评价。"
+    ]
+  },
+  {
+    "capability_id": "choice_exact",
+    "version": "1.0.0",
+    "kind": "evaluation",
+    "input_types": [
+      "single_choice",
+      "multiple_choice"
+    ],
+    "task_description": "单选与多选精确匹配",
+    "output_contract": "ChoiceExactResult",
+    "availability": "available",
+    "evaluator_id": "choice_exact",
+    "formal_assessment_available": true,
+    "limitations": [
+      "仅验证所选选项。",
+      "题目与答案依据须由正式计划及资料校验保证。",
+      "多选采用全对得分，不给部分分。"
+    ]
+  },
+  {
+    "capability_id": "numeric_scalar",
+    "version": "1.0.0",
+    "kind": "evaluation",
+    "input_types": [
+      "numeric_scalar"
+    ],
+    "task_description": "受限数值与单位评价",
+    "output_contract": "EvaluationResult",
+    "availability": "planned",
+    "evaluator_id": "numeric_scalar",
+    "formal_assessment_available": false,
+    "limitations": [
+      "尚无 V3 处理器，不能运行正式测评。",
+      "不验证符号证明或完整推导。"
+    ]
+  },
+  {
+    "capability_id": "text_rubric",
+    "version": "1.0.0",
+    "kind": "evaluation",
+    "input_types": [
+      "text"
+    ],
+    "task_description": "冻结量规文字评价",
+    "output_contract": "EvaluationResult",
+    "availability": "planned",
+    "evaluator_id": "text_rubric",
+    "formal_assessment_available": false,
+    "limitations": [
+      "尚无通用 V3 处理器，不能运行正式测评。",
+      "不得借用 V2 Python 评分宣称通用评价已实现。"
+    ]
+  },
+  {
+    "capability_id": "code_execution",
+    "version": "1.0.0",
+    "kind": "execution",
+    "input_types": [
+      "code"
+    ],
+    "task_description": "执行任意程序与测试",
+    "output_contract": "execution_evidence",
+    "availability": "unsupported",
+    "evaluator_id": null,
+    "formal_assessment_available": false,
+    "limitations": [
+      "尚无隔离代码沙箱。"
+    ]
+  },
+  {
+    "capability_id": "symbolic_proof",
+    "version": "1.0.0",
+    "kind": "evaluation",
+    "input_types": [
+      "text"
+    ],
+    "task_description": "数学符号证明与等价验证",
+    "output_contract": "proof_evidence",
+    "availability": "unsupported",
+    "evaluator_id": null,
+    "formal_assessment_available": false,
+    "limitations": [
+      "普通文字评分不能冒充形式验证。"
+    ]
+  },
+  {
+    "capability_id": "audio_input",
+    "version": "1.0.0",
+    "kind": "modality",
+    "input_types": [
+      "audio"
+    ],
+    "task_description": "接收音频",
+    "output_contract": "audio",
+    "availability": "unsupported",
+    "evaluator_id": null,
+    "formal_assessment_available": false,
+    "limitations": [
+      "V3.0 仅支持文字输入。"
+    ]
+  },
+  {
+    "capability_id": "audio_output",
+    "version": "1.0.0",
+    "kind": "modality",
+    "input_types": [
+      "text"
+    ],
+    "task_description": "输出音频",
+    "output_contract": "audio",
+    "availability": "unsupported",
+    "evaluator_id": null,
+    "formal_assessment_available": false,
+    "limitations": [
+      "V3.0 仅支持文字输出。"
+    ]
+  },
+  {
+    "capability_id": "pronunciation",
+    "version": "1.0.0",
+    "kind": "evaluation",
+    "input_types": [
+      "audio"
+    ],
+    "task_description": "发音评价",
+    "output_contract": "pronunciation_evidence",
+    "availability": "unsupported",
+    "evaluator_id": null,
+    "formal_assessment_available": false,
+    "limitations": [
+      "不得用文字题替代实际发音评价。"
+    ]
+  },
+  {
+    "capability_id": "image_input",
+    "version": "1.0.0",
+    "kind": "modality",
+    "input_types": [
+      "image"
+    ],
+    "task_description": "接收与评价图像",
+    "output_contract": "image_evidence",
+    "availability": "unsupported",
+    "evaluator_id": null,
+    "formal_assessment_available": false,
+    "limitations": [
+      "V3.0 不支持图像评价。"
+    ]
+  },
+  {
+    "capability_id": "experiment_observation",
+    "version": "1.0.0",
+    "kind": "evaluation",
+    "input_types": [
+      "observation"
+    ],
+    "task_description": "实验或操作过程评价",
+    "output_contract": "process_evidence",
+    "availability": "unsupported",
+    "evaluator_id": null,
+    "formal_assessment_available": false,
+    "limitations": [
+      "没有过程证据接收与验证能力。"
+    ]
+  }
+]

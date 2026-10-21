@@ -1,0 +1,16 @@
+{
+  "policy_id": "choice-foundation",
+  "policy_version": "3.0.0-day9",
+  "allowed_question_types": ["single_choice", "multiple_choice"],
+  "evaluators": [{"evaluator_id": "choice_exact", "evaluator_version": "1.0.0"}],
+  "objective_rules": [{"objective_id": "objective_1", "required": true, "min_items": 1, "min_evidence": 1, "weight": 1.0, "pass_threshold": 0.8, "evidence_kinds": ["choice"]}],
+  "total_pass_threshold": 0.8,
+  "critical_severities": ["critical"],
+  "max_effective_rounds": 3,
+  "max_round_extensions": 1,
+  "extension_rounds": 3,
+  "max_replacements": 2,
+  "uncertain_handling": "pause_review",
+  "missing_evidence_handling": "collect_more_evidence",
+  "invalid_item_handling": "replace_or_pause"
+}

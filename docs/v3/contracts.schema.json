@@ -1,0 +1,2347 @@
+{
+  "LearningProfile": {
+    "$defs": {
+      "LanguagePreference": {
+        "additionalProperties": false,
+        "properties": {
+          "teaching": {
+            "default": "zh-CN",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Teaching",
+            "type": "string"
+          },
+          "answering": {
+            "default": "zh-CN",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Answering",
+            "type": "string"
+          }
+        },
+        "title": "LanguagePreference",
+        "type": "object"
+      },
+      "PriorAssessmentEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "project_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "node_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Node Id",
+            "type": "string"
+          },
+          "assessment_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Assessment Id",
+            "type": "string"
+          },
+          "objective_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Objective Id",
+            "type": "string"
+          },
+          "summary": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "node_id",
+          "assessment_id",
+          "objective_id",
+          "summary"
+        ],
+        "title": "PriorAssessmentEvidence",
+        "type": "object"
+      },
+      "PriorKnowledge": {
+        "additionalProperties": false,
+        "properties": {
+          "self_reported": {
+            "items": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Self Reported",
+            "type": "array"
+          },
+          "assessed_evidence": {
+            "items": {
+              "$ref": "#/$defs/PriorAssessmentEvidence"
+            },
+            "maxItems": 20,
+            "title": "Assessed Evidence",
+            "type": "array"
+          }
+        },
+        "title": "PriorKnowledge",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "subject_label": {
+        "maxLength": 128,
+        "minLength": 1,
+        "title": "Subject Label",
+        "type": "string"
+      },
+      "topic": {
+        "maxLength": 256,
+        "minLength": 1,
+        "title": "Topic",
+        "type": "string"
+      },
+      "goal": {
+        "maxLength": 4000,
+        "minLength": 1,
+        "title": "Goal",
+        "type": "string"
+      },
+      "bounded_goal": {
+        "anyOf": [
+          {
+            "maxLength": 4000,
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Bounded Goal"
+      },
+      "prior_knowledge": {
+        "$ref": "#/$defs/PriorKnowledge"
+      },
+      "target_level": {
+        "default": "入门",
+        "maxLength": 128,
+        "minLength": 1,
+        "title": "Target Level",
+        "type": "string"
+      },
+      "language": {
+        "$ref": "#/$defs/LanguagePreference"
+      },
+      "time_budget_minutes": {
+        "default": 120,
+        "exclusiveMinimum": 0,
+        "maximum": 10080,
+        "title": "Time Budget Minutes",
+        "type": "integer"
+      },
+      "session_minutes": {
+        "default": 30,
+        "exclusiveMinimum": 0,
+        "maximum": 480,
+        "title": "Session Minutes",
+        "type": "integer"
+      },
+      "scope_in": {
+        "items": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "maxItems": 20,
+        "title": "Scope In",
+        "type": "array"
+      },
+      "scope_out": {
+        "items": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "maxItems": 20,
+        "title": "Scope Out",
+        "type": "array"
+      },
+      "learning_mode": {
+        "default": "formal",
+        "enum": [
+          "formal",
+          "exploration"
+        ],
+        "title": "Learning Mode",
+        "type": "string"
+      },
+      "requested_capabilities": {
+        "items": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "type": "string"
+        },
+        "maxItems": 20,
+        "title": "Requested Capabilities",
+        "type": "array"
+      },
+      "profile_version": {
+        "default": 1,
+        "minimum": 1,
+        "title": "Profile Version",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "subject_label",
+      "topic",
+      "goal"
+    ],
+    "title": "LearningProfile",
+    "type": "object"
+  },
+  "EvaluationPolicy": {
+    "$defs": {
+      "EvaluatorRef": {
+        "additionalProperties": false,
+        "properties": {
+          "evaluator_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Evaluator Id",
+            "type": "string"
+          },
+          "evaluator_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Evaluator Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evaluator_id",
+          "evaluator_version"
+        ],
+        "title": "EvaluatorRef",
+        "type": "object"
+      },
+      "ObjectivePolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "objective_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Objective Id",
+            "type": "string"
+          },
+          "required": {
+            "default": true,
+            "title": "Required",
+            "type": "boolean"
+          },
+          "min_items": {
+            "default": 1,
+            "maximum": 10,
+            "minimum": 1,
+            "title": "Min Items",
+            "type": "integer"
+          },
+          "min_evidence": {
+            "default": 1,
+            "maximum": 10,
+            "minimum": 1,
+            "title": "Min Evidence",
+            "type": "integer"
+          },
+          "weight": {
+            "default": 1.0,
+            "exclusiveMinimum": 0,
+            "title": "Weight",
+            "type": "number"
+          },
+          "pass_threshold": {
+            "default": 0.8,
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Pass Threshold",
+            "type": "number"
+          },
+          "evidence_kinds": {
+            "items": {
+              "enum": [
+                "choice",
+                "numeric_result",
+                "text_excerpt"
+              ],
+              "type": "string"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Evidence Kinds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "objective_id"
+        ],
+        "title": "ObjectivePolicy",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "policy_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Policy Id",
+        "type": "string"
+      },
+      "policy_version": {
+        "maxLength": 64,
+        "minLength": 1,
+        "title": "Policy Version",
+        "type": "string"
+      },
+      "allowed_question_types": {
+        "items": {
+          "enum": [
+            "single_choice",
+            "multiple_choice",
+            "text",
+            "numeric_scalar"
+          ],
+          "type": "string"
+        },
+        "maxItems": 4,
+        "minItems": 1,
+        "title": "Allowed Question Types",
+        "type": "array"
+      },
+      "evaluators": {
+        "items": {
+          "$ref": "#/$defs/EvaluatorRef"
+        },
+        "maxItems": 10,
+        "minItems": 1,
+        "title": "Evaluators",
+        "type": "array"
+      },
+      "objective_rules": {
+        "items": {
+          "$ref": "#/$defs/ObjectivePolicy"
+        },
+        "maxItems": 100,
+        "title": "Objective Rules",
+        "type": "array"
+      },
+      "total_pass_threshold": {
+        "default": 0.8,
+        "maximum": 1,
+        "minimum": 0,
+        "title": "Total Pass Threshold",
+        "type": "number"
+      },
+      "critical_severities": {
+        "items": {
+          "enum": [
+            "minor",
+            "major",
+            "critical"
+          ],
+          "type": "string"
+        },
+        "maxItems": 3,
+        "title": "Critical Severities",
+        "type": "array"
+      },
+      "max_effective_rounds": {
+        "default": 3,
+        "maximum": 3,
+        "minimum": 1,
+        "title": "Max Effective Rounds",
+        "type": "integer"
+      },
+      "max_round_extensions": {
+        "default": 1,
+        "maximum": 1,
+        "minimum": 0,
+        "title": "Max Round Extensions",
+        "type": "integer"
+      },
+      "extension_rounds": {
+        "default": 3,
+        "maximum": 3,
+        "minimum": 1,
+        "title": "Extension Rounds",
+        "type": "integer"
+      },
+      "max_replacements": {
+        "default": 2,
+        "maximum": 2,
+        "minimum": 0,
+        "title": "Max Replacements",
+        "type": "integer"
+      },
+      "uncertain_handling": {
+        "const": "pause_review",
+        "default": "pause_review",
+        "title": "Uncertain Handling",
+        "type": "string"
+      },
+      "missing_evidence_handling": {
+        "default": "collect_more_evidence",
+        "enum": [
+          "collect_more_evidence",
+          "pause_review"
+        ],
+        "title": "Missing Evidence Handling",
+        "type": "string"
+      },
+      "invalid_item_handling": {
+        "default": "replace_or_pause",
+        "enum": [
+          "replace_or_pause",
+          "pause_review"
+        ],
+        "title": "Invalid Item Handling",
+        "type": "string"
+      }
+    },
+    "required": [
+      "policy_id",
+      "policy_version",
+      "allowed_question_types",
+      "evaluators"
+    ],
+    "title": "EvaluationPolicy",
+    "type": "object"
+  },
+  "LearningPlan": {
+    "$defs": {
+      "LearningObjective": {
+        "additionalProperties": false,
+        "properties": {
+          "objective_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Objective Id",
+            "type": "string"
+          },
+          "observable_outcome": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Observable Outcome",
+            "type": "string"
+          },
+          "required_capability_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Required Capability Ids",
+            "type": "array"
+          },
+          "evidence_requirement": {
+            "items": {
+              "enum": [
+                "choice",
+                "numeric_result",
+                "text_excerpt"
+              ],
+              "type": "string"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Evidence Requirement",
+            "type": "array"
+          },
+          "required": {
+            "default": true,
+            "title": "Required",
+            "type": "boolean"
+          },
+          "source_chunk_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Source Chunk Ids",
+            "type": "array"
+          },
+          "criterion_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Criterion Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "objective_id",
+          "observable_outcome",
+          "required_capability_ids",
+          "evidence_requirement"
+        ],
+        "title": "LearningObjective",
+        "type": "object"
+      },
+      "SkillNode": {
+        "additionalProperties": false,
+        "properties": {
+          "node_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Node Id",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "objectives": {
+            "items": {
+              "$ref": "#/$defs/LearningObjective"
+            },
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Objectives",
+            "type": "array"
+          },
+          "prerequisite_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 19,
+            "title": "Prerequisite Ids",
+            "type": "array"
+          },
+          "estimated_minutes": {
+            "exclusiveMinimum": 0,
+            "maximum": 480,
+            "title": "Estimated Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "node_id",
+          "title",
+          "description",
+          "objectives",
+          "estimated_minutes"
+        ],
+        "title": "SkillNode",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "project_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Project Id",
+        "type": "string"
+      },
+      "plan_version": {
+        "default": 1,
+        "minimum": 1,
+        "title": "Plan Version",
+        "type": "integer"
+      },
+      "draft_revision": {
+        "minimum": 0,
+        "title": "Draft Revision",
+        "type": "integer"
+      },
+      "nodes": {
+        "items": {
+          "$ref": "#/$defs/SkillNode"
+        },
+        "maxItems": 20,
+        "minItems": 1,
+        "title": "Nodes",
+        "type": "array"
+      }
+    },
+    "required": [
+      "project_id",
+      "draft_revision",
+      "nodes"
+    ],
+    "title": "LearningPlan",
+    "type": "object"
+  },
+  "SourceDocument": {
+    "additionalProperties": false,
+    "properties": {
+      "source_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Source Id",
+        "type": "string"
+      },
+      "project_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Project Id",
+        "type": "string"
+      },
+      "title": {
+        "maxLength": 256,
+        "minLength": 1,
+        "title": "Title",
+        "type": "string"
+      },
+      "source_description": {
+        "maxLength": 4000,
+        "minLength": 1,
+        "title": "Source Description",
+        "type": "string"
+      },
+      "source_version": {
+        "minimum": 1,
+        "title": "Source Version",
+        "type": "integer"
+      },
+      "content": {
+        "minLength": 1,
+        "title": "Content",
+        "type": "string"
+      },
+      "content_hash": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Content Hash",
+        "type": "string"
+      },
+      "trust_note": {
+        "default": "用户提供，未独立核验",
+        "maxLength": 4000,
+        "minLength": 1,
+        "title": "Trust Note",
+        "type": "string"
+      },
+      "visibility": {
+        "default": "teaching",
+        "enum": [
+          "teaching",
+          "assessment_private"
+        ],
+        "title": "Visibility",
+        "type": "string"
+      }
+    },
+    "required": [
+      "source_id",
+      "project_id",
+      "title",
+      "source_description",
+      "source_version",
+      "content",
+      "content_hash"
+    ],
+    "title": "SourceDocument",
+    "type": "object"
+  },
+  "SourceChunk": {
+    "additionalProperties": false,
+    "properties": {
+      "chunk_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Chunk Id",
+        "type": "string"
+      },
+      "project_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Project Id",
+        "type": "string"
+      },
+      "source_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Source Id",
+        "type": "string"
+      },
+      "source_version": {
+        "minimum": 1,
+        "title": "Source Version",
+        "type": "integer"
+      },
+      "content": {
+        "minLength": 1,
+        "title": "Content",
+        "type": "string"
+      },
+      "content_hash": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Content Hash",
+        "type": "string"
+      },
+      "heading": {
+        "anyOf": [
+          {
+            "maxLength": 256,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Heading"
+      },
+      "line_start": {
+        "minimum": 1,
+        "title": "Line Start",
+        "type": "integer"
+      },
+      "line_end": {
+        "minimum": 1,
+        "title": "Line End",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "chunk_id",
+      "project_id",
+      "source_id",
+      "source_version",
+      "content",
+      "content_hash",
+      "line_start",
+      "line_end"
+    ],
+    "title": "SourceChunk",
+    "type": "object"
+  },
+  "NodeMaterialLink": {
+    "additionalProperties": false,
+    "properties": {
+      "project_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Project Id",
+        "type": "string"
+      },
+      "node_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Node Id",
+        "type": "string"
+      },
+      "objective_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Objective Id",
+        "type": "string"
+      },
+      "chunk_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Chunk Id",
+        "type": "string"
+      },
+      "purpose": {
+        "enum": [
+          "teaching",
+          "assessment",
+          "grading"
+        ],
+        "title": "Purpose",
+        "type": "string"
+      }
+    },
+    "required": [
+      "project_id",
+      "node_id",
+      "objective_id",
+      "chunk_id",
+      "purpose"
+    ],
+    "title": "NodeMaterialLink",
+    "type": "object"
+  },
+  "FrozenSnapshot": {
+    "$defs": {
+      "EvaluatorRef": {
+        "additionalProperties": false,
+        "properties": {
+          "evaluator_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Evaluator Id",
+            "type": "string"
+          },
+          "evaluator_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Evaluator Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evaluator_id",
+          "evaluator_version"
+        ],
+        "title": "EvaluatorRef",
+        "type": "object"
+      },
+      "SourceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_version": {
+            "minimum": 1,
+            "title": "Source Version",
+            "type": "integer"
+          },
+          "content_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Content Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "source_version",
+          "content_hash"
+        ],
+        "title": "SourceRef",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "profile_version": {
+        "minimum": 1,
+        "title": "Profile Version",
+        "type": "integer"
+      },
+      "plan_version": {
+        "minimum": 1,
+        "title": "Plan Version",
+        "type": "integer"
+      },
+      "policy_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Policy Id",
+        "type": "string"
+      },
+      "policy_version": {
+        "maxLength": 64,
+        "minLength": 1,
+        "title": "Policy Version",
+        "type": "string"
+      },
+      "source_manifest": {
+        "items": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "maxItems": 100,
+        "minItems": 1,
+        "title": "Source Manifest",
+        "type": "array"
+      },
+      "evaluator_manifest": {
+        "items": {
+          "$ref": "#/$defs/EvaluatorRef"
+        },
+        "maxItems": 10,
+        "minItems": 1,
+        "title": "Evaluator Manifest",
+        "type": "array"
+      },
+      "contract_version": {
+        "const": "3.0.0",
+        "default": "3.0.0",
+        "title": "Contract Version",
+        "type": "string"
+      }
+    },
+    "required": [
+      "profile_version",
+      "plan_version",
+      "policy_id",
+      "policy_version",
+      "source_manifest",
+      "evaluator_manifest"
+    ],
+    "title": "FrozenSnapshot",
+    "type": "object"
+  },
+  "AssessmentQuiz": {
+    "$defs": {
+      "AssessmentQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "objective_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Objective Ids",
+            "type": "array"
+          },
+          "question_type": {
+            "enum": [
+              "single_choice",
+              "multiple_choice",
+              "text",
+              "numeric_scalar"
+            ],
+            "title": "Question Type",
+            "type": "string"
+          },
+          "prompt": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "max_score": {
+            "exclusiveMinimum": 0,
+            "title": "Max Score",
+            "type": "number"
+          },
+          "evaluator_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Evaluator Id",
+            "type": "string"
+          },
+          "evaluator_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Evaluator Version",
+            "type": "string"
+          },
+          "source_citations": {
+            "items": {
+              "$ref": "#/$defs/SourceCitation"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Source Citations",
+            "type": "array"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/$defs/ChoiceOption"
+            },
+            "maxItems": 20,
+            "title": "Options",
+            "type": "array"
+          },
+          "answer_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Answer Key"
+          },
+          "numeric_rules": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NumericRules"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "rubric": {
+            "items": {
+              "$ref": "#/$defs/RubricCriterion"
+            },
+            "maxItems": 20,
+            "title": "Rubric",
+            "type": "array"
+          }
+        },
+        "required": [
+          "question_id",
+          "objective_ids",
+          "question_type",
+          "prompt",
+          "max_score",
+          "evaluator_id",
+          "evaluator_version",
+          "source_citations"
+        ],
+        "title": "AssessmentQuestion",
+        "type": "object"
+      },
+      "ChoiceOption": {
+        "additionalProperties": false,
+        "properties": {
+          "option_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Option Id",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "option_id",
+          "text"
+        ],
+        "title": "ChoiceOption",
+        "type": "object"
+      },
+      "EvaluatorRef": {
+        "additionalProperties": false,
+        "properties": {
+          "evaluator_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Evaluator Id",
+            "type": "string"
+          },
+          "evaluator_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Evaluator Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evaluator_id",
+          "evaluator_version"
+        ],
+        "title": "EvaluatorRef",
+        "type": "object"
+      },
+      "FrozenSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "profile_version": {
+            "minimum": 1,
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "plan_version": {
+            "minimum": 1,
+            "title": "Plan Version",
+            "type": "integer"
+          },
+          "policy_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "source_manifest": {
+            "items": {
+              "$ref": "#/$defs/SourceRef"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Source Manifest",
+            "type": "array"
+          },
+          "evaluator_manifest": {
+            "items": {
+              "$ref": "#/$defs/EvaluatorRef"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Evaluator Manifest",
+            "type": "array"
+          },
+          "contract_version": {
+            "const": "3.0.0",
+            "default": "3.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile_version",
+          "plan_version",
+          "policy_id",
+          "policy_version",
+          "source_manifest",
+          "evaluator_manifest"
+        ],
+        "title": "FrozenSnapshot",
+        "type": "object"
+      },
+      "NumericRules": {
+        "additionalProperties": false,
+        "properties": {
+          "expected": {
+            "title": "Expected",
+            "type": "number"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Unit"
+          },
+          "allowed_units": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Allowed Units",
+            "type": "array"
+          },
+          "abs_tolerance": {
+            "default": 0.0,
+            "minimum": 0,
+            "title": "Abs Tolerance",
+            "type": "number"
+          },
+          "rel_tolerance": {
+            "default": 0.0,
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Rel Tolerance",
+            "type": "number"
+          }
+        },
+        "required": [
+          "expected"
+        ],
+        "title": "NumericRules",
+        "type": "object"
+      },
+      "RubricCriterion": {
+        "additionalProperties": false,
+        "properties": {
+          "criterion_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "max_score": {
+            "exclusiveMinimum": 0,
+            "title": "Max Score",
+            "type": "number"
+          },
+          "acceptable_alternatives": {
+            "items": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Acceptable Alternatives",
+            "type": "array"
+          }
+        },
+        "required": [
+          "criterion_id",
+          "description",
+          "max_score"
+        ],
+        "title": "RubricCriterion",
+        "type": "object"
+      },
+      "SourceCitation": {
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_version": {
+            "minimum": 1,
+            "title": "Source Version",
+            "type": "integer"
+          },
+          "chunk_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Chunk Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "source_version",
+          "chunk_id"
+        ],
+        "title": "SourceCitation",
+        "type": "object"
+      },
+      "SourceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_version": {
+            "minimum": 1,
+            "title": "Source Version",
+            "type": "integer"
+          },
+          "content_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Content Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "source_version",
+          "content_hash"
+        ],
+        "title": "SourceRef",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "project_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Project Id",
+        "type": "string"
+      },
+      "node_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Node Id",
+        "type": "string"
+      },
+      "assessment_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Assessment Id",
+        "type": "string"
+      },
+      "snapshot": {
+        "$ref": "#/$defs/FrozenSnapshot"
+      },
+      "questions": {
+        "items": {
+          "$ref": "#/$defs/AssessmentQuestion"
+        },
+        "maxItems": 10,
+        "minItems": 1,
+        "title": "Questions",
+        "type": "array"
+      },
+      "previous_assessment_id": {
+        "anyOf": [
+          {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Previous Assessment Id"
+      }
+    },
+    "required": [
+      "project_id",
+      "node_id",
+      "assessment_id",
+      "snapshot",
+      "questions"
+    ],
+    "title": "AssessmentQuiz",
+    "type": "object"
+  },
+  "EvaluationResult": {
+    "$defs": {
+      "AnswerEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Evidence Id",
+            "type": "string"
+          },
+          "question_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "choice",
+              "numeric_result",
+              "text_excerpt"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Quote"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "End"
+          },
+          "selected_option_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Selected Option Ids",
+            "type": "array"
+          },
+          "numeric_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Numeric Value"
+          }
+        },
+        "required": [
+          "evidence_id",
+          "question_id",
+          "kind"
+        ],
+        "title": "AnswerEvidence",
+        "type": "object"
+      },
+      "CriterionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "criterion_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "score": {
+            "minimum": 0,
+            "title": "Score",
+            "type": "number"
+          },
+          "max_score": {
+            "exclusiveMinimum": 0,
+            "title": "Max Score",
+            "type": "number"
+          },
+          "evidence_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "enum": [
+                  "minor",
+                  "major",
+                  "critical"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Severity"
+          },
+          "subject_tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Subject Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "criterion_id",
+          "score",
+          "max_score"
+        ],
+        "title": "CriterionResult",
+        "type": "object"
+      },
+      "EvaluatorRef": {
+        "additionalProperties": false,
+        "properties": {
+          "evaluator_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Evaluator Id",
+            "type": "string"
+          },
+          "evaluator_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Evaluator Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evaluator_id",
+          "evaluator_version"
+        ],
+        "title": "EvaluatorRef",
+        "type": "object"
+      },
+      "FrozenSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "profile_version": {
+            "minimum": 1,
+            "title": "Profile Version",
+            "type": "integer"
+          },
+          "plan_version": {
+            "minimum": 1,
+            "title": "Plan Version",
+            "type": "integer"
+          },
+          "policy_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "source_manifest": {
+            "items": {
+              "$ref": "#/$defs/SourceRef"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Source Manifest",
+            "type": "array"
+          },
+          "evaluator_manifest": {
+            "items": {
+              "$ref": "#/$defs/EvaluatorRef"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Evaluator Manifest",
+            "type": "array"
+          },
+          "contract_version": {
+            "const": "3.0.0",
+            "default": "3.0.0",
+            "title": "Contract Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "profile_version",
+          "plan_version",
+          "policy_id",
+          "policy_version",
+          "source_manifest",
+          "evaluator_manifest"
+        ],
+        "title": "FrozenSnapshot",
+        "type": "object"
+      },
+      "ObjectiveResult": {
+        "additionalProperties": false,
+        "properties": {
+          "objective_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Objective Id",
+            "type": "string"
+          },
+          "score_ratio": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Score Ratio",
+            "type": "number"
+          },
+          "evidence_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "criterion_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Criterion Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "objective_id",
+          "score_ratio",
+          "evidence_ids"
+        ],
+        "title": "ObjectiveResult",
+        "type": "object"
+      },
+      "QuestionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "evaluator_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Evaluator Id",
+            "type": "string"
+          },
+          "evaluator_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Evaluator Version",
+            "type": "string"
+          },
+          "score": {
+            "minimum": 0,
+            "title": "Score",
+            "type": "number"
+          },
+          "max_score": {
+            "exclusiveMinimum": 0,
+            "title": "Max Score",
+            "type": "number"
+          },
+          "evidence_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "criterion_results": {
+            "items": {
+              "$ref": "#/$defs/CriterionResult"
+            },
+            "maxItems": 20,
+            "title": "Criterion Results",
+            "type": "array"
+          },
+          "feedback": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Feedback",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_id",
+          "evaluator_id",
+          "evaluator_version",
+          "score",
+          "max_score",
+          "evidence_ids",
+          "feedback"
+        ],
+        "title": "QuestionResult",
+        "type": "object"
+      },
+      "SourceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_version": {
+            "minimum": 1,
+            "title": "Source Version",
+            "type": "integer"
+          },
+          "content_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Content Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "source_version",
+          "content_hash"
+        ],
+        "title": "SourceRef",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "project_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Project Id",
+        "type": "string"
+      },
+      "node_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Node Id",
+        "type": "string"
+      },
+      "assessment_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Assessment Id",
+        "type": "string"
+      },
+      "snapshot": {
+        "$ref": "#/$defs/FrozenSnapshot"
+      },
+      "grading_status": {
+        "enum": [
+          "graded",
+          "needs_review",
+          "invalid_item"
+        ],
+        "title": "Grading Status",
+        "type": "string"
+      },
+      "question_results": {
+        "items": {
+          "$ref": "#/$defs/QuestionResult"
+        },
+        "maxItems": 10,
+        "title": "Question Results",
+        "type": "array"
+      },
+      "objective_results": {
+        "items": {
+          "$ref": "#/$defs/ObjectiveResult"
+        },
+        "maxItems": 5,
+        "title": "Objective Results",
+        "type": "array"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/AnswerEvidence"
+        },
+        "maxItems": 100,
+        "title": "Evidence",
+        "type": "array"
+      },
+      "uncertainty_reasons": {
+        "items": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "maxItems": 20,
+        "title": "Uncertainty Reasons",
+        "type": "array"
+      },
+      "missing_evidence": {
+        "items": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "maxItems": 20,
+        "title": "Missing Evidence",
+        "type": "array"
+      }
+    },
+    "required": [
+      "project_id",
+      "node_id",
+      "assessment_id",
+      "snapshot",
+      "grading_status"
+    ],
+    "title": "EvaluationResult",
+    "type": "object"
+  },
+  "PublicProjectView": {
+    "$defs": {
+      "ChoiceOption": {
+        "additionalProperties": false,
+        "properties": {
+          "option_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Option Id",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "option_id",
+          "text"
+        ],
+        "title": "ChoiceOption",
+        "type": "object"
+      },
+      "LanguagePreference": {
+        "additionalProperties": false,
+        "properties": {
+          "teaching": {
+            "default": "zh-CN",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Teaching",
+            "type": "string"
+          },
+          "answering": {
+            "default": "zh-CN",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Answering",
+            "type": "string"
+          }
+        },
+        "title": "LanguagePreference",
+        "type": "object"
+      },
+      "LearningProfile": {
+        "additionalProperties": false,
+        "properties": {
+          "subject_label": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Subject Label",
+            "type": "string"
+          },
+          "topic": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Topic",
+            "type": "string"
+          },
+          "goal": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Goal",
+            "type": "string"
+          },
+          "bounded_goal": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Bounded Goal"
+          },
+          "prior_knowledge": {
+            "$ref": "#/$defs/PriorKnowledge"
+          },
+          "target_level": {
+            "default": "入门",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Target Level",
+            "type": "string"
+          },
+          "language": {
+            "$ref": "#/$defs/LanguagePreference"
+          },
+          "time_budget_minutes": {
+            "default": 120,
+            "exclusiveMinimum": 0,
+            "maximum": 10080,
+            "title": "Time Budget Minutes",
+            "type": "integer"
+          },
+          "session_minutes": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 480,
+            "title": "Session Minutes",
+            "type": "integer"
+          },
+          "scope_in": {
+            "items": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Scope In",
+            "type": "array"
+          },
+          "scope_out": {
+            "items": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Scope Out",
+            "type": "array"
+          },
+          "learning_mode": {
+            "default": "formal",
+            "enum": [
+              "formal",
+              "exploration"
+            ],
+            "title": "Learning Mode",
+            "type": "string"
+          },
+          "requested_capabilities": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Requested Capabilities",
+            "type": "array"
+          },
+          "profile_version": {
+            "default": 1,
+            "minimum": 1,
+            "title": "Profile Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "subject_label",
+          "topic",
+          "goal"
+        ],
+        "title": "LearningProfile",
+        "type": "object"
+      },
+      "PriorAssessmentEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "project_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "node_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Node Id",
+            "type": "string"
+          },
+          "assessment_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Assessment Id",
+            "type": "string"
+          },
+          "objective_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Objective Id",
+            "type": "string"
+          },
+          "summary": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "node_id",
+          "assessment_id",
+          "objective_id",
+          "summary"
+        ],
+        "title": "PriorAssessmentEvidence",
+        "type": "object"
+      },
+      "PriorKnowledge": {
+        "additionalProperties": false,
+        "properties": {
+          "self_reported": {
+            "items": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Self Reported",
+            "type": "array"
+          },
+          "assessed_evidence": {
+            "items": {
+              "$ref": "#/$defs/PriorAssessmentEvidence"
+            },
+            "maxItems": 20,
+            "title": "Assessed Evidence",
+            "type": "array"
+          }
+        },
+        "title": "PriorKnowledge",
+        "type": "object"
+      },
+      "PublicQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "objective_ids": {
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            "title": "Objective Ids",
+            "type": "array"
+          },
+          "question_type": {
+            "enum": [
+              "single_choice",
+              "multiple_choice",
+              "text",
+              "numeric_scalar"
+            ],
+            "title": "Question Type",
+            "type": "string"
+          },
+          "prompt": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "max_score": {
+            "exclusiveMinimum": 0,
+            "title": "Max Score",
+            "type": "number"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/$defs/ChoiceOption"
+            },
+            "title": "Options",
+            "type": "array"
+          }
+        },
+        "required": [
+          "question_id",
+          "objective_ids",
+          "question_type",
+          "prompt",
+          "max_score",
+          "options"
+        ],
+        "title": "PublicQuestion",
+        "type": "object"
+      },
+      "PublicQuiz": {
+        "additionalProperties": false,
+        "properties": {
+          "assessment_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Assessment Id",
+            "type": "string"
+          },
+          "node_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "title": "Node Id",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/$defs/PublicQuestion"
+            },
+            "title": "Questions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "assessment_id",
+          "node_id",
+          "questions"
+        ],
+        "title": "PublicQuiz",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "project_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Project Id",
+        "type": "string"
+      },
+      "thread_id": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "title": "Thread Id",
+        "type": "string"
+      },
+      "profile": {
+        "$ref": "#/$defs/LearningProfile"
+      },
+      "page_state": {
+        "default": "profile_review",
+        "enum": [
+          "profile_review",
+          "materials_required",
+          "plan_review",
+          "learning",
+          "quiz",
+          "assessment_review",
+          "budget_exhausted",
+          "exploring",
+          "paused",
+          "completed",
+          "error",
+          "running",
+          "legacy_readonly"
+        ],
+        "title": "Page State",
+        "type": "string"
+      },
+      "allowed_actions": {
+        "items": {
+          "enum": [
+            "confirm_profile",
+            "update_profile",
+            "import_material",
+            "adjust_scope",
+            "choose_exploration",
+            "replan",
+            "confirm_plan",
+            "adjust_plan",
+            "ask",
+            "start_quiz",
+            "return_to_current",
+            "submit_answer",
+            "view_feedback",
+            "annotate_dispute",
+            "replace_assessment",
+            "rest",
+            "retry_3",
+            "continue_with_new_budget",
+            "retry",
+            "return_to_teaching"
+          ],
+          "type": "string"
+        },
+        "title": "Allowed Actions",
+        "type": "array"
+      },
+      "pending_input_id": {
+        "anyOf": [
+          {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Pending Input Id"
+      },
+      "retry_token": {
+        "anyOf": [
+          {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Retry Token"
+      },
+      "draft_revision": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Draft Revision",
+        "type": "integer"
+      },
+      "requires_replan": {
+        "default": false,
+        "title": "Requires Replan",
+        "type": "boolean"
+      },
+      "db_schema_version": {
+        "const": "v3-day10-2",
+        "default": "v3-day10-2",
+        "title": "Db Schema Version",
+        "type": "string"
+      },
+      "graph_version": {
+        "const": "v3-day10-preparation",
+        "default": "v3-day10-preparation",
+        "title": "Graph Version",
+        "type": "string"
+      },
+      "contract_version": {
+        "const": "3.0.0",
+        "default": "3.0.0",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "quiz": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/PublicQuiz"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "project_id",
+      "thread_id",
+      "profile"
+    ],
+    "title": "PublicProjectView",
+    "type": "object"
+  }
+}

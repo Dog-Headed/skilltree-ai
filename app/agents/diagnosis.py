@@ -827,7 +827,7 @@ def build_tool_execution_summary(tool_loop_result: dict[str, Any]) -> dict[str, 
     }
 
 
-DIAGNOSIS_PROMPT_VERSION = "day7-v2-prerequisite-evidence"
+DIAGNOSIS_PROMPT_VERSION = "day8-v3-learner-feedback"
 FINAL_DIAGNOSIS_SYSTEM_PROMPT = """
 你是学习诊断 Agent。
 
@@ -873,6 +873,11 @@ revisit_prerequisite
 - 对照当前目标与前置目标定位概念来源。若当前答案与对应前置历史都呈现同一基础概念错误，应优先考虑 revisit_prerequisite，并引用该前置历史和当前答案的证据。
 - 若只有当前操作错误、没有证据支持前置根因，可以选择 remediate；查询失败或受预算限制时应明确说明证据边界，不得伪造确定结论。
 - 最终是否真的允许 advance 仍由 Graph 的确定性规则决定。
+- reason 是展示给学习者的反馈：用 2–4 句简洁中文说明已掌握的内容、需要改进的地方和建议下一步。
+- weak_points 使用具体、易懂的中文描述，不要附带英文错误标签代码。
+- reason 和 weak_points 不展示目标 ID、题目 ID、测验 ID、证据 ID、工具调用次数、预算或 Graph 等内部实现信息。引用题目时用“第几题”，引用学习目标或前置节点时用其中文描述或名称。
+- Python 代码、函数名和具体报错名称（例如 print、SyntaxError、NameError）可以保留，它们属于学习内容。
+- 查询失败或受限时仍要保留证据边界，用“目前的作答还不足以确认……”等自然语言说明，不罗列工具运行记录。内部证据编号仍完整填写在 evidence_ids 中。
 - 只输出符合给定 JSON Schema 的 JSON，不要输出 Markdown 或额外说明。
 """
 
@@ -924,7 +929,7 @@ def generate_final_diagnosis(
         f"{json.dumps(next((node for node in tree if node['id'] == current_node_id), {}), ensure_ascii=False)}\n\n"
 
         "当前试卷的目标覆盖：\n"
-        f"{json.dumps([{'question_id': q['id'], 'objective_id': q['objective_id']} for q in state.get('quiz', {}).get('questions', [])], ensure_ascii=False)}\n\n"
+        f"{json.dumps([{'question_number': number, 'question_id': q['id'], 'objective_id': q['objective_id']} for number, q in enumerate(state.get('quiz', {}).get('questions', []), 1)], ensure_ascii=False)}\n\n"
 
         "当前得分：\n"
         f"{json.dumps(state.get('score_summary', {}),ensure_ascii=False,)}\n\n"

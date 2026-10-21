@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1017">
+  <meta name="description" content="SkillTree AI：从开放主题和可信资料出发，规划、学习、测评，逐步点亮学习路径。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101720'/%3E%3Cpath d='M9 24V7h13M9 16h13M22 7v4M22 16v4' fill='none' stroke='%23c8f36a' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+  <title>SkillTree AI · 学习工作台</title>
+  <link rel="stylesheet" href="/assets/v3.css">
+  <script src="/assets/v3.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到学习内容</a>
+  <button id="sidebar-shade" class="shade" aria-label="关闭学习记录列表" hidden></button>
+  <aside class="sidebar" id="sidebar" aria-label="学习记录">
+    <a class="brand" href="/" aria-label="SkillTree AI 首页"><span class="brand-icon">↳</span><span>SkillTree <b>AI</b><small>让每一步学习都有依据</small></span></a>
+    <button id="new-project" class="btn primary wide">＋ 新建学习</button>
+    <div class="record-tabs" role="tablist" aria-label="记录版本">
+      <button id="current-tab" role="tab" aria-selected="true">学习记录</button>
+      <button id="legacy-tab" role="tab" aria-selected="false">V2 历史</button>
+    </div>
+    <div class="list-caption"><span id="list-label">我的学习</span><button id="refresh-list" class="icon-button" aria-label="刷新学习记录">↻</button></div>
+    <nav id="project-list" aria-label="选择学习记录"></nav>
+    <div class="sidebar-foot"><span class="status-dot"></span>文字学习 · V3.0 <button id="capabilities-button" class="text-button">能力范围</button></div>
+  </aside>
+  <main>
+    <header class="topbar">
+      <button id="mobile-menu" class="icon-button mobile-only" aria-label="打开学习记录" aria-expanded="false" aria-controls="sidebar">☰</button>
+      <div class="breadcrumb">学习工作台 <span>/</span> <strong id="page-title">新的学习旅程</strong></div>
+      <button id="refresh-project" class="btn subtle" title="只读取状态，不调用模型">↻ 刷新状态</button>
+    </header>
+    <div class="main-inner">
+      <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+      <div id="busy-notice" class="busy-notice" role="status" aria-live="polite" hidden><span class="spinner"></span><span id="busy-text">正在处理，请稍候…</span></div>
+      <section id="content" tabindex="-1" aria-label="当前学习内容"></section>
+      <footer class="main-foot">以实际作答与目标证据判断通过 · 页面刷新不会消耗模型请求</footer>
+    </div>
+  </main>
+  <dialog id="modal" aria-labelledby="modal-title">
+    <div class="modal-head"><h2 id="modal-title"></h2><button id="modal-close" class="icon-button" aria-label="关闭弹窗">×</button></div>
+    <div id="modal-content"></div>
+  </dialog>
+</body>
+</html>

@@ -13,8 +13,9 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from app.db.repository import DEFAULT_DB_PATH, LearningRepository
 from app.graph import CHECKPOINT_DB_PATH
-from app.models.web import CreateProject, ProjectSummary, ProjectView, ResumeProject, RetryProject
+from app.models.web import CreateProject, DeleteProject, RenameProject, ProjectSummary, ProjectView, ResumeProject, RetryProject
 from app.services.learning_session import open_learning_session
+from app.services.project_deletion import delete_project_record
 from app.services.project_view import build_project_view
 from app.services.quiz_answers import normalize_choice_answer
 
@@ -58,6 +59,10 @@ def create_app(*, learning_db_path=DEFAULT_DB_PATH, checkpoint_db_path=CHECKPOIN
             raise WebError(404, "project_not_found", "找不到这个学习项目。")
         return result
 
+    def require_existing_id(repo, project_id):
+        if repo.is_project_deleted(project_id):
+            raise WebError(404, "project_not_found", "这个学习项目已删除。", project_id)
+
     def run_step(operation, project_id):
         try:
             operation()
@@ -69,7 +74,7 @@ def create_app(*, learning_db_path=DEFAULT_DB_PATH, checkpoint_db_path=CHECKPOIN
     async def local_origin(request: Request, call_next):
         # 防止其他网站向本地无登录服务提交动作。CLI 无 Origin 仍可使用。
         origin = request.headers.get("origin")
-        if request.method == "POST" and origin and origin != str(request.base_url).rstrip("/"):
+        if request.method in {"POST", "DELETE", "PATCH"} and origin and origin != str(request.base_url).rstrip("/"):
             return JSONResponse(status_code=403, content={"error": {"code": "invalid_origin", "message": "请从当前学习工作台提交操作。"}})
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
@@ -100,15 +105,21 @@ def create_app(*, learning_db_path=DEFAULT_DB_PATH, checkpoint_db_path=CHECKPOIN
     def list_projects():
         with LearningRepository(paths["learning_db_path"]) as repo:
             ids = [project["id"] for project in repo.list_projects()]
+            deleted = repo.deleted_project_ids()
         if paths["checkpoint_db_path"].exists():
             with sqlite3.connect(paths["checkpoint_db_path"]) as conn:
                 if conn.execute("SELECT 1 FROM sqlite_master WHERE name = 'checkpoints'").fetchone():
-                    ids.extend(row[0] for row in conn.execute("SELECT DISTINCT thread_id FROM checkpoints") if row[0] not in ids)
+                    ids.extend(row[0] for row in conn.execute("SELECT DISTINCT thread_id FROM checkpoints") if row[0] not in ids and row[0] not in deleted)
         summaries = []
         for project_id in ids:
-            result = read_project(project_id)
+            try:
+                result = read_project(project_id)
+            except WebError as exc:
+                if exc.status == 404:
+                    continue  # 列表读取期间该项目可能刚好被另一标签页删除。
+                raise
             if result:
-                summaries.append(ProjectSummary(**result.model_dump(include={"project_id", "goal", "completed_count", "total_count", "page_state"})))
+                summaries.append(ProjectSummary(**result.model_dump(include={"project_id", "goal", "display_name", "completed_count", "total_count", "page_state"})))
         return summaries
 
     @app.get("/projects/{project_id}", response_model=ProjectView)
@@ -117,6 +128,8 @@ def create_app(*, learning_db_path=DEFAULT_DB_PATH, checkpoint_db_path=CHECKPOIN
         lock = project_lock(project_id)
         acquired = lock.acquire(blocking=False)
         try:
+            with LearningRepository(paths["learning_db_path"]) as repo:
+                require_existing_id(repo, project_id)
             with open_learning_session(project_id, **paths) as session, LearningRepository(paths["learning_db_path"]) as repo:
                 result = build_project_view(session, repo, running=not acquired)
             if result is None:
@@ -130,6 +143,9 @@ def create_app(*, learning_db_path=DEFAULT_DB_PATH, checkpoint_db_path=CHECKPOIN
     def create_project(payload: CreateProject):
         project_id = "project_" + payload.request_id.hex
         with execution(project_id):
+            with LearningRepository(paths["learning_db_path"]) as repo:
+                if repo.is_project_deleted(project_id):
+                    raise WebError(409, "project_deleted", "原项目已删除，请重新新建一个学习项目。", project_id)
             with open_learning_session(project_id, **paths) as session, LearningRepository(paths["learning_db_path"]) as repo:
                 if session.snapshot().values or repo.get_project(project_id):
                     raise WebError(409, "duplicate_creation", "项目已经创建，请查看已保存的项目。", project_id)
@@ -140,6 +156,8 @@ def create_app(*, learning_db_path=DEFAULT_DB_PATH, checkpoint_db_path=CHECKPOIN
     @app.post("/projects/{project_id}/resume", response_model=ProjectView)
     def resume_project(project_id: str, payload: ResumeProject):
         with execution(project_id):
+            with LearningRepository(paths["learning_db_path"]) as repo:
+                require_existing_id(repo, project_id)
             with open_learning_session(project_id, **paths) as session, LearningRepository(paths["learning_db_path"]) as repo:
                 current = require_view(session, repo)
                 if payload.pending_input_id != current.pending_input_id:
@@ -179,12 +197,32 @@ def create_app(*, learning_db_path=DEFAULT_DB_PATH, checkpoint_db_path=CHECKPOIN
     @app.post("/projects/{project_id}/retry", response_model=ProjectView)
     def retry_project(project_id: str, payload: RetryProject):
         with execution(project_id):
+            with LearningRepository(paths["learning_db_path"]) as repo:
+                require_existing_id(repo, project_id)
             with open_learning_session(project_id, **paths) as session, LearningRepository(paths["learning_db_path"]) as repo:
                 current = require_view(session, repo)
                 if "retry" not in current.allowed_actions or payload.retry_token != current.retry_token:
                     raise WebError(409, "stale_retry", "当前步骤已变化，请查看最新状态。", project_id)
                 run_step(session.retry, project_id)
                 return require_view(session, repo)
+
+    @app.delete("/projects/{project_id}")
+    def delete_project(project_id: str, payload: DeleteProject):
+        with execution(project_id):
+            if payload.confirm_project_id != project_id:
+                raise WebError(422, "delete_confirmation_mismatch", "请选择并确认要删除的同一个学习项目。", project_id)
+            with LearningRepository(paths["learning_db_path"]) as repo:
+                if not delete_project_record(repo, paths["checkpoint_db_path"], project_id):
+                    raise WebError(404, "project_not_found", "找不到这个学习项目。", project_id)
+        return {"project_id": project_id, "deleted": True}
+
+    @app.patch("/projects/{project_id}")
+    def rename_project(project_id: str, payload: RenameProject):
+        with execution(project_id), LearningRepository(paths["learning_db_path"]) as repo:
+            if repo.get_project(project_id) is None:
+                raise WebError(404, 'project_not_found', '找不到这个学习项目。', project_id)
+            repo.rename_project(project_id, payload.display_name)
+        return {'project_id': project_id, 'display_name': payload.display_name}
 
     app.state.paths = paths
     return app

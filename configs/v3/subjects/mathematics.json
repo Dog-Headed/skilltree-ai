@@ -1,0 +1,42 @@
+{
+  "preset_id": "mathematics",
+  "preset_version": "3.0.0-day11",
+  "subject_label": "数学",
+  "topic": "一元一次方程",
+  "bounded_goal": "在已有四则运算基础上求解一元一次方程，验证结果并解释等式变形步骤。",
+  "target_level": "具备四则运算基础的初学者",
+  "teaching_style": "逐步解释等式两侧保持相等的操作，使用教材例题与结果代回验证。",
+  "scope_in": [
+    "单个未知数的一次方程",
+    "简单等式变形",
+    "结果代回验证"
+  ],
+  "scope_out": [
+    "任意符号等价",
+    "一般数学证明",
+    "复杂单位系统"
+  ],
+  "typical_tasks": [
+    "选择合法的等式变形",
+    "填写单个数值解",
+    "用文字说明等式变形理由"
+  ],
+  "common_misconceptions": [
+    "只改变等式一侧",
+    "移项符号错误",
+    "得到数值但不检查原方程"
+  ],
+  "suggested_capabilities": [
+    "text_explanation",
+    "text_question_answer",
+    "choice_exact",
+    "numeric_scalar",
+    "text_rubric"
+  ],
+  "suggested_policy_id": "numeric-text-draft",
+  "limitations": [
+    "numeric_scalar 与 text_rubric 已在 Day 11 实装；数值默认精确匹配，容差来自冻结策略。",
+    "不执行表达式，不提供任意符号证明或复杂单位推理。",
+    "数值答案正确不能替代要求解释等式变形的目标。"
+  ]
+}

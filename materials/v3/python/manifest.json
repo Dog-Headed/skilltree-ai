@@ -1,0 +1,236 @@
+{
+  "pack_id": "python-foundation-day10",
+  "pack_version": "3.0.0-day10-1",
+  "subject_label": "Python",
+  "topic": "条件与循环的阅读解释",
+  "scope_in": [
+    "变量与比较的区别",
+    "if边界",
+    "for元素与range终点",
+    "while条件与终止"
+  ],
+  "scope_out": [
+    "执行学生代码",
+    "任意程序正确性"
+  ],
+  "review_status": "pending_user_review",
+  "authored_by": "assistant_draft",
+  "agent_fact_checked": {
+    "checked_on": "2026-10-16",
+    "checked_by": "coding_agent",
+    "method": "浏览权威原始规则页并原创课程、题目；独立核对有限答案；不等同用户人工认可。",
+    "human_approval": false
+  },
+  "source_references": [
+    {
+      "title": "Python 3.11 Introduction",
+      "url": "https://docs.python.org/3.11/tutorial/introduction.html",
+      "role": "rule_fact_check",
+      "accessed_on": "2026-10-16"
+    },
+    {
+      "title": "Python 3.11 Control Flow",
+      "url": "https://docs.python.org/3.11/tutorial/controlflow.html",
+      "role": "rule_fact_check",
+      "accessed_on": "2026-10-16"
+    }
+  ],
+  "documents": [
+    {
+      "filename": "teaching.md",
+      "source_id": "python-teaching",
+      "source_version": 1,
+      "title": "Python 条件与循环：文字阅读小单元",
+      "visibility": "teaching",
+      "content_hash": "b42b057efa2f726124fada0ba9a2bd419f16973392f12b22cbebb1d394bc18fc",
+      "sections": [
+        {
+          "section_id": "py-foundation",
+          "heading": "py-foundation 变量、比较与列表",
+          "line_start": 6,
+          "line_end": 13
+        },
+        {
+          "section_id": "py-condition",
+          "heading": "py-condition 条件、边界与顺序",
+          "line_start": 14,
+          "line_end": 28
+        },
+        {
+          "section_id": "py-for",
+          "heading": "py-for 序列遍历与 range",
+          "line_start": 29,
+          "line_end": 36
+        },
+        {
+          "section_id": "py-while",
+          "heading": "py-while 条件变化与终止",
+          "line_start": 37,
+          "line_end": 48
+        },
+        {
+          "section_id": "py-explain",
+          "heading": "py-explain 可检查的阅读证据",
+          "line_start": 49,
+          "line_end": 55
+        },
+        {
+          "section_id": "py-references",
+          "heading": "py-references 原始参考",
+          "line_start": 56,
+          "line_end": 60
+        }
+      ],
+      "source_urls": [
+        "https://docs.python.org/3.11/tutorial/introduction.html",
+        "https://docs.python.org/3.11/tutorial/controlflow.html"
+      ],
+      "scope": [
+        "变量与比较的区别",
+        "if边界",
+        "for元素与range终点",
+        "while条件与终止"
+      ],
+      "trust_note": "Agent原创并核对公开规则，待用户复核；不是已批准教材或人工金标准。"
+    },
+    {
+      "filename": "assessment_private.md",
+      "source_id": "python-assessment-private",
+      "source_version": 1,
+      "title": "Python 条件与循环：私有评价说明",
+      "visibility": "assessment_private",
+      "content_hash": "ee4614a178b553d693234c2f8137ad2f7dc2106da60d0e64cd6f8604dbc33f45",
+      "sections": [
+        {
+          "section_id": "py-private-criteria",
+          "heading": "py-private-criteria 分项量规",
+          "line_start": 6,
+          "line_end": 13
+        },
+        {
+          "section_id": "py-private-bank",
+          "heading": "py-private-bank 原创参考样题",
+          "line_start": 14,
+          "line_end": 20
+        },
+        {
+          "section_id": "py-private-quality",
+          "heading": "py-private-quality 有效性与证据",
+          "line_start": 21,
+          "line_end": 27
+        }
+      ],
+      "source_urls": [
+        "https://docs.python.org/3.11/tutorial/introduction.html",
+        "https://docs.python.org/3.11/tutorial/controlflow.html"
+      ],
+      "scope": [
+        "变量与比较的区别",
+        "if边界",
+        "for元素与range终点",
+        "while条件与终止"
+      ],
+      "trust_note": "Agent原创并核对公开规则，待用户复核；不是已批准教材或人工金标准。"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "python_debug_01",
+      "split": "debug",
+      "path": "evals/v3/python/cases/python_debug_01.json",
+      "content_hash": "106986a3d1510e20ed9027dd11423501fe32cafba2673203147b37346ce529f3"
+    },
+    {
+      "case_id": "python_debug_02",
+      "split": "debug",
+      "path": "evals/v3/python/cases/python_debug_02.json",
+      "content_hash": "340cf42fab1d9dc32aa9579742789ee18f6d4e448df76171309c7e2a2edfcfd3"
+    },
+    {
+      "case_id": "python_debug_03",
+      "split": "debug",
+      "path": "evals/v3/python/cases/python_debug_03.json",
+      "content_hash": "d88d44829a66f27505121b372d29b061a7b3ef339ed989cab13b6394b6536ded"
+    },
+    {
+      "case_id": "python_debug_04",
+      "split": "debug",
+      "path": "evals/v3/python/cases/python_debug_04.json",
+      "content_hash": "be4d8a5a0e22b18b9a42bec3d40005d23993073f6e5bde765b0e2528bc76441e"
+    },
+    {
+      "case_id": "python_debug_05",
+      "split": "debug",
+      "path": "evals/v3/python/cases/python_debug_05.json",
+      "content_hash": "b333031ed2b85a6b746497ed1e7a0fa1cbd308af11a4070b44d31ab01332f430"
+    },
+    {
+      "case_id": "python_debug_06",
+      "split": "debug",
+      "path": "evals/v3/python/cases/python_debug_06.json",
+      "content_hash": "321d4ded0e681524a3a3e12d60a40ab511792dd7d74c9bb4527ab9c800939f9b"
+    },
+    {
+      "case_id": "python_debug_07",
+      "split": "debug",
+      "path": "evals/v3/python/cases/python_debug_07.json",
+      "content_hash": "f22aa6ef58d85d702b01d0821e73a0daaf2ca5964f3568119fed72e96bc4fb22"
+    },
+    {
+      "case_id": "python_debug_08",
+      "split": "debug",
+      "path": "evals/v3/python/cases/python_debug_08.json",
+      "content_hash": "90cb41698243dbe8ff5acec51bacc2ddc38fdd93523788c5e0e8292ca78fb262"
+    },
+    {
+      "case_id": "python_holdout_09",
+      "split": "holdout",
+      "path": "evals/v3/python/cases/python_holdout_09.json",
+      "content_hash": "4fe1848bcc9a1f1c69a2ee28253fffdbda54d38068df11596652c51555f1667f"
+    },
+    {
+      "case_id": "python_holdout_10",
+      "split": "holdout",
+      "path": "evals/v3/python/cases/python_holdout_10.json",
+      "content_hash": "6c5d7e06855fd73e7afa64e8842820da058c0d811d5f1b9f221e26b6776f5d2a"
+    },
+    {
+      "case_id": "python_holdout_11",
+      "split": "holdout",
+      "path": "evals/v3/python/cases/python_holdout_11.json",
+      "content_hash": "e0afdc3c70f1a125ec8473d407e6b497ed1acc38f9cd7d9193957555f3e418da"
+    },
+    {
+      "case_id": "python_holdout_12",
+      "split": "holdout",
+      "path": "evals/v3/python/cases/python_holdout_12.json",
+      "content_hash": "38ee7492bfb0592e3f4e57f06ffa749ddf24538c8e61fa1553e995c55f77403c"
+    }
+  ],
+  "frozen_before_model_execution": {
+    "frozen_on": "2026-10-16",
+    "timezone": "Asia/Shanghai",
+    "real_model_runs": 0,
+    "debug_case_count": 8,
+    "holdout_case_count": 4,
+    "holdout_rule": "先用户复核；调试仅用debug，Prompt冻结后holdout验收，不据此反调。"
+  },
+  "suggested_plan": {
+    "bounded_goal": "变量与比较的区别、if边界、for元素与range终点、while条件与终止",
+    "node_outcomes": [
+      "变量与比较的区别",
+      "if边界",
+      "for元素与range终点",
+      "while条件与终止"
+    ],
+    "full_goal_required_evaluators": [
+      "text_rubric"
+    ],
+    "available_reduced_goal": "仅用可用choice_exact检查缩小后的选择辨认目标，不宣称完整文字或数值目标已支持。"
+  },
+  "limitations": [
+    "通用text_rubric未实装",
+    "不测听说或代码执行",
+    "Fake只验证契约，不证明内容质量。"
+  ]
+}

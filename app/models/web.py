@@ -34,6 +34,22 @@ class RetryProject(WebModel):
     retry_token: str = Field(min_length=1, max_length=128)
 
 
+class DeleteProject(WebModel):
+    confirm_project_id: str = Field(min_length=1, max_length=128)
+
+
+class RenameProject(WebModel):
+    display_name: str = Field(min_length=1, max_length=80)
+
+    @field_validator('display_name')
+    @classmethod
+    def clean_name(cls, value):
+        value = value.strip()
+        if not value or any(ord(char) < 32 or ord(char) == 127 for char in value):
+            raise ValueError('名称不能为空或包含控制字符')
+        return value
+
+
 class Objective(WebModel):
     id: str
     description: str
@@ -102,6 +118,7 @@ class PublicError(WebModel):
 class ProjectView(WebModel):
     project_id: str
     goal: str
+    display_name: str | None = None
     nodes: list[PublicNode]
     completed_count: int
     total_count: int
@@ -126,6 +143,7 @@ class ProjectView(WebModel):
 class ProjectSummary(WebModel):
     project_id: str
     goal: str
+    display_name: str | None = None
     completed_count: int
     total_count: int
     page_state: str

@@ -1,0 +1,251 @@
+{
+  "pack_id": "mathematics-foundation-day10",
+  "pack_version": "3.0.0-day10-1",
+  "subject_label": "数学",
+  "topic": "一元一次方程的解与等价变形",
+  "scope_in": [
+    "有理数与等号",
+    "两边同加减",
+    "两边同乘除非零数",
+    "多步解与代回检验"
+  ],
+  "scope_out": [
+    "复杂符号证明",
+    "任意表达式执行"
+  ],
+  "review_status": "pending_user_review",
+  "authored_by": "assistant_draft",
+  "agent_fact_checked": {
+    "checked_on": "2026-10-16",
+    "checked_by": "coding_agent",
+    "method": "浏览权威原始规则页并原创课程、题目；独立核对有限答案；不等同用户人工认可。",
+    "human_approval": false
+  },
+  "source_references": [
+    {
+      "title": "OpenStax Prealgebra 2e 8.1",
+      "url": "https://openstax.org/books/prealgebra-2e/pages/8-1-solve-equations-using-the-subtraction-and-addition-properties-of-equality",
+      "role": "rule_fact_check",
+      "accessed_on": "2026-10-16"
+    },
+    {
+      "title": "OpenStax Prealgebra 2e 8.2",
+      "url": "https://openstax.org/books/prealgebra-2e/pages/8-2-solve-equations-using-the-division-and-multiplication-properties-of-equality",
+      "role": "rule_fact_check",
+      "accessed_on": "2026-10-16"
+    },
+    {
+      "title": "OpenStax Prealgebra 2e 8.3",
+      "url": "https://openstax.org/books/prealgebra-2e/pages/8-3-solve-equations-with-variables-and-constants-on-both-sides",
+      "role": "rule_fact_check",
+      "accessed_on": "2026-10-16"
+    }
+  ],
+  "documents": [
+    {
+      "filename": "teaching.md",
+      "source_id": "mathematics-teaching",
+      "source_version": 1,
+      "title": "一元一次方程：解、等价变形与检验",
+      "visibility": "teaching",
+      "content_hash": "c77f74e720098a8956628d99c7bcb830ccfbafe071bd853f4538240fb8247091",
+      "sections": [
+        {
+          "section_id": "math-foundation",
+          "heading": "math-foundation 有理数与等号",
+          "line_start": 6,
+          "line_end": 11
+        },
+        {
+          "section_id": "math-add",
+          "heading": "math-add 两边同加减",
+          "line_start": 12,
+          "line_end": 18
+        },
+        {
+          "section_id": "math-multiply",
+          "heading": "math-multiply 两边同乘除",
+          "line_start": 19,
+          "line_end": 25
+        },
+        {
+          "section_id": "math-multistep",
+          "heading": "math-multistep 多步求解",
+          "line_start": 26,
+          "line_end": 32
+        },
+        {
+          "section_id": "math-check",
+          "heading": "math-check 代回原式与答案形式",
+          "line_start": 33,
+          "line_end": 40
+        },
+        {
+          "section_id": "math-uncertainty",
+          "heading": "math-uncertainty 范围与资料问题",
+          "line_start": 41,
+          "line_end": 45
+        },
+        {
+          "section_id": "math-references",
+          "heading": "math-references 原始参考",
+          "line_start": 46,
+          "line_end": 51
+        }
+      ],
+      "source_urls": [
+        "https://openstax.org/books/prealgebra-2e/pages/8-1-solve-equations-using-the-subtraction-and-addition-properties-of-equality",
+        "https://openstax.org/books/prealgebra-2e/pages/8-2-solve-equations-using-the-division-and-multiplication-properties-of-equality",
+        "https://openstax.org/books/prealgebra-2e/pages/8-3-solve-equations-with-variables-and-constants-on-both-sides"
+      ],
+      "scope": [
+        "有理数与等号",
+        "两边同加减",
+        "两边同乘除非零数",
+        "多步解与代回检验"
+      ],
+      "trust_note": "Agent原创并核对公开规则，待用户复核；不是已批准教材或人工金标准。"
+    },
+    {
+      "filename": "assessment_private.md",
+      "source_id": "mathematics-assessment-private",
+      "source_version": 1,
+      "title": "一元一次方程：私有答案与分项量规",
+      "visibility": "assessment_private",
+      "content_hash": "b0d5e7a7f8a78cbceba3b2701b9e7d47764cb1a06bd01e08757dc87a28c174c5",
+      "sections": [
+        {
+          "section_id": "math-private-criteria",
+          "heading": "math-private-criteria 量规与替代路径",
+          "line_start": 6,
+          "line_end": 12
+        },
+        {
+          "section_id": "math-private-bank",
+          "heading": "math-private-bank 原创参考样题",
+          "line_start": 13,
+          "line_end": 19
+        },
+        {
+          "section_id": "math-private-quality",
+          "heading": "math-private-quality 有效性与不确定项",
+          "line_start": 20,
+          "line_end": 26
+        }
+      ],
+      "source_urls": [
+        "https://openstax.org/books/prealgebra-2e/pages/8-1-solve-equations-using-the-subtraction-and-addition-properties-of-equality",
+        "https://openstax.org/books/prealgebra-2e/pages/8-2-solve-equations-using-the-division-and-multiplication-properties-of-equality",
+        "https://openstax.org/books/prealgebra-2e/pages/8-3-solve-equations-with-variables-and-constants-on-both-sides"
+      ],
+      "scope": [
+        "有理数与等号",
+        "两边同加减",
+        "两边同乘除非零数",
+        "多步解与代回检验"
+      ],
+      "trust_note": "Agent原创并核对公开规则，待用户复核；不是已批准教材或人工金标准。"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "mathematics_debug_01",
+      "split": "debug",
+      "path": "evals/v3/mathematics/cases/mathematics_debug_01.json",
+      "content_hash": "4058c5df389e0e8523cae1f99ed3f85a9178f3910399b8cbe3796f77ceb607cc"
+    },
+    {
+      "case_id": "mathematics_debug_02",
+      "split": "debug",
+      "path": "evals/v3/mathematics/cases/mathematics_debug_02.json",
+      "content_hash": "7a75b6be054c9e73563f56a95f15fcbc939dfcd0666abefd7a6c6a5de240e4f1"
+    },
+    {
+      "case_id": "mathematics_debug_03",
+      "split": "debug",
+      "path": "evals/v3/mathematics/cases/mathematics_debug_03.json",
+      "content_hash": "40271a605457e8c6c33a505fab99d9c1dfa7534fd502f7ec32c9811c0f48a702"
+    },
+    {
+      "case_id": "mathematics_debug_04",
+      "split": "debug",
+      "path": "evals/v3/mathematics/cases/mathematics_debug_04.json",
+      "content_hash": "4251e00c757e924cc73e129bfc3166e08137b592a354c53a2b409887f78b69ed"
+    },
+    {
+      "case_id": "mathematics_debug_05",
+      "split": "debug",
+      "path": "evals/v3/mathematics/cases/mathematics_debug_05.json",
+      "content_hash": "ac0a83ce4fd724071994e2de28242fecc4684220ab0dfdcec251f591db24c2a0"
+    },
+    {
+      "case_id": "mathematics_debug_06",
+      "split": "debug",
+      "path": "evals/v3/mathematics/cases/mathematics_debug_06.json",
+      "content_hash": "770ab1acaa42b673f313d669640dfdf1e23783c89eb68fbe3435b47d90be8e19"
+    },
+    {
+      "case_id": "mathematics_debug_07",
+      "split": "debug",
+      "path": "evals/v3/mathematics/cases/mathematics_debug_07.json",
+      "content_hash": "1a731742b4f3b35fb9e459e51442b9dbbacbd2cb0082b7118b70ae5715671908"
+    },
+    {
+      "case_id": "mathematics_debug_08",
+      "split": "debug",
+      "path": "evals/v3/mathematics/cases/mathematics_debug_08.json",
+      "content_hash": "591aead7b7f9a48cfb714a93064d24a0d8b47693ae31cedaa1315ac4ed76a7f7"
+    },
+    {
+      "case_id": "mathematics_holdout_09",
+      "split": "holdout",
+      "path": "evals/v3/mathematics/cases/mathematics_holdout_09.json",
+      "content_hash": "e2804d0f797c02118518609ebd195aa0c3e237a2e5b87f6301e468d2730e5dc4"
+    },
+    {
+      "case_id": "mathematics_holdout_10",
+      "split": "holdout",
+      "path": "evals/v3/mathematics/cases/mathematics_holdout_10.json",
+      "content_hash": "ed7b45740e41626f08f158a73d2dd0446482bead0fe754062a23113c6f1de539"
+    },
+    {
+      "case_id": "mathematics_holdout_11",
+      "split": "holdout",
+      "path": "evals/v3/mathematics/cases/mathematics_holdout_11.json",
+      "content_hash": "6949602b86f6d80347b0a347eaf5fff703f83b67639b318d117e336b6b67938c"
+    },
+    {
+      "case_id": "mathematics_holdout_12",
+      "split": "holdout",
+      "path": "evals/v3/mathematics/cases/mathematics_holdout_12.json",
+      "content_hash": "b69e22382ee287ae8c88a0bbf0724542f99013b5507e40ac98cf8904e2926574"
+    }
+  ],
+  "frozen_before_model_execution": {
+    "frozen_on": "2026-10-16",
+    "timezone": "Asia/Shanghai",
+    "real_model_runs": 0,
+    "debug_case_count": 8,
+    "holdout_case_count": 4,
+    "holdout_rule": "先用户复核；调试仅用debug，Prompt冻结后holdout验收，不据此反调。"
+  },
+  "suggested_plan": {
+    "bounded_goal": "有理数与等号、两边同加减、两边同乘除非零数、多步解与代回检验",
+    "node_outcomes": [
+      "有理数与等号",
+      "两边同加减",
+      "两边同乘除非零数",
+      "多步解与代回检验"
+    ],
+    "full_goal_required_evaluators": [
+      "text_rubric",
+      "numeric_scalar"
+    ],
+    "available_reduced_goal": "仅用可用choice_exact检查缩小后的选择辨认目标，不宣称完整文字或数值目标已支持。"
+  },
+  "limitations": [
+    "通用text_rubric未实装",
+    "numeric_scalar未实装",
+    "Fake只验证契约，不证明内容质量。"
+  ]
+}

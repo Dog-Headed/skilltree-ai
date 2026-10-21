@@ -1,0 +1,41 @@
+{
+  "preset_id": "english",
+  "preset_version": "3.0.0-day11",
+  "subject_label": "英语",
+  "topic": "一般过去时",
+  "bounded_goal": "识别英语一般过去时，按资料中的规则改写句子并写一段简短过去经历。",
+  "target_level": "具备基本英文句子阅读基础的学习者",
+  "teaching_style": "使用规则、例句和允许变体解释时态，反馈文字作答的具体证据。",
+  "scope_in": [
+    "一般过去时的常见规则",
+    "资料内的不规则动词",
+    "句子改写与简短文字运用"
+  ],
+  "scope_out": [
+    "听力",
+    "发音与口语评价",
+    "资料外全部语法规则"
+  ],
+  "typical_tasks": [
+    "选择正确的过去时形式",
+    "改写给定句子",
+    "写一段简短过去经历"
+  ],
+  "common_misconceptions": [
+    "过去时与原形混用",
+    "忽略否定句中的动词原形",
+    "认为所有动词都加 ed"
+  ],
+  "suggested_capabilities": [
+    "text_explanation",
+    "text_question_answer",
+    "choice_exact",
+    "text_rubric"
+  ],
+  "suggested_policy_id": "text-rubric-draft",
+  "limitations": [
+    "text_rubric 已在 Day 11 实装；参考答案和量规须有资料依据并经人工抽查。",
+    "不接收音频，不宣称发音或听说能力通过。",
+    "选择题不能覆盖要求句子改写或短文运用的目标。"
+  ]
+}

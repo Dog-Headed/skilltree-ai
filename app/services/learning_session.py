@@ -32,6 +32,9 @@ class LearningSession:
         return {"configurable": {"thread_id": self.project_id}, "recursion_limit": 30}
 
     def snapshot(self):
+        with repository.LearningRepository(self.learning_db_path) as repo:
+            if repo.is_project_deleted(self.project_id):
+                raise ValueError("这个学习项目已删除，不能继续恢复或重试。")
         return self.graph.get_state(self.config)
 
     def restore(self):

@@ -1,0 +1,22 @@
+{
+  "status": "assistant_draft_pending_user_review",
+  "purpose": "Offline Fake output fixtures; not a real subject-specific Planner implementation",
+  "english": [
+    {"outcome": "识别主语和动词原形，写出简单句", "sections": ["en-foundation"]},
+    {"outcome": "改写含 yesterday 的过去肯定句，区分规则与有限不规则动词", "sections": ["en-affirmative"]},
+    {"outcome": "用 did not 和 Did 改写否定句与疑问句，保留动词原形", "sections": ["en-negative", "en-question"]},
+    {"outcome": "写出两到三句过去事件叙述，保留时间、原意与连贯性", "sections": ["en-paragraph"]}
+  ],
+  "mathematics": [
+    {"outcome": "比较有理数值，判断给定解是否使等号两边相等", "sections": ["math-foundation"]},
+    {"outcome": "求解 x+5=12，解释两边同减5的等价操作", "sections": ["math-add"]},
+    {"outcome": "求解 3x=12，解释两边同除非零数3的等价操作", "sections": ["math-multiply"]},
+    {"outcome": "求解 2x+5=17，说明多步操作并代回原式验证", "sections": ["math-multistep", "math-check"]}
+  ],
+  "python": [
+    {"outcome": "区分变量赋值与比较，写出列表中的元素", "sections": ["py-foundation"]},
+    {"outcome": "给出 if/elif 在等号边界的分支，解释条件判断顺序", "sections": ["py-condition"]},
+    {"outcome": "列出 for 遍历的元素与 range(1,4) 的序列，说明终点不含4", "sections": ["py-for"]},
+    {"outcome": "逐轮写出 while 变量变化并说明条件与终止依据", "sections": ["py-while"]}
+  ]
+}

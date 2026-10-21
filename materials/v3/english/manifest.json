@@ -1,0 +1,244 @@
+{
+  "pack_id": "english-foundation-day10",
+  "pack_version": "3.0.0-day10-1",
+  "subject_label": "英语",
+  "topic": "一般过去时的文字改写与叙述",
+  "scope_in": [
+    "主语与动词原形",
+    "有限规则与不规则肯定式",
+    "did否定与疑问",
+    "短段落与句子改写"
+  ],
+  "scope_out": [
+    "听力与发音",
+    "口语沟通"
+  ],
+  "review_status": "pending_user_review",
+  "authored_by": "assistant_draft",
+  "agent_fact_checked": {
+    "checked_on": "2026-10-16",
+    "checked_by": "coding_agent",
+    "method": "浏览权威原始规则页并原创课程、题目；独立核对有限答案；不等同用户人工认可。",
+    "human_approval": false
+  },
+  "source_references": [
+    {
+      "title": "British Council regular verbs",
+      "url": "https://learnenglishteens.britishcouncil.org/grammar/a1-a2-grammar/past-simple-regular-verbs",
+      "role": "rule_fact_check",
+      "accessed_on": "2026-10-16"
+    },
+    {
+      "title": "British Council past simple sentences",
+      "url": "https://learnenglishkids.britishcouncil.org/grammar-vocabulary/grammar-practice/past-simple-sentences",
+      "role": "rule_fact_check",
+      "accessed_on": "2026-10-16"
+    },
+    {
+      "title": "British Council irregular verbs",
+      "url": "https://learnenglishteens.britishcouncil.org/grammar/a1-a2-grammar/past-simple-irregular-verbs",
+      "role": "rule_fact_check",
+      "accessed_on": "2026-10-16"
+    }
+  ],
+  "documents": [
+    {
+      "filename": "teaching.md",
+      "source_id": "english-teaching",
+      "source_version": 1,
+      "title": "英语一般过去时：肯定、否定、疑问与短文",
+      "visibility": "teaching",
+      "content_hash": "8c3435f1ed5054519da4ca0ea49cf58655aac06815ed7625517b913570fed65c",
+      "sections": [
+        {
+          "section_id": "en-foundation",
+          "heading": "en-foundation 主语与动词原形",
+          "line_start": 6,
+          "line_end": 11
+        },
+        {
+          "section_id": "en-affirmative",
+          "heading": "en-affirmative 已结束的过去事件",
+          "line_start": 12,
+          "line_end": 19
+        },
+        {
+          "section_id": "en-negative",
+          "heading": "en-negative did not 加原形",
+          "line_start": 20,
+          "line_end": 26
+        },
+        {
+          "section_id": "en-question",
+          "heading": "en-question Did 加主语加原形",
+          "line_start": 27,
+          "line_end": 32
+        },
+        {
+          "section_id": "en-paragraph",
+          "heading": "en-paragraph 意义、连贯与允许变体",
+          "line_start": 33,
+          "line_end": 40
+        },
+        {
+          "section_id": "en-references",
+          "heading": "en-references 原始参考",
+          "line_start": 41,
+          "line_end": 46
+        }
+      ],
+      "source_urls": [
+        "https://learnenglishteens.britishcouncil.org/grammar/a1-a2-grammar/past-simple-regular-verbs",
+        "https://learnenglishkids.britishcouncil.org/grammar-vocabulary/grammar-practice/past-simple-sentences",
+        "https://learnenglishteens.britishcouncil.org/grammar/a1-a2-grammar/past-simple-irregular-verbs"
+      ],
+      "scope": [
+        "主语与动词原形",
+        "有限规则与不规则肯定式",
+        "did否定与疑问",
+        "短段落与句子改写"
+      ],
+      "trust_note": "Agent原创并核对公开规则，待用户复核；不是已批准教材或人工金标准。"
+    },
+    {
+      "filename": "assessment_private.md",
+      "source_id": "english-assessment-private",
+      "source_version": 1,
+      "title": "一般过去时：私有评分说明",
+      "visibility": "assessment_private",
+      "content_hash": "9a50725250493fcac6c20d83331c1a4240e21af3e251908993ada892eb2f2a9d",
+      "sections": [
+        {
+          "section_id": "en-private-criteria",
+          "heading": "en-private-criteria 分项与证据",
+          "line_start": 6,
+          "line_end": 13
+        },
+        {
+          "section_id": "en-private-bank",
+          "heading": "en-private-bank 原创参考样题",
+          "line_start": 14,
+          "line_end": 20
+        },
+        {
+          "section_id": "en-private-quality",
+          "heading": "en-private-quality 歧义、冲突与能力",
+          "line_start": 21,
+          "line_end": 27
+        }
+      ],
+      "source_urls": [
+        "https://learnenglishteens.britishcouncil.org/grammar/a1-a2-grammar/past-simple-regular-verbs",
+        "https://learnenglishkids.britishcouncil.org/grammar-vocabulary/grammar-practice/past-simple-sentences",
+        "https://learnenglishteens.britishcouncil.org/grammar/a1-a2-grammar/past-simple-irregular-verbs"
+      ],
+      "scope": [
+        "主语与动词原形",
+        "有限规则与不规则肯定式",
+        "did否定与疑问",
+        "短段落与句子改写"
+      ],
+      "trust_note": "Agent原创并核对公开规则，待用户复核；不是已批准教材或人工金标准。"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "english_debug_01",
+      "split": "debug",
+      "path": "evals/v3/english/cases/english_debug_01.json",
+      "content_hash": "e86ed15b5a40a321f0ad4ddc4d5efdb1ed9d5359f8c963b2045fdfb7c3e72931"
+    },
+    {
+      "case_id": "english_debug_02",
+      "split": "debug",
+      "path": "evals/v3/english/cases/english_debug_02.json",
+      "content_hash": "edaaaa1786819efd14a9ef33512774fdf6ff1b133f0867a861fff4879cce35c9"
+    },
+    {
+      "case_id": "english_debug_03",
+      "split": "debug",
+      "path": "evals/v3/english/cases/english_debug_03.json",
+      "content_hash": "60489f4a7a8461a15d6a392d51d281567db01f450aae4c2f674e73d6a85d6ec1"
+    },
+    {
+      "case_id": "english_debug_04",
+      "split": "debug",
+      "path": "evals/v3/english/cases/english_debug_04.json",
+      "content_hash": "c346ec9974aec368b57ad3cf7a5004e48d8e9de9486c0b8e003090d3c63e5299"
+    },
+    {
+      "case_id": "english_debug_05",
+      "split": "debug",
+      "path": "evals/v3/english/cases/english_debug_05.json",
+      "content_hash": "ae2cb76b0df937d5739ef76b304b2abf85d16a80eb1a41ab982a8be3f0b6e460"
+    },
+    {
+      "case_id": "english_debug_06",
+      "split": "debug",
+      "path": "evals/v3/english/cases/english_debug_06.json",
+      "content_hash": "d76cdd089b7271999969ed21e565fc0dfafd71dc652e2006b0b4caf8b46e7ecc"
+    },
+    {
+      "case_id": "english_debug_07",
+      "split": "debug",
+      "path": "evals/v3/english/cases/english_debug_07.json",
+      "content_hash": "173065c27c9395364e588348d5416b714379802f7142e8e87be857e8bc3fc9dd"
+    },
+    {
+      "case_id": "english_debug_08",
+      "split": "debug",
+      "path": "evals/v3/english/cases/english_debug_08.json",
+      "content_hash": "72b122d409de7f4551a5d4b3a751ca31a497ce1d5144bbf6fc968e34ddd8f65e"
+    },
+    {
+      "case_id": "english_holdout_09",
+      "split": "holdout",
+      "path": "evals/v3/english/cases/english_holdout_09.json",
+      "content_hash": "2af816e2b4bb4333bb9c5a21cc22f1b0a7899c67f95de5ca51a4afddd2746616"
+    },
+    {
+      "case_id": "english_holdout_10",
+      "split": "holdout",
+      "path": "evals/v3/english/cases/english_holdout_10.json",
+      "content_hash": "cc6b77db547732bb5d9674b5cbe4054e3bdc6d1332ccbc65cd1c9897ca68fe9a"
+    },
+    {
+      "case_id": "english_holdout_11",
+      "split": "holdout",
+      "path": "evals/v3/english/cases/english_holdout_11.json",
+      "content_hash": "2a9b2d619421100c8ef5e53882ab840897664b78781bb27e73220fc4cb429f30"
+    },
+    {
+      "case_id": "english_holdout_12",
+      "split": "holdout",
+      "path": "evals/v3/english/cases/english_holdout_12.json",
+      "content_hash": "60e98a608cf5aaf2d8b990bbdff5ba5e37dce04d29a5c5f15750569365c31872"
+    }
+  ],
+  "frozen_before_model_execution": {
+    "frozen_on": "2026-10-16",
+    "timezone": "Asia/Shanghai",
+    "real_model_runs": 0,
+    "debug_case_count": 8,
+    "holdout_case_count": 4,
+    "holdout_rule": "先用户复核；调试仅用debug，Prompt冻结后holdout验收，不据此反调。"
+  },
+  "suggested_plan": {
+    "bounded_goal": "主语与动词原形、有限规则与不规则肯定式、did否定与疑问、短段落与句子改写",
+    "node_outcomes": [
+      "主语与动词原形",
+      "有限规则与不规则肯定式",
+      "did否定与疑问",
+      "短段落与句子改写"
+    ],
+    "full_goal_required_evaluators": [
+      "text_rubric"
+    ],
+    "available_reduced_goal": "仅用可用choice_exact检查缩小后的选择辨认目标，不宣称完整文字或数值目标已支持。"
+  },
+  "limitations": [
+    "通用text_rubric未实装",
+    "不测听说或代码执行",
+    "Fake只验证契约，不证明内容质量。"
+  ]
+}

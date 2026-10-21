@@ -1,0 +1,41 @@
+{
+  "preset_id": "python",
+  "preset_version": "3.0.0-day11",
+  "subject_label": "Python",
+  "topic": "条件与循环的阅读和解释",
+  "bounded_goal": "阅读简短 Python 条件与循环示例，解释分支、循环终止条件和边界情况。",
+  "target_level": "具备变量和列表概念的初学者",
+  "teaching_style": "结合简短代码文本解释执行思路，明确阅读推断与实际执行的区别。",
+  "scope_in": [
+    "if 分支",
+    "for 和 while 的阅读",
+    "终止条件与简单边界情况"
+  ],
+  "scope_out": [
+    "任意程序运行",
+    "代码沙箱测试",
+    "复杂程序正确性证明"
+  ],
+  "typical_tasks": [
+    "选择示例可能的结果",
+    "解释循环为何结束",
+    "指出文字代码示例中的边界问题"
+  ],
+  "common_misconceptions": [
+    "赋值与比较混淆",
+    "把循环元素当作下标",
+    "忽略停止条件"
+  ],
+  "suggested_capabilities": [
+    "text_explanation",
+    "text_question_answer",
+    "choice_exact",
+    "text_rubric"
+  ],
+  "suggested_policy_id": "text-rubric-draft",
+  "limitations": [
+    "不执行代码；评价代码阅读与文字解释，不宣称程序运行正确。",
+    "text_rubric 已在 Day 11 实装；文字评分仍需真实案例质量复核。",
+    "选择题不能替代要求解释的目标。"
+  ]
+}

@@ -1,6 +1,7 @@
 """真实 FastAPI + Graph + 临时 SQLite；模型替身沿用 conftest。"""
 
 from concurrent.futures import ThreadPoolExecutor
+import json
 from threading import Event
 from uuid import uuid4
 
@@ -114,6 +115,53 @@ def test_remediation_displays_new_lesson_instead_of_previous_tutorial(web, monke
     project = answer_quiz(client, resume(client, project, "start_quiz").json())
     assert project["lesson_mode"] == "remediate"
     assert project["conversation"] == [{"role": "assistant", "content": "remediate课程"}]
+
+
+def test_legacy_diagnosis_displays_learning_content_without_internal_identifiers(web, monkeypatch):
+    original = {}
+
+    def legacy_diagnosis(state, **kwargs):
+        objective_id = state["tree"][0]["objectives"][0]["id"]
+        original.update(DiagnosisResult(
+            weak_points=["遗漏了安装或启用 Python 扩展（missing_python_extension）"],
+            evidence_ids=[f"assessment:{state['assessment_id']}:q3"],
+            recommended_action="remediate",
+            reason=f"目标 {objective_id} 仍需巩固，q3 遗漏了安装 Python 扩展（error_tags: missing_python_extension）。"
+                   "能运行 print(\"Hello World\")，保存 .py 文件并识别 SyntaxError。"
+                   "本轮仅查询了本节点历史（1 次调用，未达调用与轮数上限）。"
+                   "建议补齐这一操作后复测，最终仍由 Graph 的确定性规则决定。",
+        ).model_dump())
+        return DiagnosisResult.model_validate(original)
+
+    monkeypatch.setattr("app.agents.diagnosis.run_real_diagnosis", legacy_diagnosis)
+    client, paths = web
+    project = answer_quiz(client, resume(client, create(client), "start_quiz").json())
+    assert project["lesson_mode"] == "remediate"
+    result = project["results"][0]
+    text = result["reason"] + " ".join(result["weak_points"])
+    for internal in ("variables_obj_1", "q3", "missing_python_extension", "error_tags", "次调用", "Graph"):
+        assert internal not in text
+    assert "第3题" in text and "理解变量的基本作用" in text
+    assert 'print("Hello World")' in text and ".py" in text and "SyntaxError" in text
+    assert result["weak_points"] == ["遗漏了安装或启用 Python 扩展"]
+    with LearningRepository(paths["learning_db_path"]) as repo:
+        assert repo.get_assessment(result["assessment_id"])["diagnosis"] == original
+    # 刷新展示只做只读转换，不重新调用诊断模型、不修改原记录。
+    monkeypatch.setattr("app.agents.diagnosis.run_real_diagnosis", lambda *a, **k: pytest.fail("刷新不应调用诊断模型"))
+    assert client.get("/projects/" + project["project_id"]).json()["results"] == project["results"]
+
+
+def test_feedback_question_numbers_follow_the_quiz_order(web):
+    client, paths = web
+    project = answer_quiz(client, resume(client, create(client), "start_quiz").json())
+    assessment_id = project["results"][0]["assessment_id"]
+    with LearningRepository(paths["learning_db_path"]) as repo:
+        evaluation = repo.get_assessment(assessment_id)["evaluation"]
+        evaluation["question_results"].reverse()
+        repo.conn.execute("UPDATE assessments SET evaluation_json = ? WHERE id = ?", (json.dumps(evaluation), assessment_id))
+        repo.conn.commit()
+    result = client.get("/projects/" + project["project_id"]).json()["results"][0]
+    assert [item["question_id"] for item in result["question_results"]] == ["q1", "q2", "q3", "q4"]
 
 
 def test_return_to_teaching_abandons_original_quiz_without_round_credit(web):

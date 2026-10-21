@@ -1,0 +1,16 @@
+{
+  "preset_id": "generic",
+  "preset_version": "3.0.0-day9",
+  "subject_label": "通用",
+  "topic": "依据指定文字资料学习一个小单元",
+  "bounded_goal": "解释资料中的核心概念及其关系，给出资料支持的简短例子。",
+  "target_level": "初学者",
+  "teaching_style": "使用清楚的文字、例子和来源说明，区分资料事实与不确定解释。",
+  "scope_in": ["指定文字资料中的明确概念", "概念关系与简短解释"],
+  "scope_out": ["未经绑定资料支持的扩展结论", "音频、图像、实验操作与程序执行评价"],
+  "typical_tasks": ["选择与资料一致的描述", "用文字解释两个概念的关系"],
+  "common_misconceptions": ["把记住名词等同于能解释关系", "把模型输出自动当作权威资料"],
+  "suggested_capabilities": ["text_explanation", "text_question_answer", "choice_exact", "text_rubric"],
+  "suggested_policy_id": "text-rubric-draft",
+  "limitations": ["Day 9 文字量规评价尚未实装，完整目标只能探索。", "如只测明确选择任务，必须缩小目标、绑定资料并确认另一个选择策略计划。", "第四个保留学习主题留待 Day 13 决定，此模板不提前调试第四主题。"]
+}

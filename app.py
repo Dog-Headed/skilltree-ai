@@ -1,4 +1,4 @@
-"""运行此文件即可启动 SkillTree，并在服务就绪后打开浏览器。"""
+"""启动 SkillTree V3 工作台；V2 学习记录通过新版历史页只读查看。"""
 
 from __future__ import annotations
 
@@ -12,6 +12,13 @@ from pathlib import Path
 HOST = "127.0.0.1"
 PORT = 8765
 URL = f"http://{HOST}:{PORT}/"
+
+
+def load_application():
+    """Use the same product as day12_server; never initialize the V2 runtime."""
+    from app.v3.learning_api import create_learning_app
+
+    return create_learning_app()
 
 
 def open_browser_when_ready(server) -> None:
@@ -33,7 +40,7 @@ def open_browser_when_ready(server) -> None:
 def main() -> None:
     try:
         import uvicorn
-        from app.main import app
+        app = load_application()
     except ModuleNotFoundError as exc:
         requirements = Path(__file__).resolve().parent / "requirements.txt"
         print(f"缺少依赖：{exc.name}。请先安装项目依赖：", file=sys.stderr)
@@ -42,9 +49,16 @@ def main() -> None:
             file=sys.stderr,
         )
         raise SystemExit(1) from None
+    except ValueError:
+        print(
+            "V3 数据尚未初始化或版本不匹配，服务未启动，也不会退回旧版或自动修改数据库。\n"
+            "请按 docs/v3/DAY12_API.md 的初始化/迁移说明准备 data/v3 后重新运行。",
+            file=sys.stderr,
+        )
+        raise SystemExit(1) from None
 
     server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=PORT, workers=1))
-    print(f"SkillTree 启动后将自动打开：{URL}\n按 Ctrl+C 停止服务。", flush=True)
+    print(f"SkillTree V3 启动后将自动打开：{URL}\n旧版记录可在“V2 历史”只读查看。\n按 Ctrl+C 停止服务。", flush=True)
     threading.Thread(
         target=open_browser_when_ready,
         args=(server,),

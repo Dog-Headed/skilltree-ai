@@ -14,6 +14,8 @@ __pycache__/
 *.sqlite-*
 *.db
 *.db-*
+# V3 local business data, checkpoints and execution locks.
+/data/v3/
 data/day7_events.jsonl
 data/evaluation/reports/*.events.jsonl
 # 仅保留 Day 8 的截图和公开验收证据，其他工作文件留在本机。

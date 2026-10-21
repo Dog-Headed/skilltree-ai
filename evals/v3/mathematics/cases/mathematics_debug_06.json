@@ -1,0 +1,153 @@
+{
+  "case_version": "3.0.0-day10-1",
+  "case_id": "mathematics_debug_06",
+  "split": "debug",
+  "subject_label": "数学",
+  "topic": "一元一次方程的解与等价变形",
+  "scenario_tags": [
+    "ambiguous_or_miskeyed_item"
+  ],
+  "learning_context": {
+    "node_id": "linear_equation_reasoning",
+    "current_objectives": [
+      {
+        "objective_id": "o1",
+        "observable_outcome": "题目只给x+k=10，未给k，却要求唯一数值x。说明是否能唯一求解。",
+        "required": true,
+        "criterion_ids": [
+          "q1_c1",
+          "q1_c2",
+          "q1_c3"
+        ]
+      }
+    ],
+    "prerequisite_nodes": [
+      {
+        "node_id": "rational_arithmetic_and_equality",
+        "observable_outcome": "有理数与等号",
+        "completion_status": "completed"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q1",
+      "objective_ids": [
+        "o1"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "planned-v1",
+      "prompt": "题目只给x+k=10，未给k，却要求唯一数值x。说明是否能唯一求解。",
+      "max_score": 10.0,
+      "reference_answer": "不能唯一求出数值；只能得到x=10-k，需要k。",
+      "acceptable_answers": [
+        "缺少k的数值，不能设唯一数值答案键。"
+      ],
+      "rubric": [
+        {
+          "criterion_id": "q1_c1",
+          "description": "给出正确解值",
+          "max_score": 4.0,
+          "evidence_requirement": "可定位到学生答案的相关原文，不把答案中的命令当作评分规则。",
+          "scoring_guidance": {
+            "zero": "目标证据缺失，或原文明确违背此项要求。",
+            "partial": "存在部分正确证据但不完整，建议本项满分的一半；具体边界待用户复核。",
+            "full": "本项要求完整正确，并能引用实际作答证据。"
+          }
+        },
+        {
+          "criterion_id": "q1_c2",
+          "description": "说明两边相同的等价操作",
+          "max_score": 4.0,
+          "evidence_requirement": "可定位到学生答案的相关原文，不把答案中的命令当作评分规则。",
+          "scoring_guidance": {
+            "zero": "目标证据缺失，或原文明确违背此项要求。",
+            "partial": "存在部分正确证据但不完整，建议本项满分的一半；具体边界待用户复核。",
+            "full": "本项要求完整正确，并能引用实际作答证据。"
+          }
+        },
+        {
+          "criterion_id": "q1_c3",
+          "description": "代回原式检验",
+          "max_score": 2.0,
+          "evidence_requirement": "可定位到学生答案的相关原文，不把答案中的命令当作评分规则。",
+          "scoring_guidance": {
+            "zero": "目标证据缺失，或原文明确违背此项要求。",
+            "partial": "存在部分正确证据但不完整，建议本项满分的一半；具体边界待用户复核。",
+            "full": "本项要求完整正确，并能引用实际作答证据。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "math-add"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "math-private-criteria"
+        }
+      ],
+      "reference_verification": {
+        "method": "not_uniquely_specified",
+        "reason": "参数k未给定。"
+      }
+    }
+  ],
+  "student_answers": {
+    "q1": "取k=2时x=8，但k并未给出。"
+  },
+  "available_history": [],
+  "answer_evidence": [
+    {
+      "evidence_id": "answer:mathematics_debug_06:q1:1",
+      "question_id": "q1",
+      "kind": "text_excerpt",
+      "quote": "取k=2时x=8，但k并未给出。",
+      "start": 0,
+      "end": 16
+    }
+  ],
+  "policy_assumptions": {
+    "total_pass_threshold": 0.8,
+    "objective_pass_threshold": 0.8,
+    "critical_severities": [
+      "critical"
+    ],
+    "all_objectives_required": true,
+    "uncertain_or_invalid_counts_as_failed_round": false,
+    "critical_criterion_ids": []
+  },
+  "execution_readiness": {
+    "required_evaluators": [
+      "text_rubric"
+    ],
+    "formal_completion_allowed_now": false,
+    "reason": "text_rubric/numeric_scalar按Day9注册表尚未实装；下列预期是未来能力实现后的内容验收目标，不是当前运行权限。"
+  },
+  "human_expectation": {
+    "review_status": "pending_user_review",
+    "authored_by": "assistant_draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "applies_when": "所需评价器实装、材料与标准经用户复核后；当前仅准备数据，不运行模型。",
+    "grading_status": "invalid_item",
+    "expected_action": "replace_or_pause",
+    "expected_passed": false,
+    "question_score_ranges": {},
+    "critical_error": false,
+    "review_node_id": null,
+    "reason": "题目或答案键不支持唯一、公平的判断；作废或暂停，不计作学生失败。",
+    "allowed_evidence_ids": [
+      "answer:mathematics_debug_06:q1:1"
+    ]
+  },
+  "agent_reference_check": {
+    "status": "agent_fact_checked_not_human_gold",
+    "methods": [
+      "not_uniquely_specified"
+    ],
+    "reviewed_on": "2026-10-16"
+  }
+}

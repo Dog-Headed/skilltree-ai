@@ -1,0 +1,4 @@
+# Preserve the byte formats used by the existing frozen SHA-256 manifests.
+materials/v3/**/*.md text eol=lf
+materials/v3/**/manifest.json text eol=crlf
+evals/v3/**/cases/*.json text eol=crlf

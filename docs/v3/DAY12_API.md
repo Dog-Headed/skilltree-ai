@@ -9,10 +9,10 @@
 已完成 Day 11 初始化的目录也可以使用独立入口启动：
 
 ```powershell
-& 'D:/conda_envs/edu_agent/python.exe' day12_server.py --root data/v3 --port 8012
+.\.venv\Scripts\python.exe day12_server.py --root data/v3 --port 8012
 ```
 
-打开 `http://127.0.0.1:8012/`。现有 `day11_server.py` 也会提供同一网页。默认仅监听本机。初次安装请先按 Day 9—11 的显式初始化/迁移说明操作；启动和 GET 都不自动迁移业务数据。
+打开 `http://127.0.0.1:8012/`。现有 `day11_server.py` 也会提供同一网页。默认仅监听本机。初次安装、已有存储备份及显式迁移步骤见[安装与使用](../GETTING_STARTED.md)；新空目录先运行 `python -X utf8 day11_storage.py --root data/v3`，再启动。启动和 GET 都不自动迁移业务数据。
 
 业务库 `data/v3/learning.sqlite`；准备存档 `data/v3/checkpoints.sqlite`；学习存档 `data/v3/learning-checkpoints.sqlite`。默认 V2 历史只读读取 `data/learning.sqlite` 和 `data/checkpoints.sqlite`，可以用启动参数指定其他恢复副本。不存在的旧文件不会创建。
 

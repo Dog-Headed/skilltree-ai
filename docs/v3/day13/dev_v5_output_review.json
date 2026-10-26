@@ -1,0 +1,52 @@
+{
+  "review_id": "day13-dev-v5-independent-output-review-20261022",
+  "review_type": "independent_ai_semantic_review",
+  "reviewed_on": "2026-10-22",
+  "source_report_sha256": "94f7df2e246e7c903fa6a685e75420ddcee3b01a226ebe7bd36b60a5a6f68a22",
+  "source_standards_sha256": "187c0e4fd894e0b43b374b63365c872f63c792647d8372a12e9783956731dc8d",
+  "holdout_case_contents_read": 0,
+  "human_output_review_claimed": false,
+  "subjects": {
+    "python": {
+      "recommended_semantic_citation_review": "approved_independent_review",
+      "automated_gates_passed": true,
+      "core_actions_supported": true,
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "python_debug_02 prose incorrectly says the wrong final element received 1 point; actual c3 total=1 and q total=5 are correct"
+      ],
+      "scope": "Only this development run; not approval of holdout, subsequent run or release"
+    },
+    "mathematics": {
+      "recommended_semantic_citation_review": "approved_independent_review",
+      "automated_gates_passed": true,
+      "core_actions_supported": true,
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "mathematics_debug_08 score difference 2 within fixed tolerance"
+      ],
+      "scope": "Only this development run; not approval of holdout, subsequent run or release"
+    },
+    "english": {
+      "recommended_semantic_citation_review": "changes_requested_score_boundary",
+      "automated_gates_passed": false,
+      "core_actions_supported": true,
+      "blocking_findings": [
+        "english_debug_08 score=1 versus approved center=4 exceeds fixed maximum error 2; grammar error was penalized again in meaning/time criterion"
+      ],
+      "nonblocking_findings": [
+        "english_debug_07 score difference 2 at tolerance boundary"
+      ],
+      "scope": "Only this development run; not approval of holdout, subsequent run or release"
+    }
+  },
+  "mechanical_checks": {
+    "anchors": 39,
+    "audit_findings": 11,
+    "final_outputs": 18
+  },
+  "freeze_candidate_approved": false,
+  "can_enter_holdout": false,
+  "release_approved": false,
+  "reason": "An approved per-case score gate failed for English08 despite all action matches. Retain results and standards; revise development rubric boundary transparently, then independently review v6."
+}

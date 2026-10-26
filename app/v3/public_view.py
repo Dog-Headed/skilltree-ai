@@ -31,6 +31,10 @@ def source_detail(repo,pid,source_id,version):
 def project_view(repo,base):
     view=deepcopy(base);pid=view['project_id'];require_visible(repo,pid)
     p=repo.get_project(pid)
+    from .onboarding import metadata as guided_metadata
+    guided=guided_metadata(repo,pid)
+    view.update(guided=bool(guided),learning_basis=guided['basis'] if guided else None,
+                preparation_notice=guided['message'] if guided else None)
     documents=source_documents(repo,pid)
     public_chunks={c['chunk_id']:c for d in documents for c in repo.list_source_chunks(pid,d['source_id'],d['source_version'])}
     def citations(items):

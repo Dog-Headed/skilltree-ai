@@ -1,0 +1,167 @@
+{
+  "case_version": "day13-independent-final-1",
+  "case_id": "mathematics_holdout_final03",
+  "split": "holdout",
+  "subject_label": "数学",
+  "topic": "一元一次方程",
+  "learning_context": {
+    "node_id": "linear_equation_reasoning",
+    "current_objectives": [
+      {
+        "objective_id": "o1",
+        "observable_outcome": "解3x-6=9，解释步骤并检验。",
+        "required": true,
+        "criterion_ids": [
+          "q1_c1",
+          "q1_c2",
+          "q1_c3"
+        ]
+      },
+      {
+        "objective_id": "o2",
+        "observable_outcome": "能将4x=12两边同除以0来求解吗？解释原因。",
+        "required": true,
+        "criterion_ids": [
+          "q2_c1",
+          "q2_c2",
+          "q2_c3"
+        ]
+      }
+    ],
+    "prerequisite_nodes": [
+      {
+        "node_id": "rational_arithmetic_and_equality",
+        "observable_outcome": "本主题所需基础",
+        "completion_status": "completed"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q1",
+      "objective_ids": [
+        "o1"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "1.0.0",
+      "prompt": "解3x-6=9，解释步骤并检验。",
+      "max_score": 90,
+      "reference_answer": "x=5，同加6再同除3，代回左右均9。",
+      "rubric": [
+        {
+          "criterion_id": "q1_c1",
+          "description": "正确解x=5。",
+          "max_score": 36.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q1_c2",
+          "description": "说明两边同加6和同除3。",
+          "max_score": 36.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q1_c3",
+          "description": "正确代回原式检验。",
+          "max_score": 18.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "math-add"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "math-multiply"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "math-check"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "math-private-criteria"
+        }
+      ]
+    },
+    {
+      "question_id": "q2",
+      "objective_ids": [
+        "o2"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "1.0.0",
+      "prompt": "能将4x=12两边同除以0来求解吗？解释原因。",
+      "max_score": 10,
+      "reference_answer": "不能，除数必须非零，除以0没有定义。",
+      "rubric": [
+        {
+          "criterion_id": "q2_c1",
+          "description": "明确不能除以0。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q2_c2",
+          "description": "说明除以0没有定义。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q2_c3",
+          "description": "说明求解的同除操作要求除数非零，不能以除0得到解。",
+          "max_score": 2.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "math-multiply"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "math-private-criteria"
+        }
+      ]
+    }
+  ],
+  "student_answers": {
+    "q1": "两边同加6得3x=15，再同除3得x=5；代回3*5-6=9。",
+    "q2": "能，除以零合法而且总保持相同的解。"
+  },
+  "available_history": [],
+  "policy_assumptions": {
+    "total_pass_threshold": 0.8,
+    "objective_pass_threshold": 0.8,
+    "critical_criterion_ids": []
+  }
+}

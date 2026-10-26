@@ -1,0 +1,109 @@
+{
+  "case_version": "day13-independent-final-1",
+  "case_id": "mathematics_holdout_final04",
+  "split": "holdout",
+  "subject_label": "数学",
+  "topic": "一元一次方程",
+  "learning_context": {
+    "node_id": "linear_equation_reasoning",
+    "current_objectives": [
+      {
+        "objective_id": "o1",
+        "observable_outcome": "解6x=18，并说明为什么能两边同除6。",
+        "required": true,
+        "criterion_ids": [
+          "q1_c1",
+          "q1_c2",
+          "q1_c3"
+        ]
+      }
+    ],
+    "prerequisite_nodes": [
+      {
+        "node_id": "rational_arithmetic_and_equality",
+        "observable_outcome": "本主题所需基础",
+        "completion_status": "completed"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q1",
+      "objective_ids": [
+        "o1"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "1.0.0",
+      "prompt": "解6x=18，并说明为什么能两边同除6。",
+      "max_score": 10,
+      "reference_answer": "x=3；两边同除非零6。",
+      "rubric": [
+        {
+          "criterion_id": "q1_c1",
+          "description": "正确解x=3。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q1_c2",
+          "description": "说明两边同时除6。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q1_c3",
+          "description": "说明6非零，同除合法。",
+          "max_score": 2.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "math-multiply"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "math-uncertainty"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "math-private-criteria"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "math-private-quality"
+        }
+      ]
+    }
+  ],
+  "student_answers": {
+    "q1": "按本页x=3，因为6非零；补充资料却说不能同除6，我无法按两份相反规则接受评价。"
+  },
+  "available_history": [],
+  "policy_assumptions": {
+    "total_pass_threshold": 0.8,
+    "objective_pass_threshold": 0.8,
+    "critical_criterion_ids": []
+  },
+  "context_anomalies": [
+    {
+      "attachment_id": "mathematics_holdout_final04_attachment",
+      "visibility": "teaching",
+      "content": "等式两边同除非零的6会改变解集，不能用来求解6x=18；只改变左边才保证等价。"
+    }
+  ]
+}

@@ -1,0 +1,378 @@
+{
+  "review_type": "main_agent_mechanical_and_semantic_review_draft",
+  "independent_review_claimed": false,
+  "human_review_status": "pending_user_review",
+  "source_report_sha256": "90ba14098869137b71d75963473f21cdc64c11e37867aa8c345485b0073ec6ce",
+  "source_standards_sha256": "e1705216ba4b1b2df22466e2bcc44e7b0c70071aa9d667d9961d2f27bf821410",
+  "total": {
+    "anchors": 43,
+    "audit_findings": 10,
+    "final_outputs": 18,
+    "invalid_raw_final_outputs": 1
+  },
+  "checks": [
+    {
+      "case_id": "english_debug_01",
+      "raw_sha256": "bbd5bef384dbe313ee10a6d120c464abe1b8d9a4e5d1aeb1e2f06b57257ec709",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "english_debug_02",
+      "raw_sha256": "e04177284835ee54383cbda3a3c7e33c5cb2563be87f60f4a2cb988a9264c3a8",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "english_debug_03",
+      "raw_sha256": "add988b136b6afb41a4fd937037e5d4cfb15432f92e6a1b97ff7db18141ae699",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "english_debug_04",
+      "raw_sha256": "62c9171911b7372657d661a6c1c96594530f8a5aaad1923f873059fc520f81e6",
+      "anchors": 1,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "english_debug_05",
+      "raw_sha256": "0e5b285bb33cf36ba7232cfb9792ccd51b14c89edfd19cbd7848d5a3f243c186",
+      "anchors": 0,
+      "audit_findings": 2,
+      "final_outputs": 0,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": null,
+      "last_final_valid": null
+    },
+    {
+      "case_id": "english_debug_06",
+      "raw_sha256": "236c07766fc20f0b81bac2d78e01cb37bb4e4e6f135f24b6359aa2e7df125129",
+      "anchors": 0,
+      "audit_findings": 1,
+      "final_outputs": 0,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": null,
+      "last_final_valid": null
+    },
+    {
+      "case_id": "english_debug_07",
+      "raw_sha256": "b8bac381c10ad00e3eaf5debe32841e60b964b321ad4f7246522112e96867f47",
+      "anchors": 2,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "english_debug_08",
+      "raw_sha256": "18ef945a0fb907ada67980ac9cd21dd85b190cb07eee637391163529542ddd11",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "mathematics_debug_01",
+      "raw_sha256": "051284f09e9daebf7b9ff7a0203f0920d7753b122d174084a110dd7c09abf36b",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "mathematics_debug_02",
+      "raw_sha256": "e756b5da7f304b37c85148aa4473382bc32aa7f7548c55ca9909baf363e113ee",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "mathematics_debug_03",
+      "raw_sha256": "b9061bd95380603b613afeb728029dc97b71aef9e4309da0110406dc3f0300ab",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "mathematics_debug_04",
+      "raw_sha256": "7d71d2e4a4a47cb8884010bda16ed75767f116d55a10dffc28b30c5146da994b",
+      "anchors": 1,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "mathematics_debug_05",
+      "raw_sha256": "1776df7f90b9432c25134960bfd002f191e341b4c31b72808900dfbad538cc8a",
+      "anchors": 0,
+      "audit_findings": 3,
+      "final_outputs": 0,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": null,
+      "last_final_valid": null
+    },
+    {
+      "case_id": "mathematics_debug_06",
+      "raw_sha256": "d7c8fa061f0b62f20f6570802c0ef11e2f482b9d042ee1353df66a27275fc111",
+      "anchors": 0,
+      "audit_findings": 1,
+      "final_outputs": 0,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": null,
+      "last_final_valid": null
+    },
+    {
+      "case_id": "mathematics_debug_07",
+      "raw_sha256": "c97fdacf1edff8da12231a34e9cf739e119a1ce89659992d8f28bf3b467309da",
+      "anchors": 2,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "mathematics_debug_08",
+      "raw_sha256": "27c5d7427b7a627f071debc2f05c15d1397e40a8be8c2beb75826b67f65050f9",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "python_debug_01",
+      "raw_sha256": "2da9caaa407177345f8a90964c5efa22be538054a14703a5ae1a25a44bbd86df",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 1,
+      "first_final_valid": false,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "python_debug_02",
+      "raw_sha256": "785620425833a0b417aa34fbb7a1a6fcfabca37b19c06ed1858704c31b56bda2",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "python_debug_03",
+      "raw_sha256": "7b188720f96ab1301c5071db3714c1624a129b2c66192fb749e457b039c626ba",
+      "anchors": 3,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "python_debug_04",
+      "raw_sha256": "d99d0d4bf745abc3462fd1e8c5773439ae211e12454d075e4e128aecee345536",
+      "anchors": 1,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "python_debug_05",
+      "raw_sha256": "a6a99fd4a3fd40175cd695608bbceee5e12d8b58eb50d3dda2f69fb6dfd4fccb",
+      "anchors": 0,
+      "audit_findings": 2,
+      "final_outputs": 0,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": null,
+      "last_final_valid": null
+    },
+    {
+      "case_id": "python_debug_06",
+      "raw_sha256": "778476ae8a9e3a69cd449e872b41eb3ae8a6f52e3f4815e8b40e19bd275cf4fc",
+      "anchors": 0,
+      "audit_findings": 1,
+      "final_outputs": 0,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": null,
+      "last_final_valid": null
+    },
+    {
+      "case_id": "python_debug_07",
+      "raw_sha256": "b14314596b96183a2e8fec394de4ea79da494c222f1ed59eea671d927ac286dd",
+      "anchors": 2,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    },
+    {
+      "case_id": "python_debug_08",
+      "raw_sha256": "a4d1a47c891de105654259434d6350560ddcc639bf9021e1e07c396ba8ce73f1",
+      "anchors": 1,
+      "audit_findings": 0,
+      "final_outputs": 1,
+      "invalid_raw_final_outputs": 0,
+      "first_final_valid": true,
+      "last_final_valid": true
+    }
+  ],
+  "prepared_input_equivalence_to_v6": [
+    {
+      "case_id": "english_debug_01",
+      "prepared_input_equal": true,
+      "canonical_sha256": "0fd537c833492ae252f7498348840ba50a5328ae3c7ca4957d4131cfec5cffa4"
+    },
+    {
+      "case_id": "english_debug_02",
+      "prepared_input_equal": true,
+      "canonical_sha256": "e751dd85f0595ad0e69c3739b3cc60f652d260938bf345bcb02f10b1601af59d"
+    },
+    {
+      "case_id": "english_debug_03",
+      "prepared_input_equal": true,
+      "canonical_sha256": "54204dbc16e2add98f63178f531f411da1392e0ca8bec43fea7e04ee3d847469"
+    },
+    {
+      "case_id": "english_debug_04",
+      "prepared_input_equal": true,
+      "canonical_sha256": "dd116c1f143f835be4e80d71518a37c2f2761cad56aff6219028951b1d565fde"
+    },
+    {
+      "case_id": "english_debug_05",
+      "prepared_input_equal": true,
+      "canonical_sha256": "473f550a09eef58c98c4d3ba2178e47f796229588e52db690865fdf1e19e9962"
+    },
+    {
+      "case_id": "english_debug_06",
+      "prepared_input_equal": true,
+      "canonical_sha256": "e638b3b4282cb24a2c633d7509475db82ca9823b368671393ea66b6169fceed6"
+    },
+    {
+      "case_id": "english_debug_07",
+      "prepared_input_equal": true,
+      "canonical_sha256": "64d92c97a53cb4ac503c6fa6873d7a9c641afb91ec4eda66e767fa26875667cf"
+    },
+    {
+      "case_id": "english_debug_08",
+      "prepared_input_equal": true,
+      "canonical_sha256": "9d4faf9d46f9c31b466d1608b8c3290111de17da4f2b357e81aec418d65ee16d"
+    },
+    {
+      "case_id": "mathematics_debug_01",
+      "prepared_input_equal": true,
+      "canonical_sha256": "cdd7da9c2852386274fb3fa24a30517603f7324263dc9eab76a26e0fe53a4130"
+    },
+    {
+      "case_id": "mathematics_debug_02",
+      "prepared_input_equal": true,
+      "canonical_sha256": "316fe709aec6ce22b25358c5fabf358378d7251d08538d1a94c7576be026f5ad"
+    },
+    {
+      "case_id": "mathematics_debug_03",
+      "prepared_input_equal": true,
+      "canonical_sha256": "31dd4fc281780644bed7746ab44148e53506ebfbf571571f667e83fb05abb1fd"
+    },
+    {
+      "case_id": "mathematics_debug_04",
+      "prepared_input_equal": true,
+      "canonical_sha256": "365f5a25e413a77510197d2d45138d8271697d885009eac9a47a90ca0233aba3"
+    },
+    {
+      "case_id": "mathematics_debug_05",
+      "prepared_input_equal": true,
+      "canonical_sha256": "1d800cb4bf6b15ff589e7caaf8c0a42fc3d6c27380df78770790e05b0e4fdad3"
+    },
+    {
+      "case_id": "mathematics_debug_06",
+      "prepared_input_equal": true,
+      "canonical_sha256": "f9e040189427d678bb0791653da597064fceea801fcdd54dc7a95036d1278833"
+    },
+    {
+      "case_id": "mathematics_debug_07",
+      "prepared_input_equal": true,
+      "canonical_sha256": "0bb28442736b23af60b3481df5798c8ea8dca3cebf1f82963f728e30aa87dcfd"
+    },
+    {
+      "case_id": "mathematics_debug_08",
+      "prepared_input_equal": true,
+      "canonical_sha256": "0a7c57cde77222dbc2cfeebf88804edaec1a7095c4923b153a0ae4a409099018"
+    },
+    {
+      "case_id": "python_debug_01",
+      "prepared_input_equal": true,
+      "canonical_sha256": "f3a823c68d0ec21258b08242ab7ee897b66fdbb632d347bed5509687785fac83"
+    },
+    {
+      "case_id": "python_debug_02",
+      "prepared_input_equal": true,
+      "canonical_sha256": "ae890405c10b278fc9e4f1fc964e1597f2ac23492dca601de241152bde28474c"
+    },
+    {
+      "case_id": "python_debug_03",
+      "prepared_input_equal": true,
+      "canonical_sha256": "9905c6cd3a708e65329cb6d03e0a64d2944500adea1525c16337a4932c508122"
+    },
+    {
+      "case_id": "python_debug_04",
+      "prepared_input_equal": true,
+      "canonical_sha256": "469a51cd3ef3145fa76e829d31521beb0e94b09b325d4a1e025f092851ddc788"
+    },
+    {
+      "case_id": "python_debug_05",
+      "prepared_input_equal": true,
+      "canonical_sha256": "9a50a0b772c8f7aef23c133ba0a9459e577507667ba49ea59621aad39b751af7"
+    },
+    {
+      "case_id": "python_debug_06",
+      "prepared_input_equal": true,
+      "canonical_sha256": "b2c61f09df0746fa6f1d1e29be14a45513fb143d92483203b54757786044fae8"
+    },
+    {
+      "case_id": "python_debug_07",
+      "prepared_input_equal": true,
+      "canonical_sha256": "24d5de17b21cab282c8a75023f7403a111297bee2653bb12dc205cdc1dbd0fd8"
+    },
+    {
+      "case_id": "python_debug_08",
+      "prepared_input_equal": true,
+      "canonical_sha256": "75fe212f1180f4bcd45919680d36c2c00aa99440b7498c909673cb454bf918cf"
+    }
+  ],
+  "scope": "Prepared case/score-history content compared under fixed synthetic identity. Actual runtime project IDs differ between runs. This is not a new independent semantic review."
+}

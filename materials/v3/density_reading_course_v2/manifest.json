@@ -1,0 +1,109 @@
+{
+  "pack_id": "density-reading-course-v2",
+  "pack_version": "day13-density-course-2",
+  "subject_label": "物理",
+  "topic": "质量、体积与密度入门",
+  "authored_by": "main_agent_original_draft",
+  "review_status": "same_approved_reference_semantics_data_clarification",
+  "scope_in": [
+    "质量体积与单位的区别",
+    "ρ=m/V与g/cm³含义",
+    "理想均匀材料同比取样"
+  ],
+  "scope_out": [
+    "实验与测量技能认证",
+    "浮沉",
+    "跨单位换算",
+    "复杂符号证明",
+    "代码或表达式执行"
+  ],
+  "source_references": [
+    {
+      "title": "OpenStax College Physics 2e 11.2 Density",
+      "url": "https://openstax.org/books/college-physics-2e/pages/11-2-density",
+      "accessed_on": "2026-10-23",
+      "role": "definition and ratio fact check; no copied exercises"
+    },
+    {
+      "title": "NIST Density glossary",
+      "url": "https://www.nist.gov/glossary-term/21726",
+      "accessed_on": "2026-10-23",
+      "role": "independent definition check"
+    },
+    {
+      "title": "NIST SI Guide chapter 4",
+      "url": "https://www.nist.gov/pml/special-publication-811/nist-guide-si-chapter-4-two-classes-si-units-and-si-prefixes",
+      "accessed_on": "2026-10-23",
+      "role": "mass density SI unit check"
+    }
+  ],
+  "selected_at_utc": "2026-10-23T12:06:04.265404+00:00",
+  "selected_after_reviewed_final_report_sha256": "eb1cd3558d2f2546320f7741ffe00dc88a36cfad9239e2da255bb7f372a2ad5b",
+  "documents": [
+    {
+      "filename": "teaching.md",
+      "source_id": "density-teaching",
+      "source_version": 1,
+      "title": "质量体积与密度原创讲义",
+      "visibility": "teaching",
+      "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac",
+      "sections": [
+        {
+          "section_id": "density-quantities",
+          "heading": "density-quantities 区分质量与体积",
+          "line_start": 5,
+          "line_end": 8
+        },
+        {
+          "section_id": "density-ratio",
+          "heading": "density-ratio 每单位体积的质量",
+          "line_start": 9,
+          "line_end": 12
+        },
+        {
+          "section_id": "density-scaling",
+          "heading": "density-scaling 同比例取样",
+          "line_start": 13,
+          "line_end": 16
+        }
+      ]
+    },
+    {
+      "filename": "assessment_private.md",
+      "source_id": "density-assessment-private",
+      "source_version": 1,
+      "title": "密度评价参考与量规",
+      "visibility": "assessment_private",
+      "content_hash": "f089c960cef657399b98fa934396e0f59ad1bf487b969ec203246ff38e0508c3",
+      "sections": [
+        {
+          "section_id": "density-reference",
+          "heading": "density-reference 固定对照题的依据",
+          "line_start": 3,
+          "line_end": 7
+        },
+        {
+          "section_id": "density-rubric",
+          "heading": "density-rubric 固定对照题的逐项量规",
+          "line_start": 8,
+          "line_end": 13
+        },
+        {
+          "section_id": "density-course",
+          "heading": "density-course 正式新课边界",
+          "line_start": 14,
+          "line_end": 17
+        },
+        {
+          "section_id": "density-critical-contract",
+          "heading": "density-critical-contract 普通分项与实际关键错误的区别",
+          "line_start": 19,
+          "line_end": 22
+        }
+      ]
+    }
+  ],
+  "change_scope": "Data only: explicitly distinguish ordinary partial-credit critical=false from actual inverse-definition severity=critical; approved answers/rubrics/policy unchanged",
+  "original_pack_manifest_sha256": "bc63c86bdd717dfb0f3617c77e9c1b56bbc516cee1bdeaef8bbdc4f71f362d49",
+  "created_at_utc": "2026-10-23T16:50:47.870420+00:00"
+}

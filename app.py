@@ -1,4 +1,4 @@
-"""启动 SkillTree V3 工作台；V2 学习记录通过新版历史页只读查看。"""
+"""启动 SkillTree V3 学习工作台。"""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ def main() -> None:
         raise SystemExit(1) from None
 
     server = uvicorn.Server(uvicorn.Config(app, host=HOST, port=PORT, workers=1))
-    print(f"SkillTree V3 启动后将自动打开：{URL}\n旧版记录可在“V2 历史”只读查看。\n按 Ctrl+C 停止服务。", flush=True)
+    print(f"SkillTree V3 启动后将自动打开：{URL}\n填写目标和基础，可选上传资料，由 AI 整理学习计划。\n按 Ctrl+C 停止服务。", flush=True)
     threading.Thread(
         target=open_browser_when_ready,
         args=(server,),

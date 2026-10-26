@@ -1,0 +1,23 @@
+{
+  "accepted_at_utc": "2026-10-23T17:50:16.592948+00:00",
+  "accepted_at_Asia_Shanghai": "2026-10-24T01:50:16.592948+08:00",
+  "reviewed_by": "user",
+  "user_reply": "体验没问题，认可当前边界",
+  "evidence": "Direct human reply to final experience question call_765b697b666a4e9e836ddd6e61e3d45f in this conversation",
+  "scope": "Day13 and V3.0 local single-user text learning within documented capabilities and known limits; final isolated demo, dependent-node results, feedback and refresh experience",
+  "status": "accepted_by_user",
+  "day13_complete": true,
+  "v3_0_text_learning_complete": true,
+  "external_publication_or_deployment_authorized_by_this_reply": false,
+  "core_freeze_sha256": "91dcea124db6fe36f051c7a19739801e0fb622957365bf74d621944d9a19ddf2",
+  "approved_delivery_document_sha256_before_signoff": "98765b3dfc0b2dcf4a0023d9da5c444b40309aa403f0c25325858d381a44b6a3",
+  "pre_acceptance_status_sha256": "6da07fbeffae196cf0badab1cbdefae2b4764c7a825c4117e4862e7c63ed8c66",
+  "pre_acceptance_manifest_sha256": "64e08501620fb3e69e8339ad8385cd3286e08954a5d31e631bef84ace641b75f",
+  "pre_acceptance_archive": "work/day13-20261024/final-code-preserved-bytes",
+  "independent_content_review_sha256": "7c2b08e55f725419a4cd1a36b90444639d8da1d209c76578cf371cc9eaf686b4",
+  "independent_packaging_review_sha256": "89d497fee16ceb2fc52867531a5b9c342eb6e612bdb8d395685a6a9ddfea11b0",
+  "runtime_or_reference_changes": false,
+  "new_model_calls": 0,
+  "tests_rerun": "None; documentation/sign-off only, frozen core verified unchanged",
+  "historical_failures_and_original_reports_preserved": true
+}

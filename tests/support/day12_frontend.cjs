@@ -27,8 +27,8 @@ const path = require('node:path');
     const pack = await api('/material-packs/' + subject);
     const option = (await api('/material-packs')).find(item => item.subject === subject);
     await page.locator('.preset-button').filter({ hasText: option.title }).click();
-    await page.locator('#create-form input[name="topic"]').filter({ visible: true }).waitFor();
-    await page.waitForFunction(topic => document.querySelector('#create-form input[name="topic"]').value === topic, pack.profile.topic);
+    await page.locator('#create-form textarea[name="goal"]').filter({ visible: true }).waitFor();
+    await page.waitForFunction(topic => document.querySelector('#create-form textarea[name="goal"]').value === topic, pack.profile.goal);
     return pack;
   }
   const creations = () => requests.filter(r => r.method === 'POST' && r.path === '/projects');
@@ -61,7 +61,7 @@ const path = require('node:path');
     await page.goto('/'); await page.locator('.preset-button').first().waitFor();
     if (scenario === 'completed-new') {
       const a = await create(); await importPack('mathematics');
-      await writeClick('确认档案与范围'); await writeClick('确认并冻结计划'); await writeClick('开始学习');
+      await writeClick('AI 整理学习计划'); await writeClick('确认并冻结计划'); await writeClick('开始学习');
       for (const answer of ['-5', '7']) {
         await writeClick('开始测评');
         await page.locator('#quiz-form .answer-numeric').fill(answer);
@@ -73,7 +73,7 @@ const path = require('node:path');
       assert.equal(await pending(), null);
       await clicks('＋ 新建学习'); const b = await create();
       assert.notEqual(b.pid, a.pid); assert.notEqual(b.request.body.request_id, a.request.body.request_id);
-      assert.deepEqual(b.request.body.profile, a.request.body.profile);
+      assert.deepEqual(b.request.body.intent, a.request.body.intent);
       assert.equal(b.view.page_state, 'profile_review'); assert.deepEqual(b.view.completed_node_ids || [], []);
       assert.deepEqual(await api('/projects/' + a.pid), finished);
       assert.equal(await pending(), null);
@@ -108,11 +108,11 @@ const path = require('node:path');
       const a = await create(); await clicks('＋ 新建学习'); const b = await create('english');
       // Simulate the stale successful request retained by the older frontend.
       await page.evaluate(record => localStorage.setItem('skilltree.v3.creation-request', JSON.stringify(record)),
-        { request_id: a.request.body.request_id, profile: JSON.stringify(a.request.body.profile) });
+        { request_id: a.request.body.request_id, intent: JSON.stringify(a.request.body.intent) });
       await clicks('＋ 新建学习'); await page.locator('#create-form').waitFor();
       assert.equal(await pending(), null);
       const c = await create(); assert.notEqual(c.pid, a.pid); assert.notEqual(c.pid, b.pid);
-      assert.deepEqual(c.request.body.profile, a.request.body.profile);
+      assert.deepEqual(c.request.body.intent, a.request.body.intent);
     } else {
       const a = await create(); await clicks('＋ 新建学习'); const b = await create('english');
       let release; const gate = new Promise(resolve => { release = resolve; });

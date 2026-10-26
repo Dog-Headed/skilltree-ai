@@ -1,0 +1,43 @@
+{
+  "version": "day13-density-1",
+  "review_status": "approved_by_user",
+  "profile": {
+    "subject_label": "物理",
+    "topic": "质量、体积与密度入门",
+    "goal": "只安排两个依赖节点：先区分质量体积与单位，再解释密度m/V及同种均匀材料同比取样。每节点一个完整可观察文字目标。",
+    "bounded_goal": "用文字区分g与cm³、质量与体积；用ρ=m/V计算简单密度、解释g/cm³含义，并解释理想同温均匀材料取半后比值不变。",
+    "prior_knowledge": {
+      "self_reported": [
+        "具备基本除法能力，尚无物理测评证据。"
+      ],
+      "assessed_evidence": []
+    },
+    "target_level": "入门",
+    "language": {
+      "teaching": "zh-CN",
+      "answering": "zh-CN"
+    },
+    "time_budget_minutes": 40,
+    "session_minutes": 20,
+    "scope_in": [
+      "质量体积与单位的区别",
+      "ρ=m/V与g/cm³含义",
+      "理想均匀材料同比取样"
+    ],
+    "scope_out": [
+      "实验与测量技能认证",
+      "浮沉",
+      "跨单位换算",
+      "复杂符号证明",
+      "代码或表达式执行"
+    ],
+    "learning_mode": "formal",
+    "requested_capabilities": [
+      "text_explanation",
+      "text_question_answer",
+      "text_rubric"
+    ],
+    "profile_version": 1
+  },
+  "runtime_route": "generic open subject; text_rubric only; no density unit parser, experimental evaluator or subject Graph added"
+}

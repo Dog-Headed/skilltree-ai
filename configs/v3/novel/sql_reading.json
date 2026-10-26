@@ -1,0 +1,66 @@
+{
+  "version": "day13-sql-1",
+  "review_status": "approved_by_user",
+  "profile": {
+    "subject_label": "SQL查询阅读",
+    "topic": "SELECT与WHERE入门",
+    "goal": "按两个依赖步骤学习：先解释SELECT列选择，再解释WHERE条件筛选；用给定people表列出结果并说明边界。",
+    "bounded_goal": "只读单表SELECT name FROM people及WHERE age>=整数；解释列、行、边界和原表不变。",
+    "prior_knowledge": {
+      "self_reported": [
+        "具备基本表格阅读能力；没有SQL测评证据。"
+      ],
+      "assessed_evidence": []
+    },
+    "target_level": "入门",
+    "language": {
+      "teaching": "zh-CN",
+      "answering": "zh-CN"
+    },
+    "time_budget_minutes": 60,
+    "session_minutes": 20,
+    "scope_in": [
+      "SELECT列投影",
+      "单表WHERE整数边界",
+      "结果解释与查询不改原表"
+    ],
+    "scope_out": [
+      "执行学习者SQL",
+      "NULL、聚合、JOIN与写操作",
+      "数据库操作技能认证"
+    ],
+    "learning_mode": "formal",
+    "requested_capabilities": [
+      "text_explanation",
+      "text_question_answer",
+      "text_rubric"
+    ],
+    "profile_version": 1
+  },
+  "desired_plan": {
+    "steps": [
+      {
+        "concept": "SELECT列投影",
+        "prerequisites": []
+      },
+      {
+        "concept": "WHERE条件筛选",
+        "prerequisites": [
+          "SELECT列投影"
+        ]
+      }
+    ],
+    "node_ids": "由通用Planner生成和验证，不硬编码到Graph"
+  },
+  "runtime_route": "开放主题使用generic模板；本文件直接提供合法档案，不增加学科枚举或preset分支。",
+  "approval": {
+    "approved_at_utc": "2026-10-22T10:27:09.343368+00:00",
+    "reviewed_by": "user",
+    "evidence": "Direct human reply to the concrete fourth-topic reference question in this conversation",
+    "user_reply": "认可六例标准，继续真实评价",
+    "scope": "SQL reading two-step scope, six answers/rubrics/expected actions, including nine-point critical rejection and actual material conflict pause",
+    "approved_review_document_sha256": "a5b69808d7172687690ea723391af71e697806f5fa59a582fcc8f712d31df716",
+    "approved_draft_standards_sha256": "42539c3adb2ff7857746b4b809ed2e45990edf5406ddf20b52baa33f777a472f",
+    "independent_pre_review_file_sha256": "62ac921bf3d71ff06236d2347f8cd93c595ec4a5cdd5fdfa7a6f419c9c93cab1"
+  }
+}

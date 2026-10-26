@@ -72,7 +72,7 @@ class V3Repository:
     def list_projects(self):
         return [self.get_project(row[0]) for row in self.conn.execute("SELECT id FROM learning_projects ORDER BY created_at,id")]
 
-    def create_project(self, request_id, profile, *, derived_from_project_id=None):
+    def create_project(self, request_id, profile, *, derived_from_project_id=None, guided_intent=None):
         from .contracts import LearningProfile
         profile = LearningProfile.model_validate(profile)
         if profile.profile_version != 1:
@@ -81,7 +81,9 @@ class V3Repository:
             raise ValueError("Day 9 does not import verified prior assessments; use self_reported")
         key = request_key(request_id)
         profile_json = encode(profile)
-        fingerprint = hashlib.sha256(encode({"profile": json.loads(profile_json), "parent": derived_from_project_id}).encode()).hexdigest()
+        creation={"profile": json.loads(profile_json), "parent": derived_from_project_id}
+        if guided_intent is not None:creation['guided_intent']=guided_intent
+        fingerprint = hashlib.sha256(encode(creation).encode()).hexdigest()
         project_id = "v3_" + key
         with self.transaction():
             row = self.conn.execute("SELECT id,create_fingerprint FROM learning_projects WHERE create_request_id=?", (key,)).fetchone()
@@ -95,6 +97,9 @@ class V3Repository:
                 VALUES (?,?,?,?,?,?,1,'profile_review',?,?,?,?,?,?)""",
                 (project_id, project_id, key, fingerprint, profile.goal, profile_json, "profile_"+uuid4().hex,
                  derived_from_project_id, encode(self.limits), now(), GRAPH_VERSION, CONTRACT_VERSION))
+            if guided_intent is not None:
+                from .onboarding import register
+                register(self,project_id,guided_intent)
         return self.get_project(project_id)
 
     def _draft(self, project_id, expected_revision=None):
@@ -312,6 +317,8 @@ class V3Repository:
                 if document.source_id in selected and selected[document.source_id]["source_version"] != document.source_version:
                     raise ValueError("One frozen plan cannot mix versions of the same source")
                 selected[document.source_id] = source
+            from .context import ContextBuilder
+            ContextBuilder(self).validate_candidate_bindings(project_id, links, policy=policy)
             snapshot = FrozenSnapshot(profile_version=profile.profile_version, plan_version=plan.plan_version,
                                       policy_id=policy.policy_id, policy_version=policy.policy_version,
                                       source_manifest=[{k:d[k] for k in ("source_id","source_version","content_hash")} for d in selected.values()],

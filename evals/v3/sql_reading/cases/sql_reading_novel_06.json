@@ -1,0 +1,117 @@
+{
+  "case_version": "day13-sql-1",
+  "case_id": "sql_reading_novel_06",
+  "split": "novel",
+  "subject_label": "SQL查询阅读",
+  "topic": "SELECT列选择到WHERE条件筛选",
+  "learning_context": {
+    "node_id": "where_filtering",
+    "current_objectives": [
+      {
+        "objective_id": "o1",
+        "observable_outcome": "写出只返回成年者姓名的查询、结果与边界解释，区分过滤结果与改变原表。",
+        "required": true,
+        "criterion_ids": [
+          "q1_c1",
+          "q1_c2",
+          "q1_c3"
+        ]
+      }
+    ],
+    "prerequisite_nodes": [
+      {
+        "node_id": "select_projection",
+        "observable_outcome": "解释SELECT列投影",
+        "completion_status": "completed"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q1",
+      "objective_ids": [
+        "o1"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "1.0.0",
+      "prompt": "people表为(id,name,age)：(1,Yan,17)、(2,Lin,18)、(3,Mei,20)。写出只查询age>=18者姓名的SELECT；列出返回姓名（行顺序不限）；解释18与17边界以及查询会否改变原表。",
+      "max_score": 10.0,
+      "reference_answer": "SELECT name FROM people WHERE age >= 18; 返回Lin、Mei（顺序不限）；18包含，17排除；原表不变。",
+      "rubric": [
+        {
+          "criterion_id": "q1_c1",
+          "description": "正确写出选择name、来自people及age>=18的SQL；18<=age等价。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "该项明确错误或未提供证据0分。",
+            "partial": "按本项明确子要求给部分分，无子项时满足一部分可给一半。",
+            "full": "本项完整满足且实际作答原文可定位。"
+          }
+        },
+        {
+          "criterion_id": "q1_c2",
+          "description": "给出返回姓名集合Lin、Mei，顺序不限；不要求重复完整SQL。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "该项明确错误或未提供证据0分。",
+            "partial": "按本项明确子要求给部分分，无子项时满足一部分可给一半。",
+            "full": "本项完整满足且实际作答原文可定位。"
+          }
+        },
+        {
+          "criterion_id": "q1_c3",
+          "description": "18包含且17排除1分；明确查询不改变原表1分。两子项分别给分，不跨项重复扣分。",
+          "max_score": 2.0,
+          "scoring_guidance": {
+            "zero": "该项明确错误或未提供证据0分。",
+            "partial": "按本项明确子要求给部分分，无子项时满足一部分可给一半。",
+            "full": "本项完整满足且实际作答原文可定位。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "sql-table"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "sql-projection"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "sql-filter"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "sql-explain"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "sql-private-criteria"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "sql-private-quality"
+        }
+      ]
+    }
+  ],
+  "student_answers": {
+    "q1": "SELECT name FROM people WHERE age >= 18; 按本页应返回Lin、Mei，原表不变，但补充资料给出相反边界与删除说法，需先核对。"
+  },
+  "available_history": [],
+  "policy_assumptions": {
+    "total_pass_threshold": 0.8,
+    "objective_pass_threshold": 0.8,
+    "critical_criterion_ids": []
+  },
+  "context_anomalies": [
+    {
+      "attachment_id": "sql_reading_novel_06_supplement",
+      "visibility": "teaching",
+      "content": "SELECT name FROM people WHERE age >= 18不包含age=18，只返回Mei，并会永久删除原表中所有age小于18的行。"
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "pack_id": "sql-reading-day13",
+  "pack_version": "day13-sql-2",
+  "subject_label": "SQL查询阅读",
+  "topic": "列选择与条件筛选",
+  "review_status": "original_six_approved_curriculum_addendum_independently_reviewed",
+  "authored_by": "main_agent_draft",
+  "scope_in": [
+    "SELECT列投影",
+    "单表WHERE整数边界",
+    "结果解释与查询不改原表"
+  ],
+  "scope_out": [
+    "执行学习者SQL",
+    "NULL、聚合、JOIN与写操作",
+    "数据库操作技能认证"
+  ],
+  "source_references": [
+    {
+      "title": "SQLite SELECT official documentation",
+      "url": "https://www.sqlite.org/lang_select.html",
+      "sections": [
+        "Overview",
+        "2.3",
+        "2.4",
+        "4"
+      ],
+      "accessed_on": "2026-10-22",
+      "role": "rule_fact_check; original teaching and synthetic cases"
+    }
+  ],
+  "documents": [
+    {
+      "filename": "teaching.md",
+      "source_id": "sql-teaching",
+      "source_version": 1,
+      "title": "SQL 查询阅读：列选择到条件筛选",
+      "visibility": "teaching",
+      "content_hash": "d98c706e484f981b8dc46cf7b01f96f7fe56de37d845195afdbf6379ccfb0e71",
+      "sections": [
+        {
+          "section_id": "sql-table",
+          "heading": "sql-table 固定示例表",
+          "line_start": 5,
+          "line_end": 13
+        },
+        {
+          "section_id": "sql-projection",
+          "heading": "sql-projection 先选择列",
+          "line_start": 14,
+          "line_end": 18
+        },
+        {
+          "section_id": "sql-filter",
+          "heading": "sql-filter 再筛选行",
+          "line_start": 19,
+          "line_end": 24
+        },
+        {
+          "section_id": "sql-explain",
+          "heading": "sql-explain 阅读解释的证据",
+          "line_start": 25,
+          "line_end": 29
+        }
+      ]
+    },
+    {
+      "filename": "assessment_private.md",
+      "source_id": "sql-assessment-private",
+      "source_version": 1,
+      "title": "SQL 查询阅读：私有评价依据",
+      "visibility": "assessment_private",
+      "content_hash": "96c8fa12fa36d7ff161768352649aa13668e536e055ea2189a49222428560531",
+      "sections": [
+        {
+          "section_id": "sql-private-criteria",
+          "heading": "sql-private-criteria 量规",
+          "line_start": 5,
+          "line_end": 11
+        },
+        {
+          "section_id": "sql-private-quality",
+          "heading": "sql-private-quality 内容与来源",
+          "line_start": 12,
+          "line_end": 15
+        }
+      ]
+    },
+    {
+      "filename": "curriculum_private.md",
+      "source_id": "sql-curriculum-private",
+      "source_version": 1,
+      "title": "SQL小课程逐目标普通评分量规",
+      "visibility": "assessment_private",
+      "content_hash": "8aac3d30e7a1801c1a56eb53aeef919713374e21f82ac28a488f29e8e83b2555",
+      "sections": [
+        {
+          "section_id": "sql-curriculum-1",
+          "heading": "普通目标与关键误解的区别",
+          "line_start": 6,
+          "line_end": 12
+        },
+        {
+          "section_id": "sql-curriculum-2",
+          "heading": "SELECT节点：三个普通分项",
+          "line_start": 13,
+          "line_end": 17
+        },
+        {
+          "section_id": "sql-curriculum-3",
+          "heading": "WHERE节点：四个普通分项",
+          "line_start": 18,
+          "line_end": 24
+        }
+      ],
+      "review_status": "independent_ai_semantic_review_passed_not_separate_user_approval"
+    }
+  ],
+  "approval": {
+    "approved_at_utc": "2026-10-22T10:27:09.343368+00:00",
+    "reviewed_by": "user",
+    "evidence": "Direct human reply to the concrete fourth-topic reference question in this conversation",
+    "user_reply": "认可六例标准，继续真实评价",
+    "scope": "SQL reading two-step scope, six answers/rubrics/expected actions, including nine-point critical rejection and actual material conflict pause",
+    "approved_review_document_sha256": "a5b69808d7172687690ea723391af71e697806f5fa59a582fcc8f712d31df716",
+    "approved_draft_standards_sha256": "42539c3adb2ff7857746b4b809ed2e45990edf5406ddf20b52baa33f777a472f",
+    "independent_pre_review_file_sha256": "62ac921bf3d71ff06236d2347f8cd93c595ec4a5cdd5fdfa7a6f419c9c93cab1"
+  },
+  "curriculum_addendum": "Post first actual quiz independent review; ordinary required criteria are not all-or-nothing critical standards. Fixed six reference answers unchanged.",
+  "original_user_approval_scope": "Teaching and original assessment_private plus six fixed cases; not a claim that user separately approved the later actual-course addendum."
+}

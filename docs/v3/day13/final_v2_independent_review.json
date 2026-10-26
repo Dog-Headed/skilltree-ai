@@ -1,0 +1,1083 @@
+{
+  "review_id": "day13-final-v2-independent-review-20261023",
+  "review_type": "independent_ai_semantic_and_integrity_review",
+  "scope": "final-v2 twelve fixed-case grading and diagnosis outputs only",
+  "status": "approved_independent_review",
+  "validation_role": "independent_final_revalidation",
+  "first_unseen_execution": false,
+  "new_real_model_requests": 0,
+  "human_approval_claimed": false,
+  "release_approved": false,
+  "original_run": "work/day13-20261023/final-v2",
+  "original_report_sha256": "eb1cd3558d2f2546320f7741ffe00dc88a36cfad9239e2da255bb7f372a2ad5b",
+  "original_manifest_sha256": "af8bacf5e055c2434d8b474754e7b35921426097ed040c6410d11b44e1c83d13",
+  "original_prior_report_sha256": "ebdc3947b2e4995fbde50220eafa6f29b385461e0f1356474095b2ce8b6055b4",
+  "freeze_sha256": "91dcea124db6fe36f051c7a19739801e0fb622957365bf74d621944d9a19ddf2",
+  "standards_sha256": "fc82a723f2bf0fe4a91060b68f6ccfa7800124950062910ed5e38ce981d65ce6",
+  "review_markdown_sha256": "437a6ec6bbc768f5ceb895a4f0020bc3ccb9385ad9df520ac7dbadf10250b3cb",
+  "mechanical_probe_path": "work/day13-20261023/final-v2-independent-mechanical.json",
+  "mechanical_probe_sha256": "cfaa5f59563ab90f5b438be6f5bbc89cd964081bf709bfcce5f4a7bc6809341a",
+  "runtime_database_readonly_verified": true,
+  "runtime_database_sha256": "21106e352a17beac4a5d95ec428c4b87141526633a064c14e6d9d3fa0bf1607e",
+  "model_identity": {
+    "configured_model": "deepseek-flash",
+    "endpoint_sha256": "a34e2a4708ed1c61008a151688838dcf1c44d4e7f08054633e72ba7c0b16cfc1",
+    "sdk_retries": 0,
+    "timeout_seconds": 45
+  },
+  "prompt_versions": {
+    "grading": "v3-day13-text-rubric-4",
+    "diagnosis": "v3-day13-diagnosis-6",
+    "review": "v3-day13-quality-review-2"
+  },
+  "checks": {
+    "case_and_standard_hashes": true,
+    "result_report_identical": true,
+    "frozen_fingerprint_match": true,
+    "raw_grade_offline_replay_identical": true,
+    "business_anchors_valid": true,
+    "actual_source_lines_and_hashes_valid": true,
+    "final_diagnosis_context_valid": true,
+    "pure_guard_recomputed": true,
+    "sqlite_cached_facts_and_counts_match": true,
+    "request_usage_pairing_valid": true,
+    "server_budgets_respected": true
+  },
+  "totals": {
+    "requests": 30,
+    "student_anchors": 35,
+    "bound_sources_per_case": 41,
+    "formal_grade": 12,
+    "formal_diagnosis": 9,
+    "tool_selection": 9,
+    "usage_input_tokens": 111199,
+    "usage_output_tokens": 40937
+  },
+  "formal_structure_legality": {
+    "grade_first": 12,
+    "grade_final": 12,
+    "grade_total": 12,
+    "diagnosis_first": 9,
+    "diagnosis_final": 9,
+    "diagnosis_total": 9,
+    "tool_selection_outputs_separately_counted": 9,
+    "output_repairs": 0,
+    "original_report_note": "Per-subject first 6/7 includes a valid empty tool-stage AIMessage as non-JSON; it is not an invalid formal DiagnosisDecision."
+  },
+  "by_subject": {
+    "python": {
+      "cases": 4,
+      "scored_samples": 3,
+      "normalized_mae": 0.0,
+      "action_matches": 4,
+      "false_advances": 0,
+      "false_rejects": 0,
+      "unexpected_refusals": 0,
+      "technical_failures": 0,
+      "requests": 10,
+      "input_tokens": 36238,
+      "output_tokens": 14111,
+      "latency_seconds": {
+        "mean": 21.991,
+        "max": 29.52
+      },
+      "semantic_citation_review": "approved_independent_review",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "formal_grade_first_last_valid": 4,
+      "formal_diagnosis_first_last_valid": 3,
+      "structure_reporting_note": "原report首份6/7混合了工具阶段空AIMessage；正式评分4/4、最终Diagnosis3/3均首末合法，未发生输出修复。"
+    },
+    "mathematics": {
+      "cases": 4,
+      "scored_samples": 3,
+      "normalized_mae": 0.0,
+      "action_matches": 4,
+      "false_advances": 0,
+      "false_rejects": 0,
+      "unexpected_refusals": 0,
+      "technical_failures": 0,
+      "requests": 10,
+      "input_tokens": 38660,
+      "output_tokens": 13578,
+      "latency_seconds": {
+        "mean": 20.05375,
+        "max": 27.037
+      },
+      "semantic_citation_review": "approved_independent_review",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "formal_grade_first_last_valid": 4,
+      "formal_diagnosis_first_last_valid": 3,
+      "structure_reporting_note": "原report首份6/7混合了工具阶段空AIMessage；正式评分4/4、最终Diagnosis3/3均首末合法，未发生输出修复。"
+    },
+    "english": {
+      "cases": 4,
+      "scored_samples": 3,
+      "normalized_mae": 0.0,
+      "action_matches": 4,
+      "false_advances": 0,
+      "false_rejects": 0,
+      "unexpected_refusals": 0,
+      "technical_failures": 0,
+      "requests": 10,
+      "input_tokens": 36301,
+      "output_tokens": 13248,
+      "latency_seconds": {
+        "mean": 20.29175,
+        "max": 32.291
+      },
+      "semantic_citation_review": "approved_independent_review",
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "q1_c3摘录为“a note yesterday”，直接覆盖宾语与时间，主语Leo要结合完整学生答案和q1_c1整句引文核对；引用覆盖偏窄，不改变实际得分或行动。",
+        "q1_c3仅摘录“last night”，单条证据只支持时间，不能独自证明They/the show的原意保留；完整实际答案确实保留原意，故属非阻断的分项引文覆盖不足，不能称每条引文都独立完整支持全部子条件。"
+      ],
+      "formal_grade_first_last_valid": 4,
+      "formal_diagnosis_first_last_valid": 3,
+      "structure_reporting_note": "原report首份6/7混合了工具阶段空AIMessage；正式评分4/4、最终Diagnosis3/3均首末合法，未发生输出修复。"
+    }
+  },
+  "cases": [
+    {
+      "case_id": "english_holdout_final01",
+      "subject": "english",
+      "case_sha256": "cb5365b3c3088fb257e8a694a71394b9b8a1cf5ec19b62448d49df8765f01030",
+      "raw_sha256": "eb8d3b09d8d029affe0cc07b12d1c7809fb8357af89a57b4041fcb8630764b47",
+      "result_sha256": "5760cc7f98d2b7ebcca5eb5c525f7bd66e02ae14e98c367bc8cc623c47701485",
+      "actual_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score": 10.0,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 1,
+      "tool_selection_count": 1,
+      "student_anchor_count": 3,
+      "bound_source_count": 4,
+      "feedback": [
+        "作答将时间状语置于句首，构成“Did + 主语 + 动词原形”的一般疑问句，保留Nora吃午饭和yesterday，表达正确。"
+      ],
+      "uncertainty_reasons": [],
+      "diagnosis_reason": "本轮作答完整满足一般过去时一般疑问句改写要求：evidence_725da32b526628a60dc8baf0579d0a72显示Did已前置，evidence_d6455e856b665cca968006a67c979590显示did后使用动词原形have，evidence_1dccd9654ea6a4d3b248e59381c4401e显示保留Nora吃午饭的意义与yesterday，且时间状语置于句首有效。三个分项均为满分，当前证据足以支持推进。",
+      "tool_summary": {
+        "tool_rounds": 0,
+        "tool_executions": 0,
+        "stopped_reason": "model_finished",
+        "queries": []
+      },
+      "student_answers": {
+        "q1": "Yesterday, did Nora have lunch?"
+      },
+      "attachments": [],
+      "requests": 3,
+      "elapsed_seconds": 17.272,
+      "guard_recomputed": true,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "Yesterday置句首，后接did Nora have lunch构成合法一般疑问，did后have原形，主语/事件/时间保留。4/4/2=10与advance成立；接受正确语序变体。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/english/teaching.md",
+          "citation": {
+            "chunk_id": "section_42345187ca25ea362c66e1b1",
+            "line_end": 32,
+            "line_start": 27,
+            "source_id": "english-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "普通实义动词的一般疑问常用 Did + 主语 + 动词原形。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/english/teaching.md",
+          "citation": {
+            "chunk_id": "section_f267ed980111fd5bf24c140c",
+            "line_end": 40,
+            "line_start": 33,
+            "source_id": "english-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "不同但成立的经历、同义词和句子顺序可以接受。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "english_holdout_final02",
+      "subject": "english",
+      "case_sha256": "588ad2b731b5202481dbdd5976f5a65a33a547908be609b96d2968246dca99c5",
+      "raw_sha256": "10a070f9a6b8dc6f28167dbe70396687cbd031f7e111763d3c98b9de833ae9e4",
+      "result_sha256": "7d1b41bd9077ae8e5a17f719f4c3f5395c41be99133b8d2fdcf4a36642508033",
+      "actual_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score": 6.0,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 1,
+      "tool_selection_count": 1,
+      "student_anchor_count": 4,
+      "bound_source_count": 3,
+      "feedback": [
+        "目标句型基本正确（Did 前置、主语与动词位置正确），原意和 yesterday 时间信息保留；但 did 后误用 wrote，且说明中明确称 did 后必须用过去式，属关键错误。"
+      ],
+      "uncertainty_reasons": [],
+      "diagnosis_reason": "本题总分为6/10，未达到0.8通过阈值。q1_c1已正确前置Did并保留主语与宾语位置，q1_c3也保留了原意和yesterday时间信息；但q1_c2为关键错误且0分：作答写成了“Did Leo wrote...”，did后误用过去式wrote（evidence_6dc93c8c46b76008f33bb153a4a60843），并在说明中明确宣称“did后必须继续用过去式”（evidence_12f13676913aa76b76538b25fb620528）。这不是偶发笔误，而是对did后实义动词须用原形的规则存在明确反向陈述，需要针对当前节点补弱重练。虽然已完成前置subjects_and_base_verbs，但本轮查询其历史状态为no_history，未取得同源前置错答证据，不能仅凭前置名称或完成状态把当前关键错误归因于前置，因此选择当前节点remediate。",
+      "tool_summary": {
+        "tool_rounds": 1,
+        "tool_executions": 3,
+        "stopped_reason": "tool_limit",
+        "queries": [
+          {
+            "tool": "get_learning_history",
+            "node_id": "past_simple_writing",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "subjects_and_base_verbs",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_prerequisite_status",
+            "node_id": null,
+            "status": "found"
+          }
+        ]
+      },
+      "student_answers": {
+        "q1": "Did Leo wrote a note yesterday? 因为是过去，did后必须继续用过去式。"
+      },
+      "attachments": [],
+      "requests": 3,
+      "elapsed_seconds": 32.291,
+      "guard_recomputed": true,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported_with_nonblocking_note",
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "q1_c3摘录为“a note yesterday”，直接覆盖宾语与时间，主语Leo要结合完整学生答案和q1_c1整句引文核对；引用覆盖偏窄，不改变实际得分或行动。"
+      ],
+      "semantic_reason": "Did前置和事件/时间保留分别4与2分；wrote未还原write，且明确宣称did后必须继续过去式，动词项0与冻结critical成立。6分/补弱合理，不重复扣掉其余正确内容。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/english/teaching.md",
+          "citation": {
+            "chunk_id": "section_42345187ca25ea362c66e1b1",
+            "line_end": 32,
+            "line_start": 27,
+            "source_id": "english-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "普通实义动词的一般疑问常用 Did + 主语 + 动词原形。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/english/assessment_private.md",
+          "citation": {
+            "chunk_id": "section_160aa6905dd870aac35d289e",
+            "line_end": 13,
+            "line_start": 6,
+            "source_id": "english-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "verified_quote": "did 后再次使用过去式、把过去任务持续写成现在时，应定位实际动词与对应量规。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "english_holdout_final03",
+      "subject": "english",
+      "case_sha256": "e7fc708757cf0244a472ef1dd0a6f7377fac950594c4b275853a617bdb151ea3",
+      "raw_sha256": "0aa2c7bd8fc73d5bfcbb275143f8d928819872200e7c538d1febd9e9a8169bcf",
+      "result_sha256": "c4eac24f9d644183cb48474e42845c0a29bb2b8ad421440ec4a60c8795b2cca3",
+      "actual_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score": 90.0,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 1,
+      "tool_selection_count": 1,
+      "student_anchor_count": 5,
+      "bound_source_count": 4,
+      "feedback": [
+        "正确使用 didn't 加动词原形 see，并保留 last night，原意不变。",
+        "答案仍是陈述句，未使用 Did 前置形成一般疑问句，也没有使用 play 原形，因此未满足改写任务。"
+      ],
+      "uncertainty_reasons": [],
+      "diagnosis_reason": "本轮q1表现良好：evidence_56e4c78861a9f09f9be594424ee8ac39显示使用了didn't，evidence_bc1502cd41c70f8ab472627fac314bae显示助动词后使用see原形，evidence_2073313ddef563e9c02804e13a0e8fba显示保留last night，否定句改写达标。q2得0分：evidence_6c2ce1fad63f76caeb45dd2b05466e0a仍是陈述句“Iris played chess yesterday.”，没有将Did前置形成疑问结构；evidence_9e5891bce98ec55a116cbc0f20a5eced显示仍使用played，未在Did后使用play原形，也未形成保留原意与时间的疑问表达。前置subjects_and_base_verbs虽标记完成，但历史查询无同源作答证据，不能据此把当前错误归因于前置；本轮错误集中在一般疑问句改写操作，优先在当前节点补弱。",
+      "tool_summary": {
+        "tool_rounds": 1,
+        "tool_executions": 3,
+        "stopped_reason": "tool_limit",
+        "queries": [
+          {
+            "tool": "get_prerequisite_status",
+            "node_id": null,
+            "status": "found"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "past_simple_writing",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "subjects_and_base_verbs",
+            "status": "no_history"
+          }
+        ]
+      },
+      "student_answers": {
+        "q1": "They didn't see the show last night.",
+        "q2": "Iris played chess yesterday."
+      },
+      "attachments": [],
+      "requests": 3,
+      "elapsed_seconds": 23.638,
+      "guard_recomputed": true,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported_with_nonblocking_note",
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "q1_c3仅摘录“last night”，单条证据只支持时间，不能独自证明They/the show的原意保留；完整实际答案确实保留原意，故属非阻断的分项引文覆盖不足，不能称每条引文都独立完整支持全部子条件。"
+      ],
+      "semantic_reason": "q1否定句didn't see及原意/last night均正确，36/36/18=90。q2只重复陈述Iris played chess yesterday，未形成Did疑问、未给play原形，冻结三个分项均0。必要o2未达标，remediate成立。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/english/teaching.md",
+          "citation": {
+            "chunk_id": "section_eabcaf376f97f0f880a687c1",
+            "line_end": 26,
+            "line_start": 20,
+            "source_id": "english-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "普通实义动词的过去否定用主语加 did not 或 didn't，再加动词原形。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/english/teaching.md",
+          "citation": {
+            "chunk_id": "section_42345187ca25ea362c66e1b1",
+            "line_end": 32,
+            "line_start": 27,
+            "source_id": "english-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "普通实义动词的一般疑问常用 Did + 主语 + 动词原形。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/english/teaching.md",
+          "citation": {
+            "chunk_id": "section_f267ed980111fd5bf24c140c",
+            "line_end": 40,
+            "line_start": 33,
+            "source_id": "english-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "题目若明确要求疑问，单给正确肯定句仍没有满足该任务；题面不清时应先澄清。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "english_holdout_final04",
+      "subject": "english",
+      "case_sha256": "e1ab511a163e508d4e9b3cf8bd5567c9339881bd5a20b322fc670fd6098ed4e2",
+      "raw_sha256": "5256389a915163d3e75d8a5d7446a2142c9021a5cb490e40a174c0445f5c48fc",
+      "result_sha256": "d7c83eb52d96cf3555e8bf9cf01111559b561cf078f565d138b59b2267dfb1de",
+      "actual_status": "needs_review",
+      "effective_action": "assessment_review",
+      "passed": false,
+      "score": null,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 0,
+      "tool_selection_count": 0,
+      "student_anchor_count": 0,
+      "bound_source_count": 3,
+      "feedback": [],
+      "uncertainty_reasons": [
+        "本题相关规则冲突：chunk_id=section_eabcaf376f97f0f880a687c1（source_id=english-teaching，line_start=20，line_end=26）原文为“普通实义动词的过去否定用主语加 did not 或 didn't，再加动词原形。……不能在 didn't 后再次使用 went 或 visited；过去信息已经由 did 表达。”，并给出“Owen did not visit the library yesterday.”示例，明确要求 did not 后用动词原形。",
+        "实际补充资料 attachment_id=english_holdout_final04_attachment 原文为“普通实义动词过去否定句使用did not以后，后面的行为动词必须继续用过去式ate或went，不能用原形。”，明确要求 did not 后用过去式，与上述教学块对 did 后动词形式的要求直接矛盾。",
+        "chunk_id=section_c0dda34230d367b7a281d295（source_id=english-assessment-private，line_start=21，line_end=27）原文说明“若两份资料对 did 后的动词形式有冲突，应标明资料问题并暂停有效评价。”，因此本题应先标记资料冲突并 needs_review，不能静默按任一份资料评分。"
+      ],
+      "diagnosis_reason": null,
+      "tool_summary": null,
+      "student_answers": {
+        "q1": "We did not eat rice last night. 可是补充资料说要用ate，与本页原形规则矛盾。"
+      },
+      "attachments": [
+        {
+          "attachment_id": "english_holdout_final04_attachment",
+          "visibility": "teaching",
+          "content": "普通实义动词过去否定句使用did not以后，后面的行为动词必须继续用过去式ate或went，不能用原形。"
+        }
+      ],
+      "requests": 1,
+      "elapsed_seconds": 7.966,
+      "guard_recomputed": false,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "绑定规则要求did not后用原形eat，实际附件却明确要求过去式ate/went，学术内容互斥。评分正式输出定位双方原文及暂停规则，needs_review成立；学生正确否定句不应被当作消除资料冲突的理由。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/english/teaching.md",
+          "citation": {
+            "chunk_id": "section_eabcaf376f97f0f880a687c1",
+            "line_end": 26,
+            "line_start": 20,
+            "source_id": "english-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "普通实义动词的过去否定用主语加 did not 或 didn't，再加动词原形。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/english/assessment_private.md",
+          "citation": {
+            "chunk_id": "section_c0dda34230d367b7a281d295",
+            "line_end": 27,
+            "line_start": 21,
+            "source_id": "english-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "verified_quote": "若两份资料对 did 后的动词形式有冲突，应标明资料问题并暂停有效评价。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "mathematics_holdout_final01",
+      "subject": "mathematics",
+      "case_sha256": "e153efcc53cd09d5ad98325109d6b849509616dba9a19e00724a95d31e689ace",
+      "raw_sha256": "4ade6690d521ca545d84ad1d7db66e68a9c139f3e6ebb2ab526259a9d47835fe",
+      "result_sha256": "36328fc7eff6fb5fd740b63f622b239de32c10e4fd83fb8a043d29df0814c9ea",
+      "actual_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score": 20.0,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 1,
+      "tool_selection_count": 1,
+      "student_anchor_count": 3,
+      "bound_source_count": 3,
+      "feedback": [
+        "数值及冻结容差符合要求；此结果不验证解释或推导。",
+        "解值正确，等价变形步骤完整，并代回原式检验左右两边均为22。"
+      ],
+      "uncertainty_reasons": [],
+      "diagnosis_reason": "本轮证据满足两个必修目标。q1 的数值结果 evidence_f0625312249fb0db39bef190ef50600e 为 4.000，正确解出 x=4。q2 的 evidence_4371755e0cc1bc5839428023b83ea802 给出 x=4，evidence_5fbfe18ca743055c3971090f6f3ad286 完整说明两边同减 2x、同减 2、再除非零 3 的等价步骤，evidence_99a6cb08905129ef8f037ce1ddd3348f 完成代回并得到左右两边均为 22。三项分项均满分，无缺失证据或不确定项，可进入下一学习阶段。",
+      "tool_summary": {
+        "tool_rounds": 0,
+        "tool_executions": 0,
+        "stopped_reason": "model_finished",
+        "queries": []
+      },
+      "student_answers": {
+        "q1": "4.000",
+        "q2": "两边同减2x再同减2，得3x=12；两边同除3得x=4。原式左22、右22。"
+      },
+      "attachments": [],
+      "requests": 3,
+      "elapsed_seconds": 22.982,
+      "guard_recomputed": true,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "5x+2=2x+14解为4；4.000的确定性数值评价独立重算正确。文字另有同减2x、同减2、同除3，以及原式左右22=22；数值没有代替解释证据。10+10=20与两个必要目标通过成立。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/mathematics/teaching.md",
+          "citation": {
+            "chunk_id": "section_18fda0284e3686d0b6dc627d",
+            "line_end": 32,
+            "line_start": 26,
+            "source_id": "mathematics-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "先正确展开括号、合并同类项，再把变量项和常数项分开，最后令变量系数为 1。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/mathematics/teaching.md",
+          "citation": {
+            "chunk_id": "section_29b51c76a0399abe4ef74bf1",
+            "line_end": 40,
+            "line_start": 33,
+            "source_id": "mathematics-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "若题目还要求解释步骤，只写“4”不足以提供等价变形的证据。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "mathematics_holdout_final02",
+      "subject": "mathematics",
+      "case_sha256": "3fc3aed64ec44b25b1d9473330eeff5368f19ea2a60164114d4ec93ee885695c",
+      "raw_sha256": "8637dcbaa4f9aef3d1da6751285b8decfac3a076c8a9595848e40ab9f941758c",
+      "result_sha256": "c1c52c7198d0f34c1dc1cc22026833d2cfc1e1ca68e106a71f7dd1bfbc42bfde",
+      "actual_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score": 0.0,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 1,
+      "tool_selection_count": 1,
+      "student_anchor_count": 3,
+      "bound_source_count": 4,
+      "feedback": [
+        "本题得0/10分。解应为x=-5；作答给出x=5，并错误宣称“正数除负数总是正数”，与除法符号规则相反，且未代回原式检验。"
+      ],
+      "uncertainty_reasons": [],
+      "diagnosis_reason": "本题当前节点证据明确未达标：作答给出“x=5”，而 q1_c1 要求正确解为 x=-5（evidence_de66a329a885033d407377921cb7517c）；同时原文称“因为正数除负数总是正数”（evidence_e16061e8f26627d751715d95b283ef48），与 q1_c2 要求的除法符号说明相反，触发关键错误；答案中亦未见按 q1_c3 代回 -2*(-5)=10 的检验（evidence_58a621b3e5b041ae4e41dd29776a37fa）。这些错误直接落在当前一元一次方程解方程与符号说明目标上，应先针对当前节点补弱。前置节点虽标记已完成，但查询未见同源前置错答证据，不能据此把当前错误归因于先修，故不选 revisit_prerequisite。",
+      "tool_summary": {
+        "tool_rounds": 1,
+        "tool_executions": 3,
+        "stopped_reason": "tool_limit",
+        "queries": [
+          {
+            "tool": "get_learning_history",
+            "node_id": "linear_equation_reasoning",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "rational_arithmetic_and_equality",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_prerequisite_status",
+            "node_id": null,
+            "status": "found"
+          }
+        ]
+      },
+      "student_answers": {
+        "q1": "x=5，因为正数除负数总是正数。"
+      },
+      "attachments": [],
+      "requests": 3,
+      "elapsed_seconds": 23.521,
+      "guard_recomputed": true,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "-2x=10应得x=-5，-2*(-5)=10；学生x=5及“正数除负数总是正数”均错误且未检验。0分与冻结反向符号规则critical相符。查询无相关历史，不越级臆断先修不会，当前remediate成立。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/mathematics/teaching.md",
+          "citation": {
+            "chunk_id": "section_ce29bd3a859e8b6e11b44adb",
+            "line_end": 25,
+            "line_start": 19,
+            "source_id": "mathematics-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "用于求唯一解的除法必须除以非零数。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/mathematics/teaching.md",
+          "citation": {
+            "chunk_id": "section_29b51c76a0399abe4ef74bf1",
+            "line_end": 40,
+            "line_start": 33,
+            "source_id": "mathematics-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "求出的数要代回原方程，分别计算左右两边，而不是仅代入已经写错的中间式。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "mathematics_holdout_final03",
+      "subject": "mathematics",
+      "case_sha256": "ec75bc910093a7b86636317544b15b3196e600ecbb16e8429bf3f6bddb2974ae",
+      "raw_sha256": "2e81121cf288e841156d02159b75ad737b99cc201d24e165d0cda54456949afc",
+      "result_sha256": "4ea13f3bcf7ff3f8a06d643ad561995919f8c65b3edd3e2d5947aa71c2fd0090",
+      "actual_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score": 90.0,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 1,
+      "tool_selection_count": 1,
+      "student_anchor_count": 6,
+      "bound_source_count": 4,
+      "feedback": [
+        "等式两边同加6、同除3，解得x=5，并代回原式检验，步骤完整。",
+        "答案错误：除以0不合法且没有定义，不能用于求解；三个分项均未达成。"
+      ],
+      "uncertainty_reasons": [],
+      "diagnosis_reason": "q1已完整达成：evidence_2d654854821f9f5ced9a6a8987c75a42给出x=5，evidence_97571aaf6786e2a30a3907ce6b2154de说明两边同加6、再同除3，evidence_3145e979ce6984fe4e715e954039390c完成代回检验。但q2未达成：evidence_ebddea3e59799aef5a613d40c7acfb5e称“能，除以零合法”，evidence_e24c836805c3144f4e430fdd6858bdb4重复“除以零合法”，evidence_f81c4d060b6be681b1d6eeacd179c83e进一步称除零后“总保持相同的解”，与q2_c1不能除以0、q2_c2除以0没有定义、q2_c3求解同除要求除数非零均相反。前置历史查询无同源错答证据，不能据此把当前错误归因于前置节点，故应针对当前节点“除以0”概念进行补救。",
+      "tool_summary": {
+        "tool_rounds": 1,
+        "tool_executions": 3,
+        "stopped_reason": "tool_limit",
+        "queries": [
+          {
+            "tool": "get_prerequisite_status",
+            "node_id": null,
+            "status": "found"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "linear_equation_reasoning",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "rational_arithmetic_and_equality",
+            "status": "no_history"
+          }
+        ]
+      },
+      "student_answers": {
+        "q1": "两边同加6得3x=15，再同除3得x=5；代回3*5-6=9。",
+        "q2": "能，除以零合法而且总保持相同的解。"
+      },
+      "attachments": [],
+      "requests": 3,
+      "elapsed_seconds": 27.037,
+      "guard_recomputed": true,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "q1同加6→3x=15、同除3→x=5与代回9正确，90分成立。q2认为同除0合法且总保持同解，与非零除数约束相反，0分合理；必要o2=0，因此remediate。不能因多数分来自另一个正确目标而advance。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/mathematics/teaching.md",
+          "citation": {
+            "chunk_id": "section_089ad68bcee8d97ed528c435",
+            "line_end": 18,
+            "line_start": 12,
+            "source_id": "mathematics-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "为保持等式成立，两边同时加上或减去同一个数。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/mathematics/teaching.md",
+          "citation": {
+            "chunk_id": "section_ce29bd3a859e8b6e11b44adb",
+            "line_end": 25,
+            "line_start": 19,
+            "source_id": "mathematics-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "不能除以 0，也不能把 `3x` 错当作 `x + 3`。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "mathematics_holdout_final04",
+      "subject": "mathematics",
+      "case_sha256": "5c03064933ca281a74635be0750b4f31c5334f4145e8095514f18aa99d318354",
+      "raw_sha256": "d9079c0caae4d225bfac003e56eebe8a0326231785b96ba92f2e272a68f04b1c",
+      "result_sha256": "3682b0f2f34af615dbbce8f61d333c52eeadd36aedf8df012e81e1eb75cd7b2f",
+      "actual_status": "needs_review",
+      "effective_action": "assessment_review",
+      "passed": false,
+      "score": null,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 0,
+      "tool_selection_count": 0,
+      "student_anchor_count": 0,
+      "bound_source_count": 4,
+      "feedback": [],
+      "uncertainty_reasons": [
+        "q1 相关规则冲突：teaching block chunk_id=section_ce29bd3a859e8b6e11b44adb 原文称“等式两边同乘同一个数，仍有相等关系；用于求唯一解的除法必须除以非零数。例：`3x = 18`，两边除以 3 得 `x = 6`。”；untrusted_supplement attachment_id=mathematics_holdout_final04_attachment 原文称“等式两边同除非零的6会改变解集，不能用来求解6x=18；只改变左边才保证等价。”两者对“6x=18 两边同除非零6是否合法”直接矛盾。"
+      ],
+      "diagnosis_reason": null,
+      "tool_summary": null,
+      "student_answers": {
+        "q1": "按本页x=3，因为6非零；补充资料却说不能同除6，我无法按两份相反规则接受评价。"
+      },
+      "attachments": [
+        {
+          "attachment_id": "mathematics_holdout_final04_attachment",
+          "visibility": "teaching",
+          "content": "等式两边同除非零的6会改变解集，不能用来求解6x=18；只改变左边才保证等价。"
+        }
+      ],
+      "requests": 1,
+      "elapsed_seconds": 6.675,
+      "guard_recomputed": false,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "本轮实际资料包含“求唯一解的除法必须除以非零数”，同时附件明确禁止同除非零6、声称只改左边等价。6x=18对应两条规则直接互斥。暂停有效评价成立；学生x=3合理也不能消除未决资料冲突。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/mathematics/teaching.md",
+          "citation": {
+            "chunk_id": "section_ce29bd3a859e8b6e11b44adb",
+            "line_end": 25,
+            "line_start": 19,
+            "source_id": "mathematics-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "用于求唯一解的除法必须除以非零数。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/mathematics/teaching.md",
+          "citation": {
+            "chunk_id": "section_39a84421e8b44d36d5f8c561",
+            "line_end": 45,
+            "line_start": 41,
+            "source_id": "mathematics-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "题面缺少条件或两份材料给出互相矛盾的规则时，先定位矛盾，不能静默选一份评分。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "python_holdout_final01",
+      "subject": "python",
+      "case_sha256": "224cf12c9658386e66c252858c51ebc22bdcf18d45d6139a4924cb195a9a1d92",
+      "raw_sha256": "7d72b8853453cf26c961ab4bbf5fa128efff4bd5b4d1bb239b98755b1806bd6a",
+      "result_sha256": "6bd15b2e50b5ad1304111e67b2e77cded8166fc8646a22736323d79955233232",
+      "actual_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score": 10.0,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 1,
+      "tool_selection_count": 1,
+      "student_anchor_count": 3,
+      "bound_source_count": 3,
+      "feedback": [
+        "结果顺序正确，说明了先减1后打印与n逐次变为2、1、0，并明确n=0后条件为假而停止。"
+      ],
+      "uncertainty_reasons": [],
+      "diagnosis_reason": "本轮作答完整满足三个分项：evidence_2cb2d1a91a9b86b432fa472511676911 给出输出顺序二、一、零；evidence_e978ddddf066bd476d13729359f83d64 说明每轮先减1再打印；evidence_42c51c21774a1d844e2c3dbfd8036f5b 说明 n 到0后因 0>0 为假而停止。三项均为满分，未出现不确定或无效证据，且满足文字摘录证据要求。",
+      "tool_summary": {
+        "tool_rounds": 0,
+        "tool_executions": 0,
+        "stopped_reason": "model_finished",
+        "queries": []
+      },
+      "student_answers": {
+        "q1": "输出依次二、一、零；每轮先减1再打印，n到0后0>0为假而停止。"
+      },
+      "attachments": [],
+      "requests": 3,
+      "elapsed_seconds": 28.393,
+      "guard_recomputed": true,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "中文“二、一、零”是2、1、0的等价表述；先减1再打印和n=0后条件假均明确。4/4/2及advance成立，没有因非逐字模板而误拒。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/python/teaching.md",
+          "citation": {
+            "chunk_id": "section_8887e7b0d603470016b9dc7a",
+            "line_end": 48,
+            "line_start": 37,
+            "source_id": "python-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "每次准备进入 `while` 循环体之前都检查条件；第一次就是假时不会进入循环体。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "python_holdout_final02",
+      "subject": "python",
+      "case_sha256": "bfd9b0578a5f0b50246c9fccc7b4181ba5762602cb4654b1af3cfe656a669530",
+      "raw_sha256": "5262dea0424b5ef57771a421561643846e559d629c167965cd6f4af6371d2953",
+      "result_sha256": "9312ea20e260b3979a0c6e2838d825f7047c8b7c07ad2c147d38a2eee0f0e44a",
+      "actual_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score": 0.0,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 1,
+      "tool_selection_count": 1,
+      "student_anchor_count": 3,
+      "bound_source_count": 2,
+      "feedback": [
+        "结果为A错误；并且声称有if就无条件执行第一个分支，属于关键概念错误，未说明2>5为假因而走else。"
+      ],
+      "uncertainty_reasons": [],
+      "diagnosis_reason": "本轮作答未通过：evidence_032029d914c544191d440995686a1956 显示给出的结果是 A；evidence_f88b92d74a548bc801f269ab2e55c0ed 明确称“有if就执行第一个分支，不需要判断真假”，与 q1_c2 要求结合 2>5 为假来解释分支选择相反，且属于 critical 错误；evidence_0d9770ca6ebeb7cf6ca1f3441e1ea5d5 也未说明此处应走 else、不执行 A 分支。该问题直接落在当前目标的条件分支判断上。虽然已查询前置 variables_and_lists，但没有取得同源前置错答证据，不能据此把当前错误归因于先修，因此优先在当前节点补弱。",
+      "tool_summary": {
+        "tool_rounds": 1,
+        "tool_executions": 3,
+        "stopped_reason": "tool_limit",
+        "queries": [
+          {
+            "tool": "get_learning_history",
+            "node_id": "control_flow_reading",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "variables_and_lists",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_prerequisite_status",
+            "node_id": null,
+            "status": "found"
+          }
+        ]
+      },
+      "student_answers": {
+        "q1": "A；有if就执行第一个分支，不需要判断真假。"
+      },
+      "attachments": [],
+      "requests": 3,
+      "elapsed_seconds": 20.858,
+      "guard_recomputed": true,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "x=2时2>5为假，实际应B；“有if就执行第一个分支，不需要判断真假”是明确的一般性反向规则。0/0/0与冻结q1_c2关键错误相符，remediate成立；不是仅凭低分升级严重性。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/python/teaching.md",
+          "citation": {
+            "chunk_id": "section_e59af5f25f96c33fd94babe3",
+            "line_end": 28,
+            "line_start": 14,
+            "source_id": "python-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "`if/elif/else` 链从上到下判断，执行第一个条件成立的分支；都不成立时才进入 `else`。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "python_holdout_final03",
+      "subject": "python",
+      "case_sha256": "80ba4e597d21ee1948b82b9a1cf3cf70a6b9e777f65ea001ebbb54326435fa79",
+      "raw_sha256": "4f8cd7d51d924e0299728707cc8a6ec588dab666256a48d7e009428248bdf326",
+      "result_sha256": "d456edf3e698034d5db2f56065817ba656ced2d71e59ee141e4537979ff43101",
+      "actual_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score": 90.0,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 1,
+      "tool_selection_count": 1,
+      "student_anchor_count": 5,
+      "bound_source_count": 3,
+      "feedback": [
+        "q1 输出顺序、label 取元素而非下标、列表遍历完毕即结束均说明正确，得满分。",
+        "q2 回答称执行一次，并称写了 for 就至少运行一次；这与 range(3,3) 为空序列、循环体执行零次相反，且未说明 stop 排除规则，三个分项均不得分。"
+      ],
+      "uncertainty_reasons": [],
+      "diagnosis_reason": "q1 作答完整正确：能按顺序给出 a、b，说明 label 取列表元素而非下标，并指出列表取完即结束。q2 则明确回答“一次”，并解释“因为写了for就至少运行一次”，与 range(3,3) 为空序列、循环体执行零次相反，也未说明 stop 排除规则；因此 o2 未达到 0.8 的通过阈值。现有查询未取得 variables_and_lists 的同源前置错答证据，不能把 q2 错误归因于前置节点，应优先在当前节点针对 range 空区间与 stop 排除规则进行补救。",
+      "tool_summary": {
+        "tool_rounds": 1,
+        "tool_executions": 3,
+        "stopped_reason": "tool_limit",
+        "queries": [
+          {
+            "tool": "get_learning_history",
+            "node_id": "control_flow_reading",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "variables_and_lists",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_prerequisite_status",
+            "node_id": null,
+            "status": "found"
+          }
+        ]
+      },
+      "student_answers": {
+        "q1": "输出a、b；label依次取两个元素，不是下标，列表取完就结束。",
+        "q2": "一次，因为写了for就至少运行一次。"
+      },
+      "attachments": [],
+      "requests": 3,
+      "elapsed_seconds": 29.52,
+      "guard_recomputed": true,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "q1按顺序输出a、b、取元素非下标及耗尽后结束均正确，90分成立。q2明确声称for至少执行一次，和range(3,3)空序列相反，三个分项均0；o2为必要目标，不能被90总分覆盖。冻结未定义本题critical，未任意补标。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/python/teaching.md",
+          "citation": {
+            "chunk_id": "section_7b56cec63c4b922a8f345e34",
+            "line_end": 36,
+            "line_start": 29,
+            "source_id": "python-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "`range(3, 3)` 没有元素，因此循环体执行零次。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/python/teaching.md",
+          "citation": {
+            "chunk_id": "section_fb774cc20ec9651043300e37",
+            "line_end": 13,
+            "line_start": 6,
+            "source_id": "python-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "`for color in colors` 依次取得元素；如需位置，可以显式遍历 `range(len(colors))`。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    },
+    {
+      "case_id": "python_holdout_final04",
+      "subject": "python",
+      "case_sha256": "d0610a6965a773dbfb70b34c8883cc8230088ebf67fe0ba850b312cc9459b8a2",
+      "raw_sha256": "d88710b856fe52d16761ad804d7cc9d8f9e580697590297dbeee0b82b6c39177",
+      "result_sha256": "55308960801250fcef40e2e03aef2a629c443e96a7b624186e6db0a19c7c8db0",
+      "actual_status": "needs_review",
+      "effective_action": "assessment_review",
+      "passed": false,
+      "score": null,
+      "formal_grade_count": 1,
+      "formal_diagnosis_count": 0,
+      "tool_selection_count": 0,
+      "student_anchor_count": 0,
+      "bound_source_count": 4,
+      "feedback": [],
+      "uncertainty_reasons": [
+        "题目 q1 的绑定教学块 chunk_id=section_8887e7b0d603470016b9dc7a 原文为：“每次准备进入 `while` 循环体之前都检查条件；第一次就是假时不会进入循环体。” 补充资料 attachment_id=python_holdout_final04_attachment 原文为：“while总是先执行一次循环体，再检查条件；即使初值使条件为假也至少执行一次。” 两者就 while 条件检查顺序及零次/至少一次执行直接矛盾，无法在不选择资料的情况下评分。"
+      ],
+      "diagnosis_reason": null,
+      "tool_summary": null,
+      "student_answers": {
+        "q1": "按本页先判断应为零次，但补充资料写至少一次，两个说法不一致。"
+      },
+      "attachments": [
+        {
+          "attachment_id": "python_holdout_final04_attachment",
+          "visibility": "teaching",
+          "content": "while总是先执行一次循环体，再检查条件；即使初值使条件为假也至少执行一次。"
+        }
+      ],
+      "requests": 1,
+      "elapsed_seconds": 9.193,
+      "guard_recomputed": false,
+      "raw_to_evaluation_replayed": true,
+      "result_report_identical": true,
+      "semantic_verdict": "supported",
+      "blocking_findings": [],
+      "nonblocking_findings": [],
+      "semantic_reason": "实际传入的while教学规则要求先检查、初始假执行零次；附件却明确声称先执行、至少一次，针对同一语义直接互斥。needs_review/assessment_review成立，未把提出资料问题的学生计作低分；未运行最终Diagnosis。",
+      "academic_support": [
+        {
+          "source_file": "materials/v3/python/teaching.md",
+          "citation": {
+            "chunk_id": "section_8887e7b0d603470016b9dc7a",
+            "line_end": 48,
+            "line_start": 37,
+            "source_id": "python-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "verified_quote": "每次准备进入 `while` 循环体之前都检查条件；第一次就是假时不会进入循环体。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        },
+        {
+          "source_file": "materials/v3/python/assessment_private.md",
+          "citation": {
+            "chunk_id": "section_5f18d5235a8fc8ee1de9a493",
+            "line_end": 27,
+            "line_start": 21,
+            "source_id": "python-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "verified_quote": "来源有矛盾或参考答案错误时，保留原因并暂停有效评价，不计作学生失败轮数。",
+          "academic_support": "与本题规则、实际作答及冻结分项联合核对；不是仅检查ID存在。"
+        }
+      ],
+      "guard_recomputed_or_non_graded_path_verified": true
+    }
+  ],
+  "blocking_findings": [],
+  "nonblocking_findings": [
+    "q1_c3摘录为“a note yesterday”，直接覆盖宾语与时间，主语Leo要结合完整学生答案和q1_c1整句引文核对；引用覆盖偏窄，不改变实际得分或行动。",
+    "q1_c3仅摘录“last night”，单条证据只支持时间，不能独自证明They/the show的原意保留；完整实际答案确实保留原意，故属非阻断的分项引文覆盖不足，不能称每条引文都独立完整支持全部子条件。"
+  ],
+  "limitations": [
+    "Not first unseen execution; same previously independent approved bytes repeated after freeze04.",
+    "No positive queried same-misconception historical record occurs in this suite.",
+    "Not independent proof of Planner/Tutor/item generation or fourth-topic quality.",
+    "Original usage is provider-returned metadata; reliable currency cost unavailable.",
+    "This AI review is neither human reference approval nor release approval."
+  ]
+}

@@ -36,6 +36,16 @@ def test_frozen_material_edit_is_rejected_even_if_case_data_is_unchanged(tmp_pat
         check_fixtures(tmp_path)
 
 
+def test_historical_fixture_audit_does_not_adopt_an_unrelated_later_pack(tmp_path):
+    shutil.copytree(ROOT / "materials" / "v3", tmp_path / "materials" / "v3")
+    shutil.copytree(ROOT / "evals" / "v3", tmp_path / "evals" / "v3")
+    extra=tmp_path / "materials" / "v3" / "later_topic" / "manifest.json"
+    extra.parent.mkdir()
+    extra.write_text('{"review_status":"not_a_day10_fixture"}',encoding="utf-8")
+    result=check_fixtures(tmp_path)
+    assert result['case_count']==36 and len(result['packs'])==3
+
+
 @pytest.mark.parametrize("subject", ["python", "mathematics", "english"])
 def test_content_error_candidate_is_structurally_valid_without_becoming_gold(subject):
     case = load_case(subject, 5)

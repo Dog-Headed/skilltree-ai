@@ -1,0 +1,67 @@
+{
+  "registered_at_utc": "2026-10-22T10:10:41.880785+00:00",
+  "topic": "sql_reading",
+  "prerequisite_final_report_sha256": "f70dc28c7d93d8cbe07e80ada0777a5e846de335287b9b3205dd29e2c1451e30",
+  "core_fingerprint_unchanged": true,
+  "reference_status": "pending_user_review",
+  "authored_by": "main_agent_draft",
+  "model_calls": 0,
+  "cases": {
+    "evals/v3/sql_reading/cases/sql_reading_novel_01.json": "04868da84fc5b5bb94df33ef093dc43655bf9095b63db27734ed8d25e215d43c",
+    "evals/v3/sql_reading/cases/sql_reading_novel_02.json": "69079fa78e99a73a9bce23d639acd4a0d89e0f395fd65aa9e27dad865b5d341b",
+    "evals/v3/sql_reading/cases/sql_reading_novel_03.json": "448dd64dad6c584a49b6cfe24c9ce4d36d486fffffedf8df9bb7d1d6f003c0d0",
+    "evals/v3/sql_reading/cases/sql_reading_novel_04.json": "73dc65dda14cdb1e8d055ad7db9e2e324ff1f97083504336bfc25e2fac75f6bd",
+    "evals/v3/sql_reading/cases/sql_reading_novel_05.json": "bd33aa5f2df4e098648a5a72473c5677b40df688de40278bb7c5587e960c7a08",
+    "evals/v3/sql_reading/cases/sql_reading_novel_06.json": "0ae9186af4316841d8a9adcebbc2969f24552478b4fce5c8df725fa7ff6fd60c"
+  },
+  "standards_sha256": "42539c3adb2ff7857746b4b809ed2e45990edf5406ddf20b52baa33f777a472f",
+  "reference_check": {
+    "sqlite_version": "3.53.2",
+    "input_rows": [
+      [
+        1,
+        "Yan",
+        17
+      ],
+      [
+        2,
+        "Lin",
+        18
+      ],
+      [
+        3,
+        "Mei",
+        20
+      ]
+    ],
+    "projection": [
+      [
+        "Yan"
+      ],
+      [
+        "Lin"
+      ],
+      [
+        "Mei"
+      ]
+    ],
+    "filter": [
+      [
+        "Lin"
+      ],
+      [
+        "Mei"
+      ]
+    ],
+    "equivalent": [
+      [
+        "Lin"
+      ],
+      [
+        "Mei"
+      ]
+    ],
+    "original_table_unchanged": true,
+    "scope": "Local constant reference queries, not a student SQL execution capability"
+  }
+}

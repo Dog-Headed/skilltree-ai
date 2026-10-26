@@ -1,0 +1,105 @@
+{
+  "case_version": "day13-independent-final-1",
+  "case_id": "mathematics_holdout_final02",
+  "split": "holdout",
+  "subject_label": "数学",
+  "topic": "一元一次方程",
+  "learning_context": {
+    "node_id": "linear_equation_reasoning",
+    "current_objectives": [
+      {
+        "objective_id": "o1",
+        "observable_outcome": "解-2x=10，说明除法符号，并代回检验。",
+        "required": true,
+        "criterion_ids": [
+          "q1_c1",
+          "q1_c2",
+          "q1_c3"
+        ]
+      }
+    ],
+    "prerequisite_nodes": [
+      {
+        "node_id": "rational_arithmetic_and_equality",
+        "observable_outcome": "本主题所需基础",
+        "completion_status": "completed"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q1",
+      "objective_ids": [
+        "o1"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "1.0.0",
+      "prompt": "解-2x=10，说明除法符号，并代回检验。",
+      "max_score": 10,
+      "reference_answer": "x=-5；两边除以-2，正除负得负；-2*(-5)=10。",
+      "rubric": [
+        {
+          "criterion_id": "q1_c1",
+          "description": "正确解x=-5。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q1_c2",
+          "description": "说明两边同除-2且10除-2为负；不得宣称正除负总为正。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          },
+          "critical_failure_definition": "学生原文明确陈述与本项要求相反的一般规则；不是因缺答或标点不一致标为关键错误。"
+        },
+        {
+          "criterion_id": "q1_c3",
+          "description": "代回-2*(-5)=10检验。",
+          "max_score": 2.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "math-foundation"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "math-multiply"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "math-check"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "math-private-criteria"
+        }
+      ]
+    }
+  ],
+  "student_answers": {
+    "q1": "x=5，因为正数除负数总是正数。"
+  },
+  "available_history": [],
+  "policy_assumptions": {
+    "total_pass_threshold": 0.8,
+    "objective_pass_threshold": 0.8,
+    "critical_criterion_ids": [
+      "q1_c2"
+    ]
+  }
+}

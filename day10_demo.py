@@ -80,9 +80,9 @@ class _DemoService(preparation.PreparationService):
         self.paths=paths
 
 
-def command(service,view,action):
+def command(service,view,action,**payload):
     return service.resume(view['project_id'],{'request_id':str(uuid4()),'pending_input_id':view['pending_input_id'],
-        'draft_revision':view['draft_revision'],'action':action})
+        'draft_revision':view['draft_revision'],'action':action,**payload})
 
 
 def run_demo(destination):
@@ -95,7 +95,10 @@ def run_demo(destination):
         with repo.transaction():repo.conn.execute("INSERT INTO runtime_metadata VALUES ('demo_only','day10-isolated-fake-contract')")
     service=_DemoService(paths)
     results=[]
-    for manifest_path in sorted((ROOT/'materials'/'v3').glob('*/manifest.json')):
+    # Historical three-pack demo: later packs have their own validation protocol.
+    from day10_check_fixtures import SUBJECTS
+    for subject in sorted(SUBJECTS):
+        manifest_path=ROOT/'materials'/'v3'/subject/'manifest.json'
         manifest=json.loads(manifest_path.read_text(encoding='utf8'))
         suggested=manifest['suggested_plan']
         profile=LearningProfile(subject_label=manifest['subject_label'],topic=manifest['topic'],
@@ -120,7 +123,9 @@ def run_demo(destination):
             stack.enter_context(patch.object(planner,'get_llm',lambda:model))
             preview=command(service,view,'confirm_profile')
             if preview['page_state']!='plan_review':raise AssertionError(preview)
-            frozen=command(service,preview,'confirm_plan')
+            frozen=command(service,preview,'confirm_plan',private_references=[
+                {'reference_id':item['reference_id'],'action':'exclude','node_ids':[]}
+                for item in preview['private_references']])
             if not frozen['frozen']:raise AssertionError(frozen)
         citations=[]
         with V3Repository(paths) as repo:

@@ -1,0 +1,97 @@
+{
+  "review_id": "day13-dev-v6-independent-output-review-20261022",
+  "review_type": "independent_ai_semantic_review",
+  "reviewed_on": "2026-10-22",
+  "human_output_review_claimed": false,
+  "holdout_case_contents_read": 0,
+  "source_report_sha256": "d1100671671bc3f3c73dacfb52a7f7fea013ce2d1a722358bd6e0bf2ee85f248",
+  "source_standards_sha256": "0549f8c257e46913488788b5daeb81b02933c9d8430fdb83fe695b07b24652e9",
+  "source_protocol_sha256": "4eed8733434af653464efd8c9025c586f33f4e84f9530463bbd838994b3e3502",
+  "subjects": {
+    "python": {
+      "recommended_semantic_citation_review": "approved_independent_review",
+      "scope": "v6 development run only: scoring, key actions, supporting current/history/material citations. Not human per-output approval or release approval.",
+      "automated_gates_passed": true,
+      "reviewed_case_count": 8,
+      "action_matches": 8,
+      "score_mae_out_of_10": 0.33333333333333326,
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "Python08 continuous-time inference too strong; two observations support recurrence, not every intervening moment",
+        "Python04 score difference 2 at allowed boundary"
+      ]
+    },
+    "mathematics": {
+      "recommended_semantic_citation_review": "approved_independent_review",
+      "scope": "v6 development run only: scoring, key actions, supporting current/history/material citations. Not human per-output approval or release approval.",
+      "automated_gates_passed": true,
+      "reviewed_case_count": 8,
+      "action_matches": 8,
+      "score_mae_out_of_10": 0.3333333333333333,
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "Mathematics02 certainty about procedural versus conceptual cause is stronger than the short answer warrants",
+        "Mathematics08 score difference 2 at allowed boundary"
+      ]
+    },
+    "english": {
+      "recommended_semantic_citation_review": "approved_independent_review",
+      "scope": "v6 development run only: scoring, key actions, supporting current/history/material citations. Not human per-output approval or release approval.",
+      "automated_gates_passed": true,
+      "reviewed_case_count": 8,
+      "action_matches": 8,
+      "score_mae_out_of_10": 0.16666666666666666,
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "English07 uses imprecise prerequisite-remediation wording while effective action is explicitly current-node remediation",
+        "English04 score difference 1 within allowed boundary"
+      ]
+    }
+  },
+  "cases_reviewed": [
+    "english_debug_01",
+    "english_debug_02",
+    "english_debug_03",
+    "english_debug_04",
+    "english_debug_05",
+    "english_debug_06",
+    "english_debug_07",
+    "english_debug_08",
+    "mathematics_debug_01",
+    "mathematics_debug_02",
+    "mathematics_debug_03",
+    "mathematics_debug_04",
+    "mathematics_debug_05",
+    "mathematics_debug_06",
+    "mathematics_debug_07",
+    "mathematics_debug_08",
+    "python_debug_01",
+    "python_debug_02",
+    "python_debug_03",
+    "python_debug_04",
+    "python_debug_05",
+    "python_debug_06",
+    "python_debug_07",
+    "python_debug_08"
+  ],
+  "mechanical_checks": {
+    "anchors": 42,
+    "audit_findings": 11,
+    "final_outputs": 18
+  },
+  "final_context_checks": {
+    "frozen_questions_without_answer_key": 18,
+    "08_queried_history_records_verified": [
+      "english_debug_08",
+      "mathematics_debug_08",
+      "python_debug_08"
+    ]
+  },
+  "development_content_approved": true,
+  "freeze_candidate_approved_from_content_review": true,
+  "freeze_conditions": "Main agent must record actual matching implementation/prompt/policy/material/standard fingerprints and passing required engineering regression before freezing.",
+  "holdout_read_authorized": false,
+  "can_enter_holdout_now": false,
+  "release_approved": false,
+  "reason": "All predeclared per-subject development gates and key semantic evidence checks passed. Nonblocking wording limits are preserved. Holdout specification review and user approval remain separate; no V3 completion claim."
+}

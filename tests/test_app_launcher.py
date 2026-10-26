@@ -28,7 +28,8 @@ def test_default_launcher_serves_v3_routes_and_assets_without_database_writes(tm
     before={p:p.read_bytes() for p in paths};calls=len(frozen['model'].calls)
     client=TestClient(module.load_application())
     page=client.get('/')
-    assert page.status_code==200 and '/assets/v3.js' in page.text and 'V2 历史' in page.text
+    assert page.status_code==200 and '/assets/v3.js' in page.text and 'V2 历史' not in page.text
+    assert 'legacy-tab' not in page.text and '学习记录' in page.text
     assert client.get('/capabilities').status_code==200
     assert client.get('/projects/'+frozen['project_id']).json()['version']=='v3'
     assert client.get('/legacy/projects').json()==[]

@@ -1,0 +1,135 @@
+{
+  "case_version": "day13-independent-final-1",
+  "case_id": "mathematics_holdout_final01",
+  "split": "holdout",
+  "subject_label": "数学",
+  "topic": "一元一次方程",
+  "learning_context": {
+    "node_id": "linear_equation_reasoning",
+    "current_objectives": [
+      {
+        "objective_id": "o1",
+        "observable_outcome": "解5x+2=2x+14，只填写单个无单位数值x；下一题另外说明过程。",
+        "required": true,
+        "criterion_ids": []
+      },
+      {
+        "objective_id": "o2",
+        "observable_outcome": "解释5x+2=2x+14的等价求解步骤，并代回原式检验。",
+        "required": true,
+        "criterion_ids": [
+          "q2_c1",
+          "q2_c2",
+          "q2_c3"
+        ]
+      }
+    ],
+    "prerequisite_nodes": [
+      {
+        "node_id": "rational_arithmetic_and_equality",
+        "observable_outcome": "本主题所需基础",
+        "completion_status": "completed"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q1",
+      "objective_ids": [
+        "o1"
+      ],
+      "question_type": "numeric_scalar",
+      "evaluator_id": "numeric_scalar",
+      "evaluator_version": "1.0.0",
+      "prompt": "解5x+2=2x+14，只填写单个无单位数值x；下一题另外说明过程。",
+      "max_score": 10,
+      "reference_answer": "4",
+      "rubric": [],
+      "numeric_rules": {
+        "expected": 4.0,
+        "unit": null,
+        "allowed_units": [],
+        "abs_tolerance": 0.0,
+        "rel_tolerance": 0.0
+      },
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "math-multistep"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "math-private-criteria"
+        }
+      ]
+    },
+    {
+      "question_id": "q2",
+      "objective_ids": [
+        "o2"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "1.0.0",
+      "prompt": "解释5x+2=2x+14的等价求解步骤，并代回原式检验。",
+      "max_score": 10,
+      "reference_answer": "两边减2x与2，再除3，x=4；两边均22。",
+      "rubric": [
+        {
+          "criterion_id": "q2_c1",
+          "description": "解值x=4正确。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q2_c2",
+          "description": "说明两边同减2x、同减2、同除非零3的等价过程。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q2_c3",
+          "description": "代回原式分别得到22和22。",
+          "max_score": 2.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "math-multistep"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "math-check"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "math-private-criteria"
+        }
+      ]
+    }
+  ],
+  "student_answers": {
+    "q1": "4.000",
+    "q2": "两边同减2x再同减2，得3x=12；两边同除3得x=4。原式左22、右22。"
+  },
+  "available_history": [],
+  "policy_assumptions": {
+    "total_pass_threshold": 0.8,
+    "objective_pass_threshold": 0.8,
+    "critical_criterion_ids": []
+  }
+}

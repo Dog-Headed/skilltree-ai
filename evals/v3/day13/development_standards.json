@@ -1,0 +1,436 @@
+{
+  "version": "day13-development-5",
+  "review_status": "approved_by_user",
+  "approval": {
+    "approved_on": "2026-10-22",
+    "timezone": "Asia/Shanghai",
+    "reviewed_by": "user",
+    "evidence": "Direct user reply in this task",
+    "user_reply": "认可修订与门槛，开始开发集真实评估",
+    "approved_review_sha256": "7ba56c71339aa2194107347b236d35d9faf239b9e3696e550dc1cc5af4ee073b",
+    "scope": "24 development cases and the displayed pre-run quality thresholds; not approval of old Day10 originals, holdout or a future fourth topic"
+  },
+  "cases": {
+    "python_debug_01": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c2": "用x的实际取值说明条件为真并选择A即可满分；语义等价的简洁表达有效，无须额外声明else不执行。"
+            }
+          }
+        }
+      }
+    },
+    "python_debug_02": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 5,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c1": "完整正确序列得4分；有非空正确前缀但漏项得2分；无正确序列证据得0分",
+              "q1_c2": "用实际取值说明逐次步进；已列部分相邻正确取值但漏最后一步得2分；完整得4分，无相关证据0分",
+              "q1_c3": "两项各占1分：正确排除stop；正确给出最后一个元素。不得将只答对一项计为本项全对。"
+            }
+          }
+        }
+      }
+    },
+    "python_debug_03": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10.0,
+      "critical_error": true,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "python_debug_04": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 4,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "python_debug_05": {
+      "review_status": "approved_by_user",
+      "task_type": "candidate_score_audit",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c3": "说明循环变量取得的是列表元素，不是位置下标"
+            }
+          }
+        }
+      }
+    },
+    "python_debug_06": {
+      "review_status": "approved_by_user",
+      "task_type": "item_validity_audit",
+      "grading_status": "invalid_item",
+      "effective_action": "replace_or_pause",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "prompt": "用循环从1数到3，写出输出。",
+            "reference_answer": "1、2",
+            "extra_source_refs": [
+              {
+                "document": "assessment_private.md",
+                "section_id": "py-private-quality"
+              }
+            ]
+          }
+        },
+        "reason": "Separate the invalid inner item and disputed key from answer-revealing audit commentary, as approved before any model run."
+      }
+    },
+    "python_debug_07": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 4,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "python_debug_08": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "revisit_prerequisite",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": "variables_and_lists",
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c3": "说明循环变量取得的是列表元素，不是位置下标"
+            }
+          }
+        },
+        "history": {
+          "historical_python_debug_08": {
+            "score": 0.0,
+            "max_score": 10.0,
+            "feedback": "预置的历史错答记录"
+          }
+        }
+      }
+    },
+    "mathematics_debug_01": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_debug_02": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 2,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_debug_03": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10.0,
+      "critical_error": true,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_debug_04": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 4,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_debug_05": {
+      "review_status": "approved_by_user",
+      "task_type": "candidate_score_audit",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_debug_06": {
+      "review_status": "approved_by_user",
+      "task_type": "item_validity_audit",
+      "grading_status": "invalid_item",
+      "effective_action": "replace_or_pause",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "prompt": "x+k=10，求唯一数值x。",
+            "reference_answer": "8",
+            "extra_source_refs": [
+              {
+                "document": "assessment_private.md",
+                "section_id": "math-private-quality"
+              }
+            ]
+          }
+        },
+        "reason": "Separate the invalid inner item and disputed key from answer-revealing audit commentary, as approved before any model run."
+      }
+    },
+    "mathematics_debug_07": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_debug_08": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "revisit_prerequisite",
+      "passed": false,
+      "score_center": 2,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": "rational_arithmetic_and_equality",
+      "input_revision": {
+        "history": {
+          "historical_mathematics_debug_08": {
+            "score": 0.0,
+            "max_score": 10.0,
+            "feedback": "预置的历史错答记录"
+          }
+        }
+      }
+    },
+    "english_debug_01": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "english_debug_02": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 6,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c1": "过去肯定目标覆盖全部并列谓语；每个谓语都体现过去得4分，仅一半体现过去得2分，均未体现得0分",
+              "q1_c2": "两个目标动词过去式各占2分；形式正确才得对应分"
+            }
+          }
+        }
+      }
+    },
+    "english_debug_03": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 6,
+      "max_score": 10.0,
+      "critical_error": true,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "english_debug_04": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 1,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "english_debug_05": {
+      "review_status": "approved_by_user",
+      "task_type": "candidate_score_audit",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": 6,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "english_debug_06": {
+      "review_status": "approved_by_user",
+      "task_type": "item_validity_audit",
+      "grading_status": "invalid_item",
+      "effective_action": "replace_or_pause",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "prompt": "把Lee walks to work.改为过去时。",
+            "reference_answer": "Lee did not walk to work.",
+            "extra_source_refs": [
+              {
+                "document": "assessment_private.md",
+                "section_id": "en-private-quality"
+              }
+            ]
+          }
+        },
+        "reason": "Separate the invalid inner item and disputed key from answer-revealing audit commentary, as approved before any model run."
+      }
+    },
+    "english_debug_07": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 4,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c1": "过去肯定构式完整得4分；主语、肯定语序正确但仍用现在时形式得2分；无相关构式证据0分。",
+              "q1_c3": "意义与时间各占1分：保留原题叙述或否定意义得1分，保留时间信息得1分；只要能理解，不因已在c1/c2扣分的语法错误重复扣本项分。"
+            }
+          }
+        }
+      }
+    },
+    "english_debug_08": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "revisit_prerequisite",
+      "passed": false,
+      "score_center": 4,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": "subjects_and_base_verbs",
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c1": "过去否定构式完整（主语+did not/didn’t）得4分；主语和not表明否定意图但漏助动词得2分；无目标构式证据0分。动词是否还原在c2单独评价。",
+              "q1_c3": "意义与时间各占1分：保留原题叙述或否定意义得1分，保留时间信息得1分；只要能理解，不因已在c1/c2扣分的语法错误重复扣本项分。"
+            }
+          }
+        },
+        "history": {
+          "historical_english_debug_08": {
+            "score": 0.0,
+            "max_score": 10.0,
+            "feedback": "预置的历史错答记录"
+          }
+        }
+      }
+    }
+  },
+  "development_refinement": {
+    "expected_labels_changed": false,
+    "reason": "Development v5 exposed ambiguous boundaries in the approved English 07/08 partial-credit criteria. Make construction and meaning/time scoring explicit; same approved centers, task types and gates. No holdout read."
+  },
+  "history_adapter_revision": {
+    "expected_labels_changed": false,
+    "scope": "Make existing approved development 08 history scores explicit; preserves model-facing history bytes, no invented score fallback. Original holdout preflight exposed a generic runner defect; original holdouts are now exposed validation."
+  }
+}

@@ -1,0 +1,2623 @@
+{
+  "run_id": "density-v1",
+  "review_id": "day13-density-v1-independent-review-1",
+  "reviewed_at_utc": "2026-10-23T16:40:03.076664+00:00",
+  "review_status": "approved_independent_review",
+  "semantic_citation_review": "approved_independent_review",
+  "is_human_approval": false,
+  "new_real_model_calls": 0,
+  "release_approved": false,
+  "report_sha256": "420fe9b4e114b73732f73663f9ac2faec78feda655fbfaf6a1f8d6cd824a5136",
+  "source_report_sha256": "420fe9b4e114b73732f73663f9ac2faec78feda655fbfaf6a1f8d6cd824a5136",
+  "source_artifacts": [
+    {
+      "path": "work/day13-20261024/density-v1/report.json",
+      "sha256": "420fe9b4e114b73732f73663f9ac2faec78feda655fbfaf6a1f8d6cd824a5136"
+    },
+    {
+      "path": "work/day13-20261024/density-v1/report.md",
+      "sha256": "b6f8726e0c85f6e5307de485e3728099d66cf15a3d8ff50adf9809c00465733e"
+    },
+    {
+      "path": "work/day13-20261024/density-v1/run_manifest.json",
+      "sha256": "b4df2f82d4d8accb088a2a5e90133c02486eecc59a0fa30d6a49b056acd287c0"
+    },
+    {
+      "path": "docs/v3/day13/DENSITY_EVALUATION_INDEPENDENT_REVIEW.md",
+      "sha256": "a117ecfa4651677040656dd1b5c78af50aff9528c64452ff6bb4b756b1f8b8a3"
+    },
+    {
+      "path": "docs/v3/day13/CANDIDATE_FREEZE_04.json",
+      "sha256": "91dcea124db6fe36f051c7a19739801e0fb622957365bf74d621944d9a19ddf2"
+    },
+    {
+      "path": "evals/v3/day13/density_standards.json",
+      "sha256": "52663113ebdd48bc32cc58dc7bfec2939baf80439b8eac0a55bad9318ec51086"
+    },
+    {
+      "path": "docs/v3/day13/DENSITY_USER_APPROVAL.json",
+      "sha256": "b6eb9f9c5ba00c110119fd79c6590d817c0cc684f0d7c5eaa226567a32478744"
+    },
+    {
+      "path": "work/day13-20261024/density-v1/runtime/learning.sqlite",
+      "sha256": "0b3d71223a54e39465e5a276a1c3e2ff24451dab72bba66bef68cb8fa5115134"
+    }
+  ],
+  "by_subject": {
+    "density_reading": {
+      "cases": 6,
+      "ordinary_grading_cases": 6,
+      "normalized_mae": 0.0,
+      "scored_samples": 5,
+      "action_matches": 6,
+      "false_advances": 0,
+      "false_rejects": 0,
+      "unexpected_refusals": 0,
+      "technical_failures": 0,
+      "requests": 16,
+      "gates": {
+        "no_false_advance": true,
+        "no_critical_false_advance": true,
+        "no_correct_reject": true,
+        "no_unexpected_refusal": true,
+        "all_actions_match": true,
+        "all_statuses_match": true,
+        "score_mae": true,
+        "score_max": true,
+        "no_technical_failure": true
+      },
+      "automated_gates_passed": true,
+      "semantic_citation_review": "approved_independent_review",
+      "structure_tasks": 11,
+      "first_structurally_valid": 10,
+      "final_structurally_valid": 11,
+      "input_tokens": 57746,
+      "output_tokens": 19872,
+      "usage_responses": 16,
+      "latency_seconds": {
+        "mean": 21.454333333333334,
+        "max": 30.809
+      },
+      "cost": {
+        "amount": null,
+        "reason": "No verified provider billing rate configured"
+      },
+      "blocking_issues": [],
+      "formal_grade_first_last_valid": 6,
+      "formal_diagnosis_first_last_valid": 5
+    }
+  },
+  "integrity": {
+    "requests": 16,
+    "responses": 16,
+    "source_blocks": 30,
+    "raw_anchor_occurrences": 16,
+    "stored_evidence": 13,
+    "formal_grade_tasks": 6,
+    "formal_diagnosis_tasks": 5,
+    "formal_first_valid": 11,
+    "formal_final_valid": 11,
+    "tool_stage_outputs": 5,
+    "pure_guard_matches": 5,
+    "offline_evaluation_replays": 6,
+    "raw_results_match_original_report": true,
+    "all_current_freeze04_fingerprint_files_match": true,
+    "all_input_bundle_files_match": true,
+    "cached_results_and_requests_match": true,
+    "runtime_database_readonly_verified": true,
+    "runtime_database_sha256": "0b3d71223a54e39465e5a276a1c3e2ff24451dab72bba66bef68cb8fa5115134",
+    "db_counts": {
+      "learning_projects": 6,
+      "assessments": 0,
+      "learning_progress": 0,
+      "learning_transitions": 0,
+      "model_tasks": 11,
+      "model_operations": 6,
+      "reserved_requests": 16
+    },
+    "formal_output_repairs": 0,
+    "network_retries": 0,
+    "usage_pairing_verified": true,
+    "formal_first_structure_valid": 11,
+    "formal_final_structure_valid": 11,
+    "original_automatic_first_structure_valid": 10
+  },
+  "user_approval_chain": {
+    "approval_record": {
+      "path": "docs/v3/day13/DENSITY_USER_APPROVAL.json",
+      "sha256": "b6eb9f9c5ba00c110119fd79c6590d817c0cc684f0d7c5eaa226567a32478744"
+    },
+    "draft_directory": "work\\day13-20261024\\density-approved-draft",
+    "all_preserved_draft_hashes_match": true,
+    "only_review_status_changes": [
+      {
+        "file": "materials/v3/density_reading/manifest.json",
+        "path": "/review_status",
+        "old": "pending_user_review",
+        "new": "approved_by_user"
+      },
+      {
+        "file": "evals/v3/day13/density_standards.json",
+        "path": "/review_status",
+        "old": "pending_user_review",
+        "new": "approved_by_user"
+      },
+      {
+        "file": "evals/v3/day13/density_standards.json",
+        "path": "/cases/density_reading_novel_04/review_status",
+        "old": "pending_user_review",
+        "new": "approved_by_user"
+      },
+      {
+        "file": "evals/v3/day13/density_standards.json",
+        "path": "/cases/density_reading_novel_02/review_status",
+        "old": "pending_user_review",
+        "new": "approved_by_user"
+      },
+      {
+        "file": "evals/v3/day13/density_standards.json",
+        "path": "/cases/density_reading_novel_03/review_status",
+        "old": "pending_user_review",
+        "new": "approved_by_user"
+      },
+      {
+        "file": "evals/v3/day13/density_standards.json",
+        "path": "/cases/density_reading_novel_05/review_status",
+        "old": "pending_user_review",
+        "new": "approved_by_user"
+      },
+      {
+        "file": "evals/v3/day13/density_standards.json",
+        "path": "/cases/density_reading_novel_01/review_status",
+        "old": "pending_user_review",
+        "new": "approved_by_user"
+      },
+      {
+        "file": "evals/v3/day13/density_standards.json",
+        "path": "/cases/density_reading_novel_06/review_status",
+        "old": "pending_user_review",
+        "new": "approved_by_user"
+      },
+      {
+        "file": "configs/v3/novel/density_reading.json",
+        "path": "/review_status",
+        "old": "pending_user_review",
+        "new": "approved_by_user"
+      }
+    ],
+    "case_bytes_unchanged": true,
+    "approved_input_bundle_matches": true,
+    "run_start_after_user_approval": true
+  },
+  "chronology": {
+    "theme_selected_at_utc": "2026-10-23T12:06:04.265404+00:00",
+    "selected_after_final_v2_report_sha256": "eb1cd3558d2f2546320f7741ffe00dc88a36cfad9239e2da255bb7f372a2ad5b",
+    "approval_at_utc": "2026-10-23T16:32:28.953985+00:00",
+    "run_start_at_utc": "2026-10-23T16:32:34.121007+00:00",
+    "freeze04_sha256": "91dcea124db6fe36f051c7a19739801e0fb622957365bf74d621944d9a19ddf2",
+    "current_fingerprint_matches": true,
+    "source_input_bundle_matches": true
+  },
+  "cases": [
+    {
+      "case_id": "density_reading_novel_01",
+      "subject": "density_reading",
+      "source_case": {
+        "path": "evals/v3/density_reading/cases/density_reading_novel_01.json",
+        "sha256": "ccd4a50fc58744975abb73592e53e258944c234353ee4a687f0d22a89fd74e85"
+      },
+      "raw": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_01/raw.jsonl",
+        "sha256": "5abecaa14ad8fe6e31ce40fbcc661d53fcdcb1a697e692537fa9d82ea3959ee6"
+      },
+      "result": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_01/result.json",
+        "sha256": "76e3d042e2e5bd5883a37af18859e5e89d7a0ac7796b01edfb7e09831a207786"
+      },
+      "formal_outputs": {
+        "grade": [
+          {
+            "request_line": 1,
+            "response_line": 2,
+            "content_sha256": "f3ad3517822af0c8edcc1f726f981c41d2fd10a8903fafc866a4c237e385f586",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_fec1b7ba132d53378a579707c70e49b3",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_57d09e2cda48bc10ad03c783",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "grading_status": "graded",
+              "questions": [
+                {
+                  "question_id": "q1",
+                  "evaluator_id": "text_rubric",
+                  "evaluator_version": "1.0.0",
+                  "max_score": 10.0,
+                  "criteria": [
+                    {
+                      "criterion_id": "q1_c1",
+                      "score": 4.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "80/20=4g/cm³",
+                          "start": 8,
+                          "end": 20
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c2",
+                      "score": 4.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "ρ=m/V=80/20=4g/cm³，表示单位体积的质量，每立方厘米4克",
+                          "start": 2,
+                          "end": 38
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c3",
+                      "score": 2.0,
+                      "max_score": 2.0,
+                      "anchors": [
+                        {
+                          "quote": "取半后40g、10cm³，同比减半，比值仍4，密度不变",
+                          "start": 39,
+                          "end": 66
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    }
+                  ],
+                  "feedback": "密度数值、公式含义与单位、取样后密度不变及同比例变化的解释均正确，得10/10。"
+                }
+              ],
+              "uncertainty_reasons": []
+            }
+          }
+        ],
+        "diagnose": [
+          {
+            "request_line": 5,
+            "response_line": 6,
+            "content_sha256": "b1a61ea5416d576c6d4a1ef29ac5fa7aba90e74733aa4596fc63fb180d54fcef",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_fec1b7ba132d53378a579707c70e49b3",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_57d09e2cda48bc10ad03c783",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "action": "advance",
+              "reason": "本轮作答完整覆盖目标要求：evidence_5a01b771e8a59d77ea819063216ecd01 给出密度数值4；evidence_4fab912c60344cbd0b6945070397a52e 正确写出ρ=m/V、质量除以体积的含义及g/cm³单位；evidence_eccb1c78ab33e0b607f9ce98dbf16050 说明取一半后质量与体积同比例减半、比值仍为4且密度不变。三项均达满分，未发现需要补弱或回顾前置的错答证据，建议进入下一节点。",
+              "evidence_ids": [
+                "evidence_5a01b771e8a59d77ea819063216ecd01",
+                "evidence_4fab912c60344cbd0b6945070397a52e",
+                "evidence_eccb1c78ab33e0b607f9ce98dbf16050"
+              ],
+              "review_node_id": null
+            }
+          }
+        ]
+      },
+      "tool_selection_outputs": [
+        {
+          "response_line": 4,
+          "tool_calls": [],
+          "raw_content": "{\"project_id\":\"v3_fec1b7ba132d53378a579707c70e49b3\",\"node_id\":\"density_ratio\",\"assessment_id\":\"evaluation_57d09e2cda48bc10ad03c783\",\"snapshot\":{\"profile_version\":1,\"plan_version\":1,\"policy_id\":\"day13_policy\",\"policy_version\":\"1.0.0\",\"source_manifest\":[{\"source_id\":\"density-teaching\",\"source_version\":1,\"content_hash\":\"74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac\"},{\"source_id\":\"density-assessment-private\",\"source_version\":1,\"content_hash\":\"21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21\"}],\"evaluator_manifest\":[{\"evaluator_id\":\"text_rubric\",\"evaluator_version\":\"1.0.0\"}],\"contract_version\":\"3.0.0\"},\"action\":\"advance\",\"reason\":\"本轮作答证据完整覆盖q1_c1、q1_c2、q1_c3：evidence_5a01b771e8a59d77ea819063216ecd01给出密度数值4 g/cm³；evidence_4fab912c60344cbd0b6945070397a52e正确表达ρ=m/V、单位g/cm³及“每立方厘米4克”的含义；evidence_eccb1c78ab33e0b607f9ce98dbf16050说明取半后质量40g、体积10cm³同比例减半，比值仍为4、密度不变。未见关键错误、缺失证据或不确定性，达到目标o1的要求。先修完成状态仅作背景，不作为本轮通过依据。\",\"review_node_id\":null}"
+        }
+      ],
+      "actual_student_answers": {
+        "q1": "密度ρ=m/V=80/20=4g/cm³，表示单位体积的质量，每立方厘米4克。取半后40g、10cm³，同比减半，比值仍4，密度不变。"
+      },
+      "actual_evaluation": {
+        "project_id": "v3_fec1b7ba132d53378a579707c70e49b3",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_57d09e2cda48bc10ad03c783",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "grading_status": "graded",
+        "question_results": [
+          {
+            "question_id": "q1",
+            "evaluator_id": "text_rubric",
+            "evaluator_version": "1.0.0",
+            "score": 10.0,
+            "max_score": 10.0,
+            "evidence_ids": [
+              "evidence_5a01b771e8a59d77ea819063216ecd01",
+              "evidence_4fab912c60344cbd0b6945070397a52e",
+              "evidence_eccb1c78ab33e0b607f9ce98dbf16050"
+            ],
+            "criterion_results": [
+              {
+                "criterion_id": "q1_c1",
+                "score": 4.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_5a01b771e8a59d77ea819063216ecd01"
+                ],
+                "severity": null,
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c2",
+                "score": 4.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_4fab912c60344cbd0b6945070397a52e"
+                ],
+                "severity": null,
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c3",
+                "score": 2.0,
+                "max_score": 2.0,
+                "evidence_ids": [
+                  "evidence_eccb1c78ab33e0b607f9ce98dbf16050"
+                ],
+                "severity": null,
+                "subject_tags": []
+              }
+            ],
+            "feedback": "密度数值、公式含义与单位、取样后密度不变及同比例变化的解释均正确，得10/10。"
+          }
+        ],
+        "objective_results": [
+          {
+            "objective_id": "o1",
+            "score_ratio": 1.0,
+            "evidence_ids": [
+              "evidence_5a01b771e8a59d77ea819063216ecd01",
+              "evidence_4fab912c60344cbd0b6945070397a52e",
+              "evidence_eccb1c78ab33e0b607f9ce98dbf16050"
+            ],
+            "criterion_ids": [
+              "q1_c1",
+              "q1_c2",
+              "q1_c3"
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "evidence_5a01b771e8a59d77ea819063216ecd01",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "80/20=4g/cm³",
+            "start": 8,
+            "end": 20,
+            "selected_option_ids": [],
+            "numeric_value": null
+          },
+          {
+            "evidence_id": "evidence_4fab912c60344cbd0b6945070397a52e",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "ρ=m/V=80/20=4g/cm³，表示单位体积的质量，每立方厘米4克",
+            "start": 2,
+            "end": 38,
+            "selected_option_ids": [],
+            "numeric_value": null
+          },
+          {
+            "evidence_id": "evidence_eccb1c78ab33e0b607f9ce98dbf16050",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "取半后40g、10cm³，同比减半，比值仍4，密度不变",
+            "start": 39,
+            "end": 66,
+            "selected_option_ids": [],
+            "numeric_value": null
+          }
+        ],
+        "uncertainty_reasons": [],
+        "missing_evidence": []
+      },
+      "actual_diagnosis": {
+        "project_id": "v3_fec1b7ba132d53378a579707c70e49b3",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_57d09e2cda48bc10ad03c783",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "action": "advance",
+        "reason": "本轮作答完整覆盖目标要求：evidence_5a01b771e8a59d77ea819063216ecd01 给出密度数值4；evidence_4fab912c60344cbd0b6945070397a52e 正确写出ρ=m/V、质量除以体积的含义及g/cm³单位；evidence_eccb1c78ab33e0b607f9ce98dbf16050 说明取一半后质量与体积同比例减半、比值仍为4且密度不变。三项均达满分，未发现需要补弱或回顾前置的错答证据，建议进入下一节点。",
+        "evidence_ids": [
+          "evidence_5a01b771e8a59d77ea819063216ecd01",
+          "evidence_4fab912c60344cbd0b6945070397a52e",
+          "evidence_eccb1c78ab33e0b607f9ce98dbf16050"
+        ],
+        "review_node_id": null
+      },
+      "actual_guard": {
+        "passed": true,
+        "effective_action": "advance",
+        "reasons": [
+          "当前有效评价满足冻结策略、全部必要目标、真实证据及先修约束。"
+        ]
+      },
+      "actual_tool_summary": {
+        "tool_rounds": 0,
+        "tool_executions": 0,
+        "stopped_reason": "model_finished",
+        "queries": []
+      },
+      "actual_queried_history": [],
+      "actual_source_blocks": [
+        {
+          "citation": {
+            "chunk_id": "section_e27bf088b946890a1aafc0d1",
+            "line_end": 8,
+            "line_start": 5,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-quantities 区分质量与体积\n质量与体积是不同物理量。质量可用克（g）记录，体积描述所占空间，可用立方厘米（cm³）记录。\n例如“48g、12cm³”分别是质量48克和体积12立方厘米；不能把48g直接当成48cm³，也不能仅凭质量大小断言密度大小。\n",
+          "content_hash": "4bdbed25ea88c68c994cb0d701d4f8ae94228c9b8ffbda8047184b8ba0eab707",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_6cefdf845d7d059adc785745",
+            "line_end": 12,
+            "line_start": 9,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-ratio 每单位体积的质量\n密度是单位体积的质量，记作ρ=m/V，m为质量、V为体积且V>0。用g除以cm³，密度单位为g/cm³；SI单位为kg/m³，本单元不考跨单位换算。\n例：质量48g、体积12cm³的均匀材料，密度为48÷12=4g/cm³，即每立方厘米有4克。它不是体积除以质量，也不是总质量本身。\n",
+          "content_hash": "34bbf419b9379022d782463087d4a10cdbf41ef2f9f11ddee5a9030da3f6e80b",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3cd39ec954a5812603db0464",
+            "line_end": 16,
+            "line_start": 13,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-scaling 同比例取样\n限定同种均匀材料、温度与物态不变、切割无损耗：取原材料的一半，质量和体积都减半，m/V的比值保持。\n上例取一半是24g、6cm³，密度仍为4g/cm³。只给质量而没有体积等必要信息，不能编造唯一密度。\n本单元只讨论这些理想条件下的文字解释和简单比值，不评价实验操作、浮沉、复杂证明或任意表达式执行。",
+          "content_hash": "71b7a6843b7b54767f96577a446e8c405c3f452b73970c2188d164a4a9021725",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_7c16c8c8f9ef609e0a3f557d",
+            "line_end": 7,
+            "line_start": 3,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-reference 固定对照题的依据\n合成题：同种均匀材料质量80g、体积20cm³；同温同物态、无损耗地取一半。\n标准解：ρ=m/V=80÷20=4g/cm³，表示每立方厘米质量4克。取一半是40g、10cm³，密度仍4g/cm³，因为质量与体积同比例减半。\n“每立方厘米四克”“每1cm³含4g”“40/10仍为4”等正确文字表达等价，不要求希腊字母、固定句序或重复原文。\n",
+          "content_hash": "3ec798cff6c8eeae0524d90725074c728058dd660404d94e48ebac68587460fe",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3210b47262b4b54d66b6c37b",
+            "line_end": 13,
+            "line_start": 8,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-rubric 固定对照题的逐项量规\n结果项4分：密度数值4为4分；未给结果或结果错误0分。\n含义与单位项4分：表达质量除以体积或单位体积的质量2分；给出g/cm³或等价每立方厘米多少克2分。单说数字4不给本项分。\n取样项2分：在题目理想条件下密度保持4且说明质量体积同比例变化，各1分。仅说“不变”而无理由1分。\n明确把密度定义成V/m并据此判0.25cm³/g，是本题预先定义的关键概念错误；应标critical。普通漏答、不会、算术小误差不自动标critical。\n",
+          "content_hash": "bd1b23ab8a30af4fa8c4efd9e652c9f560ec3ed8a4685a82b9a93891a0daa9e9",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        }
+      ],
+      "actual_supplement": [],
+      "cached_tasks_match": true,
+      "operation_requests": 3,
+      "review_status": "supported",
+      "blocking_issues": [],
+      "semantic_reason": "4g/cm³、单位体积质量及40/10同比保持均完整，4+4+2=10与advance由当前作答支持。"
+    },
+    {
+      "case_id": "density_reading_novel_02",
+      "subject": "density_reading",
+      "source_case": {
+        "path": "evals/v3/density_reading/cases/density_reading_novel_02.json",
+        "sha256": "b5d83d991d0e8db245a9377005a88018ce02b84a2c0839527342d65eb5d615b8"
+      },
+      "raw": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_02/raw.jsonl",
+        "sha256": "c8151cd6d654197a5fceddce20dcc3bfdeaa6991e7bb020733c5e0e3de28eac6"
+      },
+      "result": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_02/result.json",
+        "sha256": "447cd588e21f52008d40c1d3457e5df89ba549c920ba3bdccae36a4d608c38cd"
+      },
+      "formal_outputs": {
+        "grade": [
+          {
+            "request_line": 1,
+            "response_line": 2,
+            "content_sha256": "61c6ec2a0f68f0301f69f44e25e3fda2f8bd5ed3d8423bfb4715858f2c7d1e08",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_86514bcfcf605f119a807907cbbb8db3",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_97fbaf65e0f7e2d0be6a0224",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "grading_status": "graded",
+              "questions": [
+                {
+                  "question_id": "q1",
+                  "evaluator_id": "text_rubric",
+                  "evaluator_version": "1.0.0",
+                  "max_score": 10.0,
+                  "criteria": [
+                    {
+                      "criterion_id": "q1_c1",
+                      "score": 4.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "密度的数值为4",
+                          "start": 0,
+                          "end": 7
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c2",
+                      "score": 0.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "单位、定义和取一半的变化我还不会解释",
+                          "start": 8,
+                          "end": 26
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c3",
+                      "score": 0.0,
+                      "max_score": 2.0,
+                      "anchors": [
+                        {
+                          "quote": "取一半的变化我还不会解释",
+                          "start": 14,
+                          "end": 26
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    }
+                  ],
+                  "feedback": "密度数值4正确，得4分；未说明密度的公式含义与单位，也未解释取一半后的变化及理由，因此后两项不得分。总分4/10。"
+                }
+              ],
+              "uncertainty_reasons": []
+            }
+          }
+        ],
+        "diagnose": [
+          {
+            "request_line": 5,
+            "response_line": 6,
+            "content_sha256": "135651ab5224e445fa13bc2401635b364b60efb7b0e271bb1e619cf6e8a6a8dc",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_86514bcfcf605f119a807907cbbb8db3",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_97fbaf65e0f7e2d0be6a0224",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "action": "remediate",
+              "reason": "本轮证据显示，学生仅正确给出密度数值4（q1_c1），但明确表示不会解释单位、定义及取一半后的变化（q1_c2、q1_c3），因此未达到目标要求。q1_c2涉及质量除以体积/单位体积质量及g/cm³，q1_c3涉及取一半后密度不变且质量和体积同比例减半。前置节点虽标记完成且历史查询无记录，但缺乏同源前置错答证据，不能据此把当前薄弱点归因于mass_and_volume，故优先在当前节点补弱。",
+              "evidence_ids": [
+                "evidence_5271c22b770fbab919d0539c86403fd6",
+                "evidence_c3ec8d55de0a5548638133171916cac5",
+                "evidence_d99b6ed042be6b98698d606bf923bc87"
+              ],
+              "review_node_id": null
+            }
+          }
+        ]
+      },
+      "tool_selection_outputs": [
+        {
+          "response_line": 4,
+          "tool_calls": [
+            {
+              "name": "get_learning_history",
+              "args": {
+                "node_id": "density_ratio"
+              },
+              "id": "call_00_qViQobusVskeR1wOOEoW2052",
+              "type": "tool_call"
+            },
+            {
+              "name": "get_learning_history",
+              "args": {
+                "node_id": "mass_and_volume"
+              },
+              "id": "call_01_4e2PzhevpCFw1fl2mvsy3244",
+              "type": "tool_call"
+            },
+            {
+              "name": "get_prerequisite_status",
+              "args": {},
+              "id": "call_02_9VUxhvJgLAi1G8g6nWYL7219",
+              "type": "tool_call"
+            }
+          ],
+          "raw_content": ""
+        }
+      ],
+      "actual_student_answers": {
+        "q1": "密度的数值为4；单位、定义和取一半的变化我还不会解释。"
+      },
+      "actual_evaluation": {
+        "project_id": "v3_86514bcfcf605f119a807907cbbb8db3",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_97fbaf65e0f7e2d0be6a0224",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "grading_status": "graded",
+        "question_results": [
+          {
+            "question_id": "q1",
+            "evaluator_id": "text_rubric",
+            "evaluator_version": "1.0.0",
+            "score": 4.0,
+            "max_score": 10.0,
+            "evidence_ids": [
+              "evidence_5271c22b770fbab919d0539c86403fd6",
+              "evidence_c3ec8d55de0a5548638133171916cac5",
+              "evidence_d99b6ed042be6b98698d606bf923bc87"
+            ],
+            "criterion_results": [
+              {
+                "criterion_id": "q1_c1",
+                "score": 4.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_5271c22b770fbab919d0539c86403fd6"
+                ],
+                "severity": null,
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c2",
+                "score": 0.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_c3ec8d55de0a5548638133171916cac5"
+                ],
+                "severity": null,
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c3",
+                "score": 0.0,
+                "max_score": 2.0,
+                "evidence_ids": [
+                  "evidence_d99b6ed042be6b98698d606bf923bc87"
+                ],
+                "severity": null,
+                "subject_tags": []
+              }
+            ],
+            "feedback": "密度数值4正确，得4分；未说明密度的公式含义与单位，也未解释取一半后的变化及理由，因此后两项不得分。总分4/10。"
+          }
+        ],
+        "objective_results": [
+          {
+            "objective_id": "o1",
+            "score_ratio": 0.4,
+            "evidence_ids": [
+              "evidence_5271c22b770fbab919d0539c86403fd6",
+              "evidence_c3ec8d55de0a5548638133171916cac5",
+              "evidence_d99b6ed042be6b98698d606bf923bc87"
+            ],
+            "criterion_ids": [
+              "q1_c1",
+              "q1_c2",
+              "q1_c3"
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "evidence_5271c22b770fbab919d0539c86403fd6",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "密度的数值为4",
+            "start": 0,
+            "end": 7,
+            "selected_option_ids": [],
+            "numeric_value": null
+          },
+          {
+            "evidence_id": "evidence_c3ec8d55de0a5548638133171916cac5",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "单位、定义和取一半的变化我还不会解释",
+            "start": 8,
+            "end": 26,
+            "selected_option_ids": [],
+            "numeric_value": null
+          },
+          {
+            "evidence_id": "evidence_d99b6ed042be6b98698d606bf923bc87",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "取一半的变化我还不会解释",
+            "start": 14,
+            "end": 26,
+            "selected_option_ids": [],
+            "numeric_value": null
+          }
+        ],
+        "uncertainty_reasons": [],
+        "missing_evidence": []
+      },
+      "actual_diagnosis": {
+        "project_id": "v3_86514bcfcf605f119a807907cbbb8db3",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_97fbaf65e0f7e2d0be6a0224",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "action": "remediate",
+        "reason": "本轮证据显示，学生仅正确给出密度数值4（q1_c1），但明确表示不会解释单位、定义及取一半后的变化（q1_c2、q1_c3），因此未达到目标要求。q1_c2涉及质量除以体积/单位体积质量及g/cm³，q1_c3涉及取一半后密度不变且质量和体积同比例减半。前置节点虽标记完成且历史查询无记录，但缺乏同源前置错答证据，不能据此把当前薄弱点归因于mass_and_volume，故优先在当前节点补弱。",
+        "evidence_ids": [
+          "evidence_5271c22b770fbab919d0539c86403fd6",
+          "evidence_c3ec8d55de0a5548638133171916cac5",
+          "evidence_d99b6ed042be6b98698d606bf923bc87"
+        ],
+        "review_node_id": null
+      },
+      "actual_guard": {
+        "passed": false,
+        "effective_action": "remediate",
+        "reasons": [
+          "必要目标未达标：o1（服务端重算0.400）",
+          "总分未达标（服务端重算0.400）。",
+          "策略加权目标总分未达标（服务端重算0.400）。",
+          "诊断建议继续学习或补充证据，当前不形成正式通过。"
+        ]
+      },
+      "actual_tool_summary": {
+        "tool_rounds": 1,
+        "tool_executions": 3,
+        "stopped_reason": "tool_limit",
+        "queries": [
+          {
+            "tool": "get_learning_history",
+            "node_id": "density_ratio",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "mass_and_volume",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_prerequisite_status",
+            "node_id": null,
+            "status": "found"
+          }
+        ]
+      },
+      "actual_queried_history": [],
+      "actual_source_blocks": [
+        {
+          "citation": {
+            "chunk_id": "section_e27bf088b946890a1aafc0d1",
+            "line_end": 8,
+            "line_start": 5,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-quantities 区分质量与体积\n质量与体积是不同物理量。质量可用克（g）记录，体积描述所占空间，可用立方厘米（cm³）记录。\n例如“48g、12cm³”分别是质量48克和体积12立方厘米；不能把48g直接当成48cm³，也不能仅凭质量大小断言密度大小。\n",
+          "content_hash": "4bdbed25ea88c68c994cb0d701d4f8ae94228c9b8ffbda8047184b8ba0eab707",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_6cefdf845d7d059adc785745",
+            "line_end": 12,
+            "line_start": 9,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-ratio 每单位体积的质量\n密度是单位体积的质量，记作ρ=m/V，m为质量、V为体积且V>0。用g除以cm³，密度单位为g/cm³；SI单位为kg/m³，本单元不考跨单位换算。\n例：质量48g、体积12cm³的均匀材料，密度为48÷12=4g/cm³，即每立方厘米有4克。它不是体积除以质量，也不是总质量本身。\n",
+          "content_hash": "34bbf419b9379022d782463087d4a10cdbf41ef2f9f11ddee5a9030da3f6e80b",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3cd39ec954a5812603db0464",
+            "line_end": 16,
+            "line_start": 13,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-scaling 同比例取样\n限定同种均匀材料、温度与物态不变、切割无损耗：取原材料的一半，质量和体积都减半，m/V的比值保持。\n上例取一半是24g、6cm³，密度仍为4g/cm³。只给质量而没有体积等必要信息，不能编造唯一密度。\n本单元只讨论这些理想条件下的文字解释和简单比值，不评价实验操作、浮沉、复杂证明或任意表达式执行。",
+          "content_hash": "71b7a6843b7b54767f96577a446e8c405c3f452b73970c2188d164a4a9021725",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_7c16c8c8f9ef609e0a3f557d",
+            "line_end": 7,
+            "line_start": 3,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-reference 固定对照题的依据\n合成题：同种均匀材料质量80g、体积20cm³；同温同物态、无损耗地取一半。\n标准解：ρ=m/V=80÷20=4g/cm³，表示每立方厘米质量4克。取一半是40g、10cm³，密度仍4g/cm³，因为质量与体积同比例减半。\n“每立方厘米四克”“每1cm³含4g”“40/10仍为4”等正确文字表达等价，不要求希腊字母、固定句序或重复原文。\n",
+          "content_hash": "3ec798cff6c8eeae0524d90725074c728058dd660404d94e48ebac68587460fe",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3210b47262b4b54d66b6c37b",
+            "line_end": 13,
+            "line_start": 8,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-rubric 固定对照题的逐项量规\n结果项4分：密度数值4为4分；未给结果或结果错误0分。\n含义与单位项4分：表达质量除以体积或单位体积的质量2分；给出g/cm³或等价每立方厘米多少克2分。单说数字4不给本项分。\n取样项2分：在题目理想条件下密度保持4且说明质量体积同比例变化，各1分。仅说“不变”而无理由1分。\n明确把密度定义成V/m并据此判0.25cm³/g，是本题预先定义的关键概念错误；应标critical。普通漏答、不会、算术小误差不自动标critical。\n",
+          "content_hash": "bd1b23ab8a30af4fa8c4efd9e652c9f560ec3ed8a4685a82b9a93891a0daa9e9",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        }
+      ],
+      "actual_supplement": [],
+      "cached_tasks_match": true,
+      "operation_requests": 3,
+      "review_status": "supported",
+      "blocking_issues": [],
+      "semantic_reason": "只说明数值4，单位/定义/取样均明确不会，4+0+0=4。正常graded/remediate，不能由题面给学生补证。"
+    },
+    {
+      "case_id": "density_reading_novel_03",
+      "subject": "density_reading",
+      "source_case": {
+        "path": "evals/v3/density_reading/cases/density_reading_novel_03.json",
+        "sha256": "0ecd9d80e6da400216fdaba1f16bcaaddc5e8467974123e28da1a1ae258ca2a3"
+      },
+      "raw": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_03/raw.jsonl",
+        "sha256": "774b2c54061c06f795f7e81f39e54620f37bd1fb2b336a85f45e0a743890583c"
+      },
+      "result": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_03/result.json",
+        "sha256": "6eb6cdf3ed389d97e01d2b71e5e8336ae3fb507d3b7f9fc521cf4a368f5699ae"
+      },
+      "formal_outputs": {
+        "grade": [
+          {
+            "request_line": 1,
+            "response_line": 2,
+            "content_sha256": "2ea009de3bfcb008e4d04fe91730013887d49ffec9c5e3c283070e7c8ed9b030",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_bb4ebf703fe05f34a719baa3a96edea7",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_fc020144a52cf4cf51ee5e58",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "grading_status": "graded",
+              "questions": [
+                {
+                  "question_id": "q1",
+                  "evaluator_id": "text_rubric",
+                  "evaluator_version": "1.0.0",
+                  "max_score": 10.0,
+                  "criteria": [
+                    {
+                      "criterion_id": "q1_c1",
+                      "score": 0.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "20/80=0.25cm³/g",
+                          "start": 15,
+                          "end": 30
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c2",
+                      "score": 0.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "密度定义应是体积除以质量",
+                          "start": 0,
+                          "end": 12
+                        },
+                        {
+                          "quote": "0.25cm³/g",
+                          "start": 21,
+                          "end": 30
+                        }
+                      ],
+                      "severity": "critical",
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c3",
+                      "score": 0.0,
+                      "max_score": 2.0,
+                      "anchors": [
+                        {
+                          "quote": "取一半质量减半，密度也减半为0.125。",
+                          "start": 31,
+                          "end": 51
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    }
+                  ],
+                  "feedback": "学生把密度错误定义为体积除以质量，并据此得到0.25cm³/g；本题正确密度应为80÷20=4g/cm³。取一半后质量与体积同比减半，密度应仍为4g/cm³，而不是减半为0.125。结果、公式与单位、取样解释均未得分，且构成题目预先定义的关键概念错误。"
+                }
+              ],
+              "uncertainty_reasons": []
+            }
+          }
+        ],
+        "diagnose": [
+          {
+            "request_line": 5,
+            "response_line": 6,
+            "content_sha256": "6b2c7750ac8b933dfa035b441fecd5501470f2ae4cacb781a33907e656303cca",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_bb4ebf703fe05f34a719baa3a96edea7",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_fc020144a52cf4cf51ee5e58",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "action": "remediate",
+              "reason": "本轮q1得0/10，未达到通过标准，且q1_c2被判定为critical：学生明确写出“密度定义应是体积除以质量”，并据此计算“20/80=0.25cm³/g”，把密度公式反置。因而q1_c1的密度数值错误，正确答案应为80÷20=4g/cm³；q1_c3也错误地认为取一半后密度减半为0.125，未体现同种均匀材料取样时质量和体积同比例减半、密度不变。上述是本节点核心概念和取样不变性错误，需当前节点补弱。已查询density_ratio与前置mass_and_volume的学习历史，均返回no_history；虽然mass_and_volume显示completed，但没有可引用的同源前置错答证据，不能据此把当前错误归因于先修，因此不建议revisit_prerequisite。",
+              "evidence_ids": [
+                "evidence_38b43cd9686372b7ee6f09570d37527f",
+                "evidence_d193d4a2eb2d7bd7f58d99fd59182731",
+                "evidence_dc6e168b6bf5c2703cff472611cc0278",
+                "evidence_10fc2bbabb04bdd3a7d8a99c54fd672c"
+              ],
+              "review_node_id": null
+            }
+          }
+        ]
+      },
+      "tool_selection_outputs": [
+        {
+          "response_line": 4,
+          "tool_calls": [
+            {
+              "name": "get_learning_history",
+              "args": {
+                "node_id": "density_ratio"
+              },
+              "id": "call_00_pi2xB7vYQ3Rl9z5ULK4s4247",
+              "type": "tool_call"
+            },
+            {
+              "name": "get_learning_history",
+              "args": {
+                "node_id": "mass_and_volume"
+              },
+              "id": "call_01_zVfCjWWXcplXGJWorMNa7877",
+              "type": "tool_call"
+            },
+            {
+              "name": "get_prerequisite_status",
+              "args": {},
+              "id": "call_02_xiHpkXN2sPaLy0GfBwk72998",
+              "type": "tool_call"
+            }
+          ],
+          "raw_content": ""
+        }
+      ],
+      "actual_student_answers": {
+        "q1": "密度定义应是体积除以质量，所以20/80=0.25cm³/g。取一半质量减半，密度也减半为0.125。"
+      },
+      "actual_evaluation": {
+        "project_id": "v3_bb4ebf703fe05f34a719baa3a96edea7",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_fc020144a52cf4cf51ee5e58",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "grading_status": "graded",
+        "question_results": [
+          {
+            "question_id": "q1",
+            "evaluator_id": "text_rubric",
+            "evaluator_version": "1.0.0",
+            "score": 0.0,
+            "max_score": 10.0,
+            "evidence_ids": [
+              "evidence_d193d4a2eb2d7bd7f58d99fd59182731",
+              "evidence_38b43cd9686372b7ee6f09570d37527f",
+              "evidence_dc6e168b6bf5c2703cff472611cc0278",
+              "evidence_10fc2bbabb04bdd3a7d8a99c54fd672c"
+            ],
+            "criterion_results": [
+              {
+                "criterion_id": "q1_c1",
+                "score": 0.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_d193d4a2eb2d7bd7f58d99fd59182731"
+                ],
+                "severity": null,
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c2",
+                "score": 0.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_38b43cd9686372b7ee6f09570d37527f",
+                  "evidence_dc6e168b6bf5c2703cff472611cc0278"
+                ],
+                "severity": "critical",
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c3",
+                "score": 0.0,
+                "max_score": 2.0,
+                "evidence_ids": [
+                  "evidence_10fc2bbabb04bdd3a7d8a99c54fd672c"
+                ],
+                "severity": null,
+                "subject_tags": []
+              }
+            ],
+            "feedback": "学生把密度错误定义为体积除以质量，并据此得到0.25cm³/g；本题正确密度应为80÷20=4g/cm³。取一半后质量与体积同比减半，密度应仍为4g/cm³，而不是减半为0.125。结果、公式与单位、取样解释均未得分，且构成题目预先定义的关键概念错误。"
+          }
+        ],
+        "objective_results": [
+          {
+            "objective_id": "o1",
+            "score_ratio": 0.0,
+            "evidence_ids": [
+              "evidence_d193d4a2eb2d7bd7f58d99fd59182731",
+              "evidence_38b43cd9686372b7ee6f09570d37527f",
+              "evidence_dc6e168b6bf5c2703cff472611cc0278",
+              "evidence_10fc2bbabb04bdd3a7d8a99c54fd672c"
+            ],
+            "criterion_ids": [
+              "q1_c1",
+              "q1_c2",
+              "q1_c3"
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "evidence_d193d4a2eb2d7bd7f58d99fd59182731",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "20/80=0.25cm³/g",
+            "start": 15,
+            "end": 30,
+            "selected_option_ids": [],
+            "numeric_value": null
+          },
+          {
+            "evidence_id": "evidence_38b43cd9686372b7ee6f09570d37527f",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "密度定义应是体积除以质量",
+            "start": 0,
+            "end": 12,
+            "selected_option_ids": [],
+            "numeric_value": null
+          },
+          {
+            "evidence_id": "evidence_dc6e168b6bf5c2703cff472611cc0278",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "0.25cm³/g",
+            "start": 21,
+            "end": 30,
+            "selected_option_ids": [],
+            "numeric_value": null
+          },
+          {
+            "evidence_id": "evidence_10fc2bbabb04bdd3a7d8a99c54fd672c",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "取一半质量减半，密度也减半为0.125。",
+            "start": 31,
+            "end": 51,
+            "selected_option_ids": [],
+            "numeric_value": null
+          }
+        ],
+        "uncertainty_reasons": [],
+        "missing_evidence": []
+      },
+      "actual_diagnosis": {
+        "project_id": "v3_bb4ebf703fe05f34a719baa3a96edea7",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_fc020144a52cf4cf51ee5e58",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "action": "remediate",
+        "reason": "本轮q1得0/10，未达到通过标准，且q1_c2被判定为critical：学生明确写出“密度定义应是体积除以质量”，并据此计算“20/80=0.25cm³/g”，把密度公式反置。因而q1_c1的密度数值错误，正确答案应为80÷20=4g/cm³；q1_c3也错误地认为取一半后密度减半为0.125，未体现同种均匀材料取样时质量和体积同比例减半、密度不变。上述是本节点核心概念和取样不变性错误，需当前节点补弱。已查询density_ratio与前置mass_and_volume的学习历史，均返回no_history；虽然mass_and_volume显示completed，但没有可引用的同源前置错答证据，不能据此把当前错误归因于先修，因此不建议revisit_prerequisite。",
+        "evidence_ids": [
+          "evidence_38b43cd9686372b7ee6f09570d37527f",
+          "evidence_d193d4a2eb2d7bd7f58d99fd59182731",
+          "evidence_dc6e168b6bf5c2703cff472611cc0278",
+          "evidence_10fc2bbabb04bdd3a7d8a99c54fd672c"
+        ],
+        "review_node_id": null
+      },
+      "actual_guard": {
+        "passed": false,
+        "effective_action": "remediate",
+        "reasons": [
+          "存在阻断性的关键错误：q1_c2",
+          "必要目标未达标：o1（服务端重算0.000）",
+          "总分未达标（服务端重算0.000）。",
+          "策略加权目标总分未达标（服务端重算0.000）。",
+          "诊断建议继续学习或补充证据，当前不形成正式通过。"
+        ]
+      },
+      "actual_tool_summary": {
+        "tool_rounds": 1,
+        "tool_executions": 3,
+        "stopped_reason": "tool_limit",
+        "queries": [
+          {
+            "tool": "get_learning_history",
+            "node_id": "density_ratio",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "mass_and_volume",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_prerequisite_status",
+            "node_id": null,
+            "status": "found"
+          }
+        ]
+      },
+      "actual_queried_history": [],
+      "actual_source_blocks": [
+        {
+          "citation": {
+            "chunk_id": "section_e27bf088b946890a1aafc0d1",
+            "line_end": 8,
+            "line_start": 5,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-quantities 区分质量与体积\n质量与体积是不同物理量。质量可用克（g）记录，体积描述所占空间，可用立方厘米（cm³）记录。\n例如“48g、12cm³”分别是质量48克和体积12立方厘米；不能把48g直接当成48cm³，也不能仅凭质量大小断言密度大小。\n",
+          "content_hash": "4bdbed25ea88c68c994cb0d701d4f8ae94228c9b8ffbda8047184b8ba0eab707",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_6cefdf845d7d059adc785745",
+            "line_end": 12,
+            "line_start": 9,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-ratio 每单位体积的质量\n密度是单位体积的质量，记作ρ=m/V，m为质量、V为体积且V>0。用g除以cm³，密度单位为g/cm³；SI单位为kg/m³，本单元不考跨单位换算。\n例：质量48g、体积12cm³的均匀材料，密度为48÷12=4g/cm³，即每立方厘米有4克。它不是体积除以质量，也不是总质量本身。\n",
+          "content_hash": "34bbf419b9379022d782463087d4a10cdbf41ef2f9f11ddee5a9030da3f6e80b",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3cd39ec954a5812603db0464",
+            "line_end": 16,
+            "line_start": 13,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-scaling 同比例取样\n限定同种均匀材料、温度与物态不变、切割无损耗：取原材料的一半，质量和体积都减半，m/V的比值保持。\n上例取一半是24g、6cm³，密度仍为4g/cm³。只给质量而没有体积等必要信息，不能编造唯一密度。\n本单元只讨论这些理想条件下的文字解释和简单比值，不评价实验操作、浮沉、复杂证明或任意表达式执行。",
+          "content_hash": "71b7a6843b7b54767f96577a446e8c405c3f452b73970c2188d164a4a9021725",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_7c16c8c8f9ef609e0a3f557d",
+            "line_end": 7,
+            "line_start": 3,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-reference 固定对照题的依据\n合成题：同种均匀材料质量80g、体积20cm³；同温同物态、无损耗地取一半。\n标准解：ρ=m/V=80÷20=4g/cm³，表示每立方厘米质量4克。取一半是40g、10cm³，密度仍4g/cm³，因为质量与体积同比例减半。\n“每立方厘米四克”“每1cm³含4g”“40/10仍为4”等正确文字表达等价，不要求希腊字母、固定句序或重复原文。\n",
+          "content_hash": "3ec798cff6c8eeae0524d90725074c728058dd660404d94e48ebac68587460fe",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3210b47262b4b54d66b6c37b",
+            "line_end": 13,
+            "line_start": 8,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-rubric 固定对照题的逐项量规\n结果项4分：密度数值4为4分；未给结果或结果错误0分。\n含义与单位项4分：表达质量除以体积或单位体积的质量2分；给出g/cm³或等价每立方厘米多少克2分。单说数字4不给本项分。\n取样项2分：在题目理想条件下密度保持4且说明质量体积同比例变化，各1分。仅说“不变”而无理由1分。\n明确把密度定义成V/m并据此判0.25cm³/g，是本题预先定义的关键概念错误；应标critical。普通漏答、不会、算术小误差不自动标critical。\n",
+          "content_hash": "bd1b23ab8a30af4fa8c4efd9e652c9f560ec3ed8a4685a82b9a93891a0daa9e9",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        }
+      ],
+      "actual_supplement": [],
+      "cached_tasks_match": true,
+      "operation_requests": 3,
+      "review_status": "supported",
+      "blocking_issues": [],
+      "semantic_reason": "原文明确“密度定义应是体积除以质量”且以0.25cm³/g为密度，命中批准的反向定义；取样再减半也错误，三项0、c2 critical。普通rubric critical仍false，guard按实际severity阻断。"
+    },
+    {
+      "case_id": "density_reading_novel_04",
+      "subject": "density_reading",
+      "source_case": {
+        "path": "evals/v3/density_reading/cases/density_reading_novel_04.json",
+        "sha256": "ae2cf85eb1000308e8f4b680a8a3564c7ec7001568e74f11c46e71667de2f5f8"
+      },
+      "raw": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_04/raw.jsonl",
+        "sha256": "29de06a84b4341e6cab8686d29e2ee7b29dce357d8043e730bd5e02444ddd75d"
+      },
+      "result": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_04/result.json",
+        "sha256": "8833d8fc3e1fdf10be3db38573c0d4816fcd6164579106dec04ec8a1f493a810"
+      },
+      "formal_outputs": {
+        "grade": [
+          {
+            "request_line": 1,
+            "response_line": 2,
+            "content_sha256": "145989a732216a0f64481d3b70bd9c80e8d4ee1b0437d9b31e4a4c007cfa2182",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_53800813796f54d08b94d2f370174a30",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_54c18148d8f2b07a05c1f1f8",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "grading_status": "graded",
+              "questions": [
+                {
+                  "question_id": "q1",
+                  "evaluator_id": "text_rubric",
+                  "evaluator_version": "1.0.0",
+                  "max_score": 10.0,
+                  "criteria": [
+                    {
+                      "criterion_id": "q1_c1",
+                      "score": 4.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "每一立方厘米含四克",
+                          "start": 0,
+                          "end": 9
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c2",
+                      "score": 4.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "每一立方厘米含四克",
+                          "start": 0,
+                          "end": 9
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c3",
+                      "score": 2.0,
+                      "max_score": 2.0,
+                      "anchors": [
+                        {
+                          "quote": "只取原材料的一半时，总克数和占的空间都各减半，因此每立方厘米还是四克，这个比值没有改变。",
+                          "start": 10,
+                          "end": 54
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    }
+                  ],
+                  "feedback": "密度数值、含义与单位、以及取样后密度不变的理由均正确，得10分。"
+                }
+              ],
+              "uncertainty_reasons": []
+            }
+          }
+        ],
+        "diagnose": [
+          {
+            "request_line": 5,
+            "response_line": 6,
+            "content_sha256": "8f384beca6ccc5d1a41406fc87bd8f0d2d5aa355f8982ee69e03fb5c0158abf8",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_53800813796f54d08b94d2f370174a30",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_54c18148d8f2b07a05c1f1f8",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "action": "advance",
+              "reason": "本轮作答证据覆盖 q1_c1、q1_c2、q1_c3：evidence_52653827dc7786f4d5e3cb012b23c7fe 以“每一立方厘米含四克”表达密度数值4及单位体积质量含义；evidence_bd10f0a36bb2c7968d8e0721afe02541 说明取样一半时质量与体积同比减半、比值不变，仍为每立方厘米四克。三项均达满分，无不确定项、缺失证据或无效项，故建议 advance。",
+              "evidence_ids": [
+                "evidence_52653827dc7786f4d5e3cb012b23c7fe",
+                "evidence_bd10f0a36bb2c7968d8e0721afe02541"
+              ],
+              "review_node_id": null
+            }
+          }
+        ]
+      },
+      "tool_selection_outputs": [
+        {
+          "response_line": 4,
+          "tool_calls": [],
+          "raw_content": "```json\n{\n  \"project_id\": \"v3_53800813796f54d08b94d2f370174a30\",\n  \"node_id\": \"density_ratio\",\n  \"assessment_id\": \"evaluation_54c18148d8f2b07a05c1f1f8\",\n  \"action\": \"advance\",\n  \"review_node_id\": null,\n  \"reason\": \"本轮q1作答被完整评分10/10（q1_c1 4/4、q1_c2 4/4、q1_c3 2/2），达到o1的0.8阈值且总阈值0.8。证据evidence_52653827dc7786f4d5e3cb012b23c7fe以“每一立方厘米含四克”给出密度的单位体积质量含义与单位，满足q1_c1的数值表达和q1_c2的含义/单位子项；证据evidence_bd10f0a36bb2c7968d8e0721afe02541说明“取一半时总克数和占的空间都各减半，每立方厘米还是四克，这个比值没有改变”，同时覆盖q1_c3的“密度不变”与“质量体积同比例减半”两个子项。本轮无critical标记、无missing_evidence、无needs_review/invalid_item，前置mass_and_volume虽已完成，但本轮无需归因于前置薄弱点，故仅凭本轮作答证据建议推进。\"\n}\n```"
+        }
+      ],
+      "actual_student_answers": {
+        "q1": "每一立方厘米含四克。只取原材料的一半时，总克数和占的空间都各减半，因此每立方厘米还是四克，这个比值没有改变。"
+      },
+      "actual_evaluation": {
+        "project_id": "v3_53800813796f54d08b94d2f370174a30",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_54c18148d8f2b07a05c1f1f8",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "grading_status": "graded",
+        "question_results": [
+          {
+            "question_id": "q1",
+            "evaluator_id": "text_rubric",
+            "evaluator_version": "1.0.0",
+            "score": 10.0,
+            "max_score": 10.0,
+            "evidence_ids": [
+              "evidence_52653827dc7786f4d5e3cb012b23c7fe",
+              "evidence_bd10f0a36bb2c7968d8e0721afe02541"
+            ],
+            "criterion_results": [
+              {
+                "criterion_id": "q1_c1",
+                "score": 4.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_52653827dc7786f4d5e3cb012b23c7fe"
+                ],
+                "severity": null,
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c2",
+                "score": 4.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_52653827dc7786f4d5e3cb012b23c7fe"
+                ],
+                "severity": null,
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c3",
+                "score": 2.0,
+                "max_score": 2.0,
+                "evidence_ids": [
+                  "evidence_bd10f0a36bb2c7968d8e0721afe02541"
+                ],
+                "severity": null,
+                "subject_tags": []
+              }
+            ],
+            "feedback": "密度数值、含义与单位、以及取样后密度不变的理由均正确，得10分。"
+          }
+        ],
+        "objective_results": [
+          {
+            "objective_id": "o1",
+            "score_ratio": 1.0,
+            "evidence_ids": [
+              "evidence_52653827dc7786f4d5e3cb012b23c7fe",
+              "evidence_bd10f0a36bb2c7968d8e0721afe02541"
+            ],
+            "criterion_ids": [
+              "q1_c1",
+              "q1_c2",
+              "q1_c3"
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "evidence_52653827dc7786f4d5e3cb012b23c7fe",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "每一立方厘米含四克",
+            "start": 0,
+            "end": 9,
+            "selected_option_ids": [],
+            "numeric_value": null
+          },
+          {
+            "evidence_id": "evidence_bd10f0a36bb2c7968d8e0721afe02541",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "只取原材料的一半时，总克数和占的空间都各减半，因此每立方厘米还是四克，这个比值没有改变。",
+            "start": 10,
+            "end": 54,
+            "selected_option_ids": [],
+            "numeric_value": null
+          }
+        ],
+        "uncertainty_reasons": [],
+        "missing_evidence": []
+      },
+      "actual_diagnosis": {
+        "project_id": "v3_53800813796f54d08b94d2f370174a30",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_54c18148d8f2b07a05c1f1f8",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "action": "advance",
+        "reason": "本轮作答证据覆盖 q1_c1、q1_c2、q1_c3：evidence_52653827dc7786f4d5e3cb012b23c7fe 以“每一立方厘米含四克”表达密度数值4及单位体积质量含义；evidence_bd10f0a36bb2c7968d8e0721afe02541 说明取样一半时质量与体积同比减半、比值不变，仍为每立方厘米四克。三项均达满分，无不确定项、缺失证据或无效项，故建议 advance。",
+        "evidence_ids": [
+          "evidence_52653827dc7786f4d5e3cb012b23c7fe",
+          "evidence_bd10f0a36bb2c7968d8e0721afe02541"
+        ],
+        "review_node_id": null
+      },
+      "actual_guard": {
+        "passed": true,
+        "effective_action": "advance",
+        "reasons": [
+          "当前有效评价满足冻结策略、全部必要目标、真实证据及先修约束。"
+        ]
+      },
+      "actual_tool_summary": {
+        "tool_rounds": 0,
+        "tool_executions": 0,
+        "stopped_reason": "model_finished",
+        "queries": []
+      },
+      "actual_queried_history": [],
+      "actual_source_blocks": [
+        {
+          "citation": {
+            "chunk_id": "section_e27bf088b946890a1aafc0d1",
+            "line_end": 8,
+            "line_start": 5,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-quantities 区分质量与体积\n质量与体积是不同物理量。质量可用克（g）记录，体积描述所占空间，可用立方厘米（cm³）记录。\n例如“48g、12cm³”分别是质量48克和体积12立方厘米；不能把48g直接当成48cm³，也不能仅凭质量大小断言密度大小。\n",
+          "content_hash": "4bdbed25ea88c68c994cb0d701d4f8ae94228c9b8ffbda8047184b8ba0eab707",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_6cefdf845d7d059adc785745",
+            "line_end": 12,
+            "line_start": 9,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-ratio 每单位体积的质量\n密度是单位体积的质量，记作ρ=m/V，m为质量、V为体积且V>0。用g除以cm³，密度单位为g/cm³；SI单位为kg/m³，本单元不考跨单位换算。\n例：质量48g、体积12cm³的均匀材料，密度为48÷12=4g/cm³，即每立方厘米有4克。它不是体积除以质量，也不是总质量本身。\n",
+          "content_hash": "34bbf419b9379022d782463087d4a10cdbf41ef2f9f11ddee5a9030da3f6e80b",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3cd39ec954a5812603db0464",
+            "line_end": 16,
+            "line_start": 13,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-scaling 同比例取样\n限定同种均匀材料、温度与物态不变、切割无损耗：取原材料的一半，质量和体积都减半，m/V的比值保持。\n上例取一半是24g、6cm³，密度仍为4g/cm³。只给质量而没有体积等必要信息，不能编造唯一密度。\n本单元只讨论这些理想条件下的文字解释和简单比值，不评价实验操作、浮沉、复杂证明或任意表达式执行。",
+          "content_hash": "71b7a6843b7b54767f96577a446e8c405c3f452b73970c2188d164a4a9021725",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_7c16c8c8f9ef609e0a3f557d",
+            "line_end": 7,
+            "line_start": 3,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-reference 固定对照题的依据\n合成题：同种均匀材料质量80g、体积20cm³；同温同物态、无损耗地取一半。\n标准解：ρ=m/V=80÷20=4g/cm³，表示每立方厘米质量4克。取一半是40g、10cm³，密度仍4g/cm³，因为质量与体积同比例减半。\n“每立方厘米四克”“每1cm³含4g”“40/10仍为4”等正确文字表达等价，不要求希腊字母、固定句序或重复原文。\n",
+          "content_hash": "3ec798cff6c8eeae0524d90725074c728058dd660404d94e48ebac68587460fe",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3210b47262b4b54d66b6c37b",
+            "line_end": 13,
+            "line_start": 8,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-rubric 固定对照题的逐项量规\n结果项4分：密度数值4为4分；未给结果或结果错误0分。\n含义与单位项4分：表达质量除以体积或单位体积的质量2分；给出g/cm³或等价每立方厘米多少克2分。单说数字4不给本项分。\n取样项2分：在题目理想条件下密度保持4且说明质量体积同比例变化，各1分。仅说“不变”而无理由1分。\n明确把密度定义成V/m并据此判0.25cm³/g，是本题预先定义的关键概念错误；应标critical。普通漏答、不会、算术小误差不自动标critical。\n",
+          "content_hash": "bd1b23ab8a30af4fa8c4efd9e652c9f560ec3ed8a4685a82b9a93891a0daa9e9",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        }
+      ],
+      "actual_supplement": [],
+      "cached_tasks_match": true,
+      "operation_requests": 3,
+      "review_status": "supported",
+      "blocking_issues": [],
+      "semantic_reason": "“每一立方厘米含四克”同时承载正确数值4、单位及单位体积质量；“总克数和空间各减半，比值不变”补足取样两子项。无ρ符号的等价表达获10分并通过，成立。"
+    },
+    {
+      "case_id": "density_reading_novel_05",
+      "subject": "density_reading",
+      "source_case": {
+        "path": "evals/v3/density_reading/cases/density_reading_novel_05.json",
+        "sha256": "eccfd7ba249a0c211b22bc03b828d1ff1d1750fcc50c49f2d3021d70b1b191ae"
+      },
+      "raw": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_05/raw.jsonl",
+        "sha256": "ec2929aba7f373611abd2820671aad11d05a601b116c8e38fa923c7c3aaec648"
+      },
+      "result": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_05/result.json",
+        "sha256": "90341dff28e3025e27e6f42def80d382c60eed05b114e951457a70f3662e953a"
+      },
+      "formal_outputs": {
+        "grade": [
+          {
+            "request_line": 1,
+            "response_line": 2,
+            "content_sha256": "a86e5f8ae1349b52c373272538e836964c52f835ad116a73f6f7c60781ac6c03",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_c0aea8cd5f8b57a2ace5d5ea9c63de92",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_4f191a6ee3c76dff142c5b8a",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "grading_status": "graded",
+              "questions": [
+                {
+                  "question_id": "q1",
+                  "evaluator_id": "text_rubric",
+                  "evaluator_version": "1.0.0",
+                  "max_score": 10.0,
+                  "criteria": [
+                    {
+                      "criterion_id": "q1_c1",
+                      "score": 0.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "我还不知道怎样计算，也没有给出物理判断。",
+                          "start": 0,
+                          "end": 20
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c2",
+                      "score": 0.0,
+                      "max_score": 4.0,
+                      "anchors": [
+                        {
+                          "quote": "我还不知道怎样计算，也没有给出物理判断。",
+                          "start": 0,
+                          "end": 20
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    },
+                    {
+                      "criterion_id": "q1_c3",
+                      "score": 0.0,
+                      "max_score": 2.0,
+                      "anchors": [
+                        {
+                          "quote": "我还不知道怎样计算，也没有给出物理判断。",
+                          "start": 0,
+                          "end": 20
+                        }
+                      ],
+                      "severity": null,
+                      "subject_tags": []
+                    }
+                  ],
+                  "feedback": "作答未给出密度数值、公式含义与单位，也未说明取半后的变化及理由，因此三个分项均未获得分数。学生表示不会，不构成本题预先定义的关键概念错误。"
+                }
+              ],
+              "uncertainty_reasons": []
+            }
+          }
+        ],
+        "diagnose": [
+          {
+            "request_line": 5,
+            "response_line": 6,
+            "content_sha256": "8c3518ab2bbf2161311bac92168cd567fcbffa7315299d31dc8ac895b3334849",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_c0aea8cd5f8b57a2ace5d5ea9c63de92",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_4f191a6ee3c76dff142c5b8a",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "action": "remediate",
+              "reason": "本轮作答证据 evidence_a6aebf1a84aeac01c9ebd186f0b010e0 明确表示“我还不知道怎样计算，也没有给出物理判断”，未给出密度数值、公式、单位或取半后的变化与理由，q1_c1、q1_c2、q1_c3 均无有效作答证据，未达到当前节点目标。虽然前置节点 mass_and_volume 已完成，但查询其历史返回 no_history，且没有可用的同源前置错答证据，不能据此把当前错误归因于先修薄弱；因此优先针对当前节点 density_ratio 进行补弱，而非回顾先修。",
+              "evidence_ids": [
+                "evidence_a6aebf1a84aeac01c9ebd186f0b010e0"
+              ],
+              "review_node_id": null
+            }
+          }
+        ]
+      },
+      "tool_selection_outputs": [
+        {
+          "response_line": 4,
+          "tool_calls": [
+            {
+              "name": "get_prerequisite_status",
+              "args": {},
+              "id": "call_00_0bRChalekVzGsvT1IxPI8358",
+              "type": "tool_call"
+            },
+            {
+              "name": "get_learning_history",
+              "args": {
+                "node_id": "density_ratio"
+              },
+              "id": "call_01_ig1Wn3qgIeUI6189itcK4356",
+              "type": "tool_call"
+            },
+            {
+              "name": "get_learning_history",
+              "args": {
+                "node_id": "mass_and_volume"
+              },
+              "id": "call_02_xfO8g73FSYBlXfRNMoPZ2729",
+              "type": "tool_call"
+            }
+          ],
+          "raw_content": ""
+        }
+      ],
+      "actual_student_answers": {
+        "q1": "我还不知道怎样计算，也没有给出物理判断。"
+      },
+      "actual_evaluation": {
+        "project_id": "v3_c0aea8cd5f8b57a2ace5d5ea9c63de92",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_4f191a6ee3c76dff142c5b8a",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "grading_status": "graded",
+        "question_results": [
+          {
+            "question_id": "q1",
+            "evaluator_id": "text_rubric",
+            "evaluator_version": "1.0.0",
+            "score": 0.0,
+            "max_score": 10.0,
+            "evidence_ids": [
+              "evidence_a6aebf1a84aeac01c9ebd186f0b010e0"
+            ],
+            "criterion_results": [
+              {
+                "criterion_id": "q1_c1",
+                "score": 0.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_a6aebf1a84aeac01c9ebd186f0b010e0"
+                ],
+                "severity": null,
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c2",
+                "score": 0.0,
+                "max_score": 4.0,
+                "evidence_ids": [
+                  "evidence_a6aebf1a84aeac01c9ebd186f0b010e0"
+                ],
+                "severity": null,
+                "subject_tags": []
+              },
+              {
+                "criterion_id": "q1_c3",
+                "score": 0.0,
+                "max_score": 2.0,
+                "evidence_ids": [
+                  "evidence_a6aebf1a84aeac01c9ebd186f0b010e0"
+                ],
+                "severity": null,
+                "subject_tags": []
+              }
+            ],
+            "feedback": "作答未给出密度数值、公式含义与单位，也未说明取半后的变化及理由，因此三个分项均未获得分数。学生表示不会，不构成本题预先定义的关键概念错误。"
+          }
+        ],
+        "objective_results": [
+          {
+            "objective_id": "o1",
+            "score_ratio": 0.0,
+            "evidence_ids": [
+              "evidence_a6aebf1a84aeac01c9ebd186f0b010e0"
+            ],
+            "criterion_ids": [
+              "q1_c1",
+              "q1_c2",
+              "q1_c3"
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "evidence_a6aebf1a84aeac01c9ebd186f0b010e0",
+            "question_id": "q1",
+            "kind": "text_excerpt",
+            "quote": "我还不知道怎样计算，也没有给出物理判断。",
+            "start": 0,
+            "end": 20,
+            "selected_option_ids": [],
+            "numeric_value": null
+          }
+        ],
+        "uncertainty_reasons": [],
+        "missing_evidence": []
+      },
+      "actual_diagnosis": {
+        "project_id": "v3_c0aea8cd5f8b57a2ace5d5ea9c63de92",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_4f191a6ee3c76dff142c5b8a",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "action": "remediate",
+        "reason": "本轮作答证据 evidence_a6aebf1a84aeac01c9ebd186f0b010e0 明确表示“我还不知道怎样计算，也没有给出物理判断”，未给出密度数值、公式、单位或取半后的变化与理由，q1_c1、q1_c2、q1_c3 均无有效作答证据，未达到当前节点目标。虽然前置节点 mass_and_volume 已完成，但查询其历史返回 no_history，且没有可用的同源前置错答证据，不能据此把当前错误归因于先修薄弱；因此优先针对当前节点 density_ratio 进行补弱，而非回顾先修。",
+        "evidence_ids": [
+          "evidence_a6aebf1a84aeac01c9ebd186f0b010e0"
+        ],
+        "review_node_id": null
+      },
+      "actual_guard": {
+        "passed": false,
+        "effective_action": "remediate",
+        "reasons": [
+          "必要目标未达标：o1（服务端重算0.000）",
+          "总分未达标（服务端重算0.000）。",
+          "策略加权目标总分未达标（服务端重算0.000）。",
+          "诊断建议继续学习或补充证据，当前不形成正式通过。"
+        ]
+      },
+      "actual_tool_summary": {
+        "tool_rounds": 1,
+        "tool_executions": 3,
+        "stopped_reason": "tool_limit",
+        "queries": [
+          {
+            "tool": "get_prerequisite_status",
+            "node_id": null,
+            "status": "found"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "density_ratio",
+            "status": "no_history"
+          },
+          {
+            "tool": "get_learning_history",
+            "node_id": "mass_and_volume",
+            "status": "no_history"
+          }
+        ]
+      },
+      "actual_queried_history": [],
+      "actual_source_blocks": [
+        {
+          "citation": {
+            "chunk_id": "section_e27bf088b946890a1aafc0d1",
+            "line_end": 8,
+            "line_start": 5,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-quantities 区分质量与体积\n质量与体积是不同物理量。质量可用克（g）记录，体积描述所占空间，可用立方厘米（cm³）记录。\n例如“48g、12cm³”分别是质量48克和体积12立方厘米；不能把48g直接当成48cm³，也不能仅凭质量大小断言密度大小。\n",
+          "content_hash": "4bdbed25ea88c68c994cb0d701d4f8ae94228c9b8ffbda8047184b8ba0eab707",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_6cefdf845d7d059adc785745",
+            "line_end": 12,
+            "line_start": 9,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-ratio 每单位体积的质量\n密度是单位体积的质量，记作ρ=m/V，m为质量、V为体积且V>0。用g除以cm³，密度单位为g/cm³；SI单位为kg/m³，本单元不考跨单位换算。\n例：质量48g、体积12cm³的均匀材料，密度为48÷12=4g/cm³，即每立方厘米有4克。它不是体积除以质量，也不是总质量本身。\n",
+          "content_hash": "34bbf419b9379022d782463087d4a10cdbf41ef2f9f11ddee5a9030da3f6e80b",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3cd39ec954a5812603db0464",
+            "line_end": 16,
+            "line_start": 13,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-scaling 同比例取样\n限定同种均匀材料、温度与物态不变、切割无损耗：取原材料的一半，质量和体积都减半，m/V的比值保持。\n上例取一半是24g、6cm³，密度仍为4g/cm³。只给质量而没有体积等必要信息，不能编造唯一密度。\n本单元只讨论这些理想条件下的文字解释和简单比值，不评价实验操作、浮沉、复杂证明或任意表达式执行。",
+          "content_hash": "71b7a6843b7b54767f96577a446e8c405c3f452b73970c2188d164a4a9021725",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_7c16c8c8f9ef609e0a3f557d",
+            "line_end": 7,
+            "line_start": 3,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-reference 固定对照题的依据\n合成题：同种均匀材料质量80g、体积20cm³；同温同物态、无损耗地取一半。\n标准解：ρ=m/V=80÷20=4g/cm³，表示每立方厘米质量4克。取一半是40g、10cm³，密度仍4g/cm³，因为质量与体积同比例减半。\n“每立方厘米四克”“每1cm³含4g”“40/10仍为4”等正确文字表达等价，不要求希腊字母、固定句序或重复原文。\n",
+          "content_hash": "3ec798cff6c8eeae0524d90725074c728058dd660404d94e48ebac68587460fe",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3210b47262b4b54d66b6c37b",
+            "line_end": 13,
+            "line_start": 8,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-rubric 固定对照题的逐项量规\n结果项4分：密度数值4为4分；未给结果或结果错误0分。\n含义与单位项4分：表达质量除以体积或单位体积的质量2分；给出g/cm³或等价每立方厘米多少克2分。单说数字4不给本项分。\n取样项2分：在题目理想条件下密度保持4且说明质量体积同比例变化，各1分。仅说“不变”而无理由1分。\n明确把密度定义成V/m并据此判0.25cm³/g，是本题预先定义的关键概念错误；应标critical。普通漏答、不会、算术小误差不自动标critical。\n",
+          "content_hash": "bd1b23ab8a30af4fa8c4efd9e652c9f560ec3ed8a4685a82b9a93891a0daa9e9",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        }
+      ],
+      "actual_supplement": [],
+      "cached_tasks_match": true,
+      "operation_requests": 3,
+      "review_status": "supported",
+      "blocking_issues": [],
+      "semantic_reason": "原文只说不会，无正确物理判断，0/0/0 graded，severity均null；有效题的低分不等于技术拒评/关键误解。当前补弱，未把先修completed/no_history当作真实错答。"
+    },
+    {
+      "case_id": "density_reading_novel_06",
+      "subject": "density_reading",
+      "source_case": {
+        "path": "evals/v3/density_reading/cases/density_reading_novel_06.json",
+        "sha256": "0afaced11a56005efd4b9ecff8f323c82ee0a7b314153ecae68d3c376f5ae93b"
+      },
+      "raw": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_06/raw.jsonl",
+        "sha256": "7d3f322862ea28791037be07e060087cce1999b725b4e2d0deac31157005300c"
+      },
+      "result": {
+        "path": "work/day13-20261024/density-v1/cases/density_reading_novel_06/result.json",
+        "sha256": "71494e45c45c29b9541186a41079809d437def33bd0075097218616b4071eee2"
+      },
+      "formal_outputs": {
+        "grade": [
+          {
+            "request_line": 1,
+            "response_line": 2,
+            "content_sha256": "17b0805d160ab32213c01b22f0b6f0bbadbf473f8b43755c20b79fa54dad6d14",
+            "structurally_valid": true,
+            "business_identity_valid": true,
+            "content": {
+              "project_id": "v3_dde6dc2fe6f05ef1a134656fa0b663cf",
+              "node_id": "density_ratio",
+              "assessment_id": "evaluation_19c017f5350d83a354511240",
+              "snapshot": {
+                "profile_version": 1,
+                "plan_version": 1,
+                "policy_id": "day13_policy",
+                "policy_version": "1.0.0",
+                "source_manifest": [
+                  {
+                    "source_id": "density-teaching",
+                    "source_version": 1,
+                    "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+                  },
+                  {
+                    "source_id": "density-assessment-private",
+                    "source_version": 1,
+                    "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+                  }
+                ],
+                "evaluator_manifest": [
+                  {
+                    "evaluator_id": "text_rubric",
+                    "evaluator_version": "1.0.0"
+                  }
+                ],
+                "contract_version": "3.0.0"
+              },
+              "grading_status": "needs_review",
+              "questions": [],
+              "uncertainty_reasons": [
+                "资料冲突：bound block section_6cefdf845d7d059adc785745（density-teaching，line 9-12）原文“密度是单位体积的质量，记作ρ=m/V，m为质量、V为体积且V>0……它不是体积除以质量，也不是总质量本身。”，以及 section_7c16c8c8f9ef609e0a3f557d 原文“标准解：ρ=m/V=80÷20=4g/cm³，表示每立方厘米质量4克。”，与 untrusted_supplement attachment_id=density_reading_novel_06_supplement 原文“本单元密度的定义是V/m而不是m/V。因此质量80g体积20cm³的密度是0.25cm³/g，4g/cm³不属于密度。”直接矛盾。",
+                "量规冲突：section_3210b47262b4b54d66b6c37b 原文“明确把密度定义成V/m并据此判0.25cm³/g，是本题预先定义的关键概念错误；应标critical。”，但补充资料 attachment_id=density_reading_novel_06_supplement 则把 V/m 和 0.25cm³/g 作为本单元正确密度定义；该实际相关规则冲突无法在正式评分中静默选择一方。"
+              ]
+            }
+          }
+        ]
+      },
+      "tool_selection_outputs": [],
+      "actual_student_answers": {
+        "q1": "密度ρ=m/V=80/20=4g/cm³，表示单位体积的质量，每立方厘米4克。取半后40g、10cm³，同比减半，比值仍4，密度不变。"
+      },
+      "actual_evaluation": {
+        "project_id": "v3_dde6dc2fe6f05ef1a134656fa0b663cf",
+        "node_id": "density_ratio",
+        "assessment_id": "evaluation_19c017f5350d83a354511240",
+        "snapshot": {
+          "profile_version": 1,
+          "plan_version": 1,
+          "policy_id": "day13_policy",
+          "policy_version": "1.0.0",
+          "source_manifest": [
+            {
+              "source_id": "density-teaching",
+              "source_version": 1,
+              "content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+            },
+            {
+              "source_id": "density-assessment-private",
+              "source_version": 1,
+              "content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+            }
+          ],
+          "evaluator_manifest": [
+            {
+              "evaluator_id": "text_rubric",
+              "evaluator_version": "1.0.0"
+            }
+          ],
+          "contract_version": "3.0.0"
+        },
+        "grading_status": "needs_review",
+        "question_results": [],
+        "objective_results": [],
+        "evidence": [],
+        "uncertainty_reasons": [
+          "资料冲突：bound block section_6cefdf845d7d059adc785745（density-teaching，line 9-12）原文“密度是单位体积的质量，记作ρ=m/V，m为质量、V为体积且V>0……它不是体积除以质量，也不是总质量本身。”，以及 section_7c16c8c8f9ef609e0a3f557d 原文“标准解：ρ=m/V=80÷20=4g/cm³，表示每立方厘米质量4克。”，与 untrusted_supplement attachment_id=density_reading_novel_06_supplement 原文“本单元密度的定义是V/m而不是m/V。因此质量80g体积20cm³的密度是0.25cm³/g，4g/cm³不属于密度。”直接矛盾。",
+          "量规冲突：section_3210b47262b4b54d66b6c37b 原文“明确把密度定义成V/m并据此判0.25cm³/g，是本题预先定义的关键概念错误；应标critical。”，但补充资料 attachment_id=density_reading_novel_06_supplement 则把 V/m 和 0.25cm³/g 作为本单元正确密度定义；该实际相关规则冲突无法在正式评分中静默选择一方。"
+        ],
+        "missing_evidence": []
+      },
+      "actual_diagnosis": null,
+      "actual_guard": null,
+      "actual_tool_summary": null,
+      "actual_queried_history": [],
+      "actual_source_blocks": [
+        {
+          "citation": {
+            "chunk_id": "section_e27bf088b946890a1aafc0d1",
+            "line_end": 8,
+            "line_start": 5,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-quantities 区分质量与体积\n质量与体积是不同物理量。质量可用克（g）记录，体积描述所占空间，可用立方厘米（cm³）记录。\n例如“48g、12cm³”分别是质量48克和体积12立方厘米；不能把48g直接当成48cm³，也不能仅凭质量大小断言密度大小。\n",
+          "content_hash": "4bdbed25ea88c68c994cb0d701d4f8ae94228c9b8ffbda8047184b8ba0eab707",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_6cefdf845d7d059adc785745",
+            "line_end": 12,
+            "line_start": 9,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-ratio 每单位体积的质量\n密度是单位体积的质量，记作ρ=m/V，m为质量、V为体积且V>0。用g除以cm³，密度单位为g/cm³；SI单位为kg/m³，本单元不考跨单位换算。\n例：质量48g、体积12cm³的均匀材料，密度为48÷12=4g/cm³，即每立方厘米有4克。它不是体积除以质量，也不是总质量本身。\n",
+          "content_hash": "34bbf419b9379022d782463087d4a10cdbf41ef2f9f11ddee5a9030da3f6e80b",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3cd39ec954a5812603db0464",
+            "line_end": 16,
+            "line_start": 13,
+            "source_id": "density-teaching",
+            "source_version": 1,
+            "visibility": "teaching"
+          },
+          "content": "## density-scaling 同比例取样\n限定同种均匀材料、温度与物态不变、切割无损耗：取原材料的一半，质量和体积都减半，m/V的比值保持。\n上例取一半是24g、6cm³，密度仍为4g/cm³。只给质量而没有体积等必要信息，不能编造唯一密度。\n本单元只讨论这些理想条件下的文字解释和简单比值，不评价实验操作、浮沉、复杂证明或任意表达式执行。",
+          "content_hash": "71b7a6843b7b54767f96577a446e8c405c3f452b73970c2188d164a4a9021725",
+          "source_content_hash": "74623b5a9b9105fc9876eb712987296aaea1df0061a21caff884adbfdce32aac"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_7c16c8c8f9ef609e0a3f557d",
+            "line_end": 7,
+            "line_start": 3,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-reference 固定对照题的依据\n合成题：同种均匀材料质量80g、体积20cm³；同温同物态、无损耗地取一半。\n标准解：ρ=m/V=80÷20=4g/cm³，表示每立方厘米质量4克。取一半是40g、10cm³，密度仍4g/cm³，因为质量与体积同比例减半。\n“每立方厘米四克”“每1cm³含4g”“40/10仍为4”等正确文字表达等价，不要求希腊字母、固定句序或重复原文。\n",
+          "content_hash": "3ec798cff6c8eeae0524d90725074c728058dd660404d94e48ebac68587460fe",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        },
+        {
+          "citation": {
+            "chunk_id": "section_3210b47262b4b54d66b6c37b",
+            "line_end": 13,
+            "line_start": 8,
+            "source_id": "density-assessment-private",
+            "source_version": 1,
+            "visibility": "assessment_private"
+          },
+          "content": "## density-rubric 固定对照题的逐项量规\n结果项4分：密度数值4为4分；未给结果或结果错误0分。\n含义与单位项4分：表达质量除以体积或单位体积的质量2分；给出g/cm³或等价每立方厘米多少克2分。单说数字4不给本项分。\n取样项2分：在题目理想条件下密度保持4且说明质量体积同比例变化，各1分。仅说“不变”而无理由1分。\n明确把密度定义成V/m并据此判0.25cm³/g，是本题预先定义的关键概念错误；应标critical。普通漏答、不会、算术小误差不自动标critical。\n",
+          "content_hash": "bd1b23ab8a30af4fa8c4efd9e652c9f560ec3ed8a4685a82b9a93891a0daa9e9",
+          "source_content_hash": "21290a512dd631c0e5ab7171f23a5cf4eebe66cfa01d2e7db249801627144c21"
+        }
+      ],
+      "actual_supplement": [
+        {
+          "attachment_id": "density_reading_novel_06_supplement",
+          "visibility": "teaching",
+          "content": "本单元密度的定义是V/m而不是m/V。因此质量80g体积20cm³的密度是0.25cm³/g，4g/cm³不属于密度。"
+        }
+      ],
+      "cached_tasks_match": true,
+      "operation_requests": 1,
+      "review_status": "supported",
+      "blocking_issues": [],
+      "semantic_reason": "实际补充资料明确V/m并否认m/V和4g/cm³，与density-ratio及density-reference实质互斥。needs_review理由定位双方身份/原文，question_results/objective_results为空，不形成正式分数、Diagnosis或guard。"
+    }
+  ],
+  "blocking_issues": [],
+  "nonblocking_issues": [
+    {
+      "issue_id": "N_DENSITY1_STRUCTURE_SCOPE",
+      "finding": "Original first structure10/11 includes the01 tool-selection JSON draft; actual sixgrade and fiveformalDiagnosis first/last11/11, no output repair."
+    },
+    {
+      "issue_id": "N_DENSITY1_GENERIC_REPORT_HEADER",
+      "finding": "Originalreport.md generic 05/06 quality-review header does not describe this new suite. All six tasks are ordinary_grading;06 text evaluator needs_review, not separate quality_review service."
+    },
+    {
+      "issue_id": "N_DENSITY1_FIXED_CASE_PERSISTENCE_SCOPE",
+      "finding": "Evaluationrunner stores six projects/11tasks, with assessments/progress/transitions zero; it verifies fixed-case evaluation/guard, not live course completion."
+    }
+  ],
+  "approval_scope": "Exact six approved fixed cases under frozen04; no new human/release approval and no future normal course/Tutor/generated quiz/recovery approval."
+}

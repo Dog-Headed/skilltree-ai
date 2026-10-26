@@ -1,0 +1,102 @@
+{
+  "review_id": "day13-dev-v4-independent-output-review-20261022",
+  "review_type": "independent_ai_semantic_review",
+  "reviewed_on": "2026-10-22",
+  "human_output_review_claimed": false,
+  "holdout_case_contents_read": 0,
+  "source_report_sha256": "48e51af4ec7cb753f4161dfe1be6a98c33b5965bc3e5449c5bbf59408c61f0fd",
+  "source_metadata": {
+    "date": "2026-10-22T04:45:30.758890+00:00",
+    "mode": "real",
+    "split": "debug",
+    "baseline_commit": "97d8bc4c03cd33af13bdfcb7e4858c968833b939",
+    "protocol_sha256": "4eed8733434af653464efd8c9025c586f33f4e84f9530463bbd838994b3e3502",
+    "standards_sha256": "187c0e4fd894e0b43b374b63365c872f63c792647d8372a12e9783956731dc8d",
+    "freeze_sha256": null,
+    "reference_status": "approved_by_user",
+    "holdout_used_for_development": false,
+    "model_identity": {
+      "configured_model": "deepseek-flash",
+      "endpoint_sha256": "a34e2a4708ed1c61008a151688838dcf1c44d4e7f08054633e72ba7c0b16cfc1",
+      "sdk_retries": 0,
+      "timeout_seconds": 45
+    },
+    "runtime_fingerprint_scope": "core runtime, policies, original three source/case packs, development protocol/standards; novel data is hashed separately",
+    "input_cases": {
+      "evals/v3/python/cases/python_debug_01.json": "106986a3d1510e20ed9027dd11423501fe32cafba2673203147b37346ce529f3",
+      "evals/v3/python/cases/python_debug_02.json": "340cf42fab1d9dc32aa9579742789ee18f6d4e448df76171309c7e2a2edfcfd3",
+      "evals/v3/python/cases/python_debug_03.json": "d88d44829a66f27505121b372d29b061a7b3ef339ed989cab13b6394b6536ded",
+      "evals/v3/python/cases/python_debug_04.json": "be4d8a5a0e22b18b9a42bec3d40005d23993073f6e5bde765b0e2528bc76441e",
+      "evals/v3/python/cases/python_debug_05.json": "b333031ed2b85a6b746497ed1e7a0fa1cbd308af11a4070b44d31ab01332f430",
+      "evals/v3/python/cases/python_debug_06.json": "321d4ded0e681524a3a3e12d60a40ab511792dd7d74c9bb4527ab9c800939f9b",
+      "evals/v3/python/cases/python_debug_07.json": "f22aa6ef58d85d702b01d0821e73a0daaf2ca5964f3568119fed72e96bc4fb22",
+      "evals/v3/python/cases/python_debug_08.json": "90cb41698243dbe8ff5acec51bacc2ddc38fdd93523788c5e0e8292ca78fb262",
+      "evals/v3/mathematics/cases/mathematics_debug_01.json": "4058c5df389e0e8523cae1f99ed3f85a9178f3910399b8cbe3796f77ceb607cc",
+      "evals/v3/mathematics/cases/mathematics_debug_02.json": "7a75b6be054c9e73563f56a95f15fcbc939dfcd0666abefd7a6c6a5de240e4f1",
+      "evals/v3/mathematics/cases/mathematics_debug_03.json": "40271a605457e8c6c33a505fab99d9c1dfa7534fd502f7ec32c9811c0f48a702",
+      "evals/v3/mathematics/cases/mathematics_debug_04.json": "4251e00c757e924cc73e129bfc3166e08137b592a354c53a2b409887f78b69ed",
+      "evals/v3/mathematics/cases/mathematics_debug_05.json": "ac0a83ce4fd724071994e2de28242fecc4684220ab0dfdcec251f591db24c2a0",
+      "evals/v3/mathematics/cases/mathematics_debug_06.json": "770ab1acaa42b673f313d669640dfdf1e23783c89eb68fbe3435b47d90be8e19",
+      "evals/v3/mathematics/cases/mathematics_debug_07.json": "1a731742b4f3b35fb9e459e51442b9dbbacbd2cb0082b7118b70ae5715671908",
+      "evals/v3/mathematics/cases/mathematics_debug_08.json": "591aead7b7f9a48cfb714a93064d24a0d8b47693ae31cedaa1315ac4ed76a7f7",
+      "evals/v3/english/cases/english_debug_01.json": "e86ed15b5a40a321f0ad4ddc4d5efdb1ed9d5359f8c963b2045fdfb7c3e72931",
+      "evals/v3/english/cases/english_debug_02.json": "edaaaa1786819efd14a9ef33512774fdf6ff1b133f0867a861fff4879cce35c9",
+      "evals/v3/english/cases/english_debug_03.json": "60489f4a7a8461a15d6a392d51d281567db01f450aae4c2f674e73d6a85d6ec1",
+      "evals/v3/english/cases/english_debug_04.json": "c346ec9974aec368b57ad3cf7a5004e48d8e9de9486c0b8e003090d3c63e5299",
+      "evals/v3/english/cases/english_debug_05.json": "ae2cb76b0df937d5739ef76b304b2abf85d16a80eb1a41ab982a8be3f0b6e460",
+      "evals/v3/english/cases/english_debug_06.json": "d76cdd089b7271999969ed21e565fc0dfafd71dc652e2006b0b4caf8b46e7ecc",
+      "evals/v3/english/cases/english_debug_07.json": "173065c27c9395364e588348d5416b714379802f7142e8e87be857e8bc3fc9dd",
+      "evals/v3/english/cases/english_debug_08.json": "72b122d409de7f4551a5d4b3a751ca31a497ce1d5144bbf6fc968e34ddd8f65e"
+    },
+    "prompt_versions": {
+      "grading": "v3-day13-text-rubric-3",
+      "diagnosis": "v3-day13-diagnosis-3",
+      "review": "v3-day13-quality-review-1"
+    }
+  },
+  "subjects": {
+    "python": {
+      "core_decisions_and_citations_supported": true,
+      "automated_gates_passed": true,
+      "recommended_semantic_citation_review": "approved_independent_review",
+      "scope": "This v4 development run only; key conclusions and evidence, with nonblocking wording findings recorded. Not approval of v5, holdout, fourth topic or V3 release.",
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "Python02 overbroad claim about already correctly stated stop exclusion",
+        "Scores Python04/07 at approved 2-point error boundary"
+      ]
+    },
+    "mathematics": {
+      "core_decisions_and_citations_supported": true,
+      "automated_gates_passed": true,
+      "recommended_semantic_citation_review": "approved_independent_review",
+      "scope": "This v4 development run only; key conclusions and evidence, with nonblocking wording findings recorded. Not approval of v5, holdout, fourth topic or V3 release.",
+      "blocking_findings": [],
+      "nonblocking_findings": [
+        "Mathematics06 extra finding incorrectly suggests brief answer key alone invalidates step rubric"
+      ]
+    },
+    "english": {
+      "core_decisions_and_citations_supported": true,
+      "automated_gates_passed": true,
+      "recommended_semantic_citation_review": "changes_requested_feedback_mapping",
+      "scope": "This v4 development run only; key conclusions and evidence, with nonblocking wording findings recorded. Not approval of v5, holdout, fourth topic or V3 release.",
+      "blocking_findings": [
+        "English04 criterion labels misdescribed",
+        "English08 explanation error assigned to meaning/time criterion"
+      ],
+      "nonblocking_findings": [
+        "English07/08 score differences remain at approved tolerance boundary"
+      ]
+    }
+  },
+  "mechanical_checks": {
+    "anchors": 43,
+    "audit_findings": 12,
+    "final_outputs": 18
+  },
+  "release_approved": false,
+  "freeze_candidate_approved": false,
+  "can_enter_holdout": false,
+  "reason": "English diagnostic criterion explanations need correction; v5 independent review is required after generic context projection fix. Automatic outcome gates alone do not establish all wording is correct."
+}

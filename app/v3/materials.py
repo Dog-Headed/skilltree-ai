@@ -105,7 +105,8 @@ class MaterialService:
 
     def import_text(self, project_id: str, *, content: str, title: str,
                     source_description: str, request_id: UUID | str,
-                    source_id: str | None = None, visibility: str = "teaching") -> MaterialImportResult:
+                    source_id: str | None = None, visibility: str = "teaching",
+                    trust_note: str = "用户提供，未独立核验") -> MaterialImportResult:
         if not isinstance(content, str) or not content.strip("\ufeff \t\r\n"):
             raise MaterialInputError("请提供非空文字资料")
         if not isinstance(title, str) or not title.strip() or not isinstance(source_description, str) or not source_description.strip():
@@ -128,7 +129,7 @@ class MaterialService:
         proposed = SourceDocument(
             project_id=project_id, source_id=source_id, source_version=1,
             title=title, source_description=source_description, content=content,
-            content_hash=sha256(raw).hexdigest(), visibility=visibility,
+            content_hash=sha256(raw).hexdigest(), visibility=visibility, trust_note=trust_note,
         )
         document_kwargs = proposed.model_dump(exclude={"source_version"})
         saved = self.repository.import_source_version(document_kwargs, chunk_document, request_id=key)
@@ -164,7 +165,7 @@ class MaterialService:
                                 source_description=source_description, request_id=request_id,
                                 source_id=source_id, visibility=visibility)
 
-    def catalog(self, project_id: str) -> list[dict]:
+    def catalog(self, project_id: str, *, exclude_source_ids=()) -> list[dict]:
         """Latest selected public sources, never answer-only/private material.
 
         The complete catalog either fits the server budget or is refused. A
@@ -182,6 +183,7 @@ class MaterialService:
                 latest[source.source_id] = source
         catalog = []
         for source_id in sorted(latest):
+            if source_id in exclude_source_ids:continue
             source = latest[source_id]
             if source.visibility != "teaching":
                 continue

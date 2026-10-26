@@ -1,0 +1,35 @@
+{
+  "version": "day13-protocol-1",
+  "approved_on": "2026-10-22",
+  "review_status": "approved_by_user",
+  "approval": {
+    "approved_on": "2026-10-22",
+    "timezone": "Asia/Shanghai",
+    "reviewed_by": "user",
+    "evidence": "Direct user reply in this task",
+    "user_reply": "认可修订与门槛，开始开发集真实评估",
+    "approved_review_sha256": "7ba56c71339aa2194107347b236d35d9faf239b9e3696e550dc1cc5af4ee073b",
+    "scope": "24 development cases and the displayed pre-run quality thresholds; not approval of old Day10 originals, holdout or a future fourth topic"
+  },
+  "order": [
+    "development",
+    "freeze",
+    "holdout",
+    "novel",
+    "clean_environment_and_recovery"
+  ],
+  "gates": {
+    "normalized_mae_max": 0.1,
+    "normalized_individual_error_max": 0.2,
+    "false_advance_max": 0,
+    "critical_false_advance_max": 0,
+    "complete_correct_false_reject_max": 0,
+    "unexpected_refusal_max": 0,
+    "action_agreement_min": 1.0
+  },
+  "report_denominators": "Each subject separately; 6 ordinary grading, 1 candidate grade audit, 1 item validity audit in development.",
+  "audit_scope": "Quality review is an explicit separate service; the ordinary Graph does not silently gain a second semantic gate.",
+  "pricing": null,
+  "cost_rule": "Do not invent billing figures. Keep provider usage and actual pricing provenance separate.",
+  "review_provenance_rule": "Human approval applies only to explicitly reviewed version hashes. Independent AI is not human approval."
+}

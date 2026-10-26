@@ -1,0 +1,141 @@
+{
+  "review_id": "day13-final-git-byte-preservation-independent-review",
+  "reviewer": "independent_ai_subagent",
+  "reviewed_at_utc": "2026-10-23T17:38:17.500794+00:00",
+  "review_status": "approved_independent_review",
+  "is_human_approval": false,
+  "release_approved": false,
+  "new_real_model_calls": 0,
+  "scope": "Final Git packaging attributes and byte-preserving export; no runtime, model, standards or raw changes by reviewer.",
+  "final_configuration": {
+    "path": ".gitattributes",
+    "sha256": "2c81822c68c3b772b44074b5c60ef36124f527b235340b9ecb5051cccaf23346",
+    "rule": "* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+    "semantics": "-text disables EOL conversion; it does not set binary/diff. whitespace retains blank-at-eol,blank-at-eof,space-before-tab checks and recognizes terminal CR as part of CRLF. No runtime behavior changes.",
+    "attribute_checks": [
+      ".gitattributes: text: unset",
+      ".gitattributes: diff: unspecified",
+      ".gitattributes: filter: unspecified",
+      ".gitattributes: working-tree-encoding: unspecified",
+      ".gitattributes: whitespace: blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+      "README.md: text: unset",
+      "README.md: diff: unspecified",
+      "README.md: filter: unspecified",
+      "README.md: working-tree-encoding: unspecified",
+      "README.md: whitespace: blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol",
+      "materials/v3/density_reading_course_v2/assessment_private.md: text: unset",
+      "materials/v3/density_reading_course_v2/assessment_private.md: diff: unspecified",
+      "materials/v3/density_reading_course_v2/assessment_private.md: filter: unspecified",
+      "materials/v3/density_reading_course_v2/assessment_private.md: working-tree-encoding: unspecified",
+      "materials/v3/density_reading_course_v2/assessment_private.md: whitespace: blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol"
+    ],
+    "git_diff_check_exit_code": 0
+  },
+  "seven_current_variant_independent_blob_probes": [
+    {
+      "path": "app/v3/diagnosis.py",
+      "raw_blob_sha1": "647681476429abcbae0e881ba3b0112c25a908eb",
+      "filtered_blob_sha1": "647681476429abcbae0e881ba3b0112c25a908eb",
+      "sha256": "9af54ba7b722d0ba123cf12ad197e6cc32735759fd169a61ad9064a080fe143f",
+      "equal": true,
+      "same_as_original_probe_variant": true
+    },
+    {
+      "path": "materials/v3/python/teaching.md",
+      "raw_blob_sha1": "b82bef52cb814d305373c3e3a82d564b0c17ee7f",
+      "filtered_blob_sha1": "b82bef52cb814d305373c3e3a82d564b0c17ee7f",
+      "sha256": "b42b057efa2f726124fada0ba9a2bd419f16973392f12b22cbebb1d394bc18fc",
+      "equal": true,
+      "same_as_original_probe_variant": true
+    },
+    {
+      "path": "materials/v3/python/manifest.json",
+      "raw_blob_sha1": "a99afdd263dd9c516e9e48880d3c57cb204ca072",
+      "filtered_blob_sha1": "a99afdd263dd9c516e9e48880d3c57cb204ca072",
+      "sha256": "1778ace2c7f3cf1717a3dd8fd93d0a9cc1ee1f249e17655087fb4ab9b7eb9d84",
+      "equal": true,
+      "same_as_original_probe_variant": true
+    },
+    {
+      "path": "materials/v3/density_reading_course_v2/assessment_private.md",
+      "raw_blob_sha1": "88e80eaec6e249eeaf1c396a760d2176338d6374",
+      "filtered_blob_sha1": "88e80eaec6e249eeaf1c396a760d2176338d6374",
+      "sha256": "f089c960cef657399b98fa934396e0f59ad1bf487b969ec203246ff38e0508c3",
+      "equal": true,
+      "same_as_original_probe_variant": true
+    },
+    {
+      "path": "evals/v3/python/cases/python_debug_01.json",
+      "raw_blob_sha1": "53a0b811538253abf5efaa3cb0ff4c1bac5cf448",
+      "filtered_blob_sha1": "53a0b811538253abf5efaa3cb0ff4c1bac5cf448",
+      "sha256": "106986a3d1510e20ed9027dd11423501fe32cafba2673203147b37346ce529f3",
+      "equal": true,
+      "same_as_original_probe_variant": true
+    },
+    {
+      "path": "evals/v3/day13/density_standards.json",
+      "raw_blob_sha1": "30e56d7af85c07a6551e8a93ff82a0bf657f4966",
+      "filtered_blob_sha1": "30e56d7af85c07a6551e8a93ff82a0bf657f4966",
+      "sha256": "52663113ebdd48bc32cc58dc7bfec2939baf80439b8eac0a55bad9318ec51086",
+      "equal": true,
+      "same_as_original_probe_variant": true
+    },
+    {
+      "path": ".gitattributes",
+      "raw_blob_sha1": "aa0f30b5d56ffeddaf128312c321de081df3e63e",
+      "filtered_blob_sha1": "aa0f30b5d56ffeddaf128312c321de081df3e63e",
+      "sha256": "2c81822c68c3b772b44074b5c60ef36124f527b235340b9ecb5051cccaf23346",
+      "equal": true,
+      "same_as_original_probe_variant": false
+    }
+  ],
+  "original_seven_probe_evidence_preserved": {
+    "path": "work/day13-20261024/git-byte-preservation.json",
+    "sha256": "ea38230b511804869b139ef0fd499ed37491dc450b2be86aedd8d1ab7c44f7b2",
+    "note": "Original probe used prior attributes variant; current seven were independently rerun. Final .gitattributes blob differs from original probe but raw and filtered remain equal."
+  },
+  "full_final_export": {
+    "path": "work/day13-20261024/git-full-export-final-evidence.json",
+    "sha256": "034438a68cdc7276a3e550361d70187b022baf621ba23b42ffc98243833acc97",
+    "source_and_export_payload_files_independently_verified": 353,
+    "isolated_index_exact_path_set": true,
+    "core_autocrlf": true,
+    "export_directory": "D:/SkillTree_AI/day13-isolated-20261024/git-byte-check-final/export",
+    "source_git_directory_distinct": true,
+    "parent_source_index_not_modified_attestation": true,
+    "commit_or_push": false,
+    "clean_dependencies_smoke": {
+      "statuses": {
+        "/": 200,
+        "/projects": 200,
+        "/capabilities": 200,
+        "/legacy/projects": 200
+      },
+      "imported_module": "D:\\SkillTree_AI\\day13-isolated-20261024\\git-byte-check-final\\export\\app\\v3\\learning_api.py",
+      "python": "D:\\SkillTree_AI\\day13-isolated-20261024\\clean-install-v2\\code\\.venv\\Scripts\\python.exe",
+      "model_calls": 0
+    }
+  },
+  "freeze04": {
+    "path": "docs/v3/day13/CANDIDATE_FREEZE_04.json",
+    "sha256": "91dcea124db6fe36f051c7a19739801e0fb622957365bf74d621944d9a19ddf2",
+    "source_and_export_files_verified": 116,
+    "mismatches": []
+  },
+  "changes_between_original_and_final_export_variants": [
+    ".gitattributes",
+    "README.md",
+    "docs/v3/day13/ENGINEERING_RESULTS.md",
+    "docs/v3/day13/FINAL_DELIVERY.md"
+  ],
+  "variant_change_scope": "Attributes and README/packaging documentation only; none of the116 frozen files differ.",
+  "blocking_issues": [],
+  "nonblocking_issues": [],
+  "real_evaluation_rerun_required": false,
+  "rerun_reason": "Git packaging settings and documentation do not alter actual runtime, Prompt, frozen reference or model output bytes; independent116 frozen hash check passes. Existing content conclusions remain scoped to original review.",
+  "scope_limits": [
+    "353 describes the captured allowed-source payload before these two new review files; final archive must generate its own current file list/hash.",
+    "Attributes do not retroactively rewrite old Git blobs/history. New add/checkout of current bytes is what was tested.",
+    "No claim of new unseen evaluation or release approval. Old failures, restore-sidecar incident and raw evidence remain preserved."
+  ]
+}

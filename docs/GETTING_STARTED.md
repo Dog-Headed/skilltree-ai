@@ -2,7 +2,7 @@
 
 The [English README](../README.md#quick-start) and [中文 README](../README.zh-CN.md#快速开始) cover installation with Python 3.11. Commands below run from the repository root. On Windows, use `.\.venv\Scripts\python.exe` wherever `python` appears; on macOS/Linux, activate `.venv` first.
 
-Clone with Git and retain `.gitattributes`: it preserves LF for frozen material Markdown and CRLF for evaluation-case JSON and pack manifests, matching the existing byte hashes and aggregate freeze digest. Do not apply a blanket newline conversion to these datasets.
+Clone with Git and retain `.gitattributes`: it preserves the original bytes of versioned files, including their existing LF/CRLF formats, to match frozen hashes. Do not apply a blanket newline conversion to source files or datasets.
 
 ## Model configuration
 
@@ -66,7 +66,7 @@ Do **not** run fresh-install initialization on every launch. Normal startup only
 
 The migration code refuses incompatible checkpoints; these commands are not a universal converter. See the [preparation contract](v3/DAY10_PREPARATION.md) and [learning runtime notes](v3/DAY11_RUNTIME.md) before upgrading older stores. Back up all three current V3 databases together while the service is stopped.
 
-V2 files remain under `data/learning.sqlite` and `data/checkpoints.sqlite`. The V3 browser provides a read-only history view; it does not resume V2 checkpoints or convert them into V3 projects. Never pass the V2 `data` directory as a V3 root.
+V2 files remain under `data/learning.sqlite` and `data/checkpoints.sqlite`. The V2 history entry has been removed from the browser. Existing V2 data and the compatibility read API remain; V3 does not resume V2 checkpoints or convert them into V3 projects. Never pass the V2 `data` directory as a V3 root.
 
 ## Demo without a model key
 
@@ -82,14 +82,14 @@ This is a workflow demonstration, not evidence of real teaching, grading, or sub
 
 ## Browser workflow
 
-1. Choose a sample topic or enter a text topic, scope, background, and assessment preferences.
-2. Create the record, import the matching example pack or your own materials, and confirm the profile. TXT/Markdown uploads must be UTF-8; PDFs and Word documents are not accepted.
+1. Enter a learning goal and optional prior knowledge. AI will propose the subject, bounded first unit, and evaluation requirements; no scope or mode selector is required.
+2. Create the record and optionally import an example pack or your own materials, then ask AI to prepare the plan. Without teaching materials, AI drafts labeled notes; organization-specific rules require actual documents. TXT/Markdown uploads must be UTF-8; PDFs and Word documents are not accepted.
 3. Review the generated skill dependencies, source coverage, and assessment criteria. Confirm and freeze the plan before formal learning.
 4. Start a lesson, ask questions, then request and answer an assessment. Numeric and explanation objectives are assessed separately when required by the plan.
-5. Read feedback and follow the permitted next action: advance, remediate, review prerequisites, or resolve an uncertain assessment. Exploration provides text Q&A without formal completion.
+5. Read feedback and follow the permitted next action: advance, remediate, review prerequisites, or resolve an uncertain assessment. Legacy exploration records still provide text Q&A without formal completion; the new creation flow has one entry point and preserves evaluator limits.
 6. Reopen the record to continue. Refresh reads saved state. If a response is lost, inspect the recovered state before choosing another action.
 
-The three bundled packs and their evaluation standards remain drafts pending human review. Importing a source does not establish that its contents or a model's conclusions are correct.
+Day 13 reference standards were approved by the user before the corresponding real-model runs; evaluation roles, exposed cases, revalidation, and failures are recorded separately in [the delivery report](v3/day13/FINAL_DELIVERY.md). This finite review does not certify arbitrary materials or model answers. See [goal-first creation](v3/GOAL_FIRST_ONBOARDING.md) for the current increment and verification.
 
 ## Troubleshooting
 
@@ -101,6 +101,6 @@ The three bundled packs and their evaluation standards remain drafts pending hum
 | Browser still shows an older version | Stop the old server in its terminal, restart the intended entry point, then reload. |
 | Port is already in use | Stop the service you started or use the alternate launcher with an unused port. |
 | Planning or text scoring fails | Check all `.env` values and provider support for JSON output/tool calling. Model output still must satisfy application validation. |
-| Requested task cannot be formally assessed | Check the browser's capability panel; adjust the scope or choose exploration when offered. |
+| Requested task cannot be formally assessed | Check the browser's capability panel; adjust the goal to a supported text-based task. The UI does not offer a separate mode selector. |
 
 The current [API contract](v3/DAY12_API.md) documents routes, state-specific actions, public fields, and recovery behavior.

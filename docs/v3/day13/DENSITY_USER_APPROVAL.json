@@ -1,0 +1,28 @@
+{
+  "approved_at_utc": "2026-10-23T16:32:28.953985+00:00",
+  "client_approved_on": "2026-10-24",
+  "reviewed_by": "user",
+  "evidence": "Direct reply to density reference question call_eb6bb579468940d48e7907e6fcde6f89 in this conversation",
+  "user_reply": "认可六例标准，继续真实评价",
+  "scope": "Density reading two dependent nodes and six fixed answers/rubrics/actions; not SQL approval",
+  "approved_draft_files": {
+    "docs/v3/day13/DENSITY_REFERENCE_REVIEW.md": "9f0300f7f6f34b8cbffd5cf657e783828e57c8acb895a6bda86bdc2518492d11",
+    "materials/v3/density_reading/manifest.json": "b3e2e3a1d317e7dca4a41025ad5e53b3cff0ed14f4ed1249fc9a4bd59168d72d",
+    "evals/v3/day13/density_standards.json": "20b88451565959f78a2e3d3b8ec10f2c0ef9e50629cc3961ae99ff383957bbc3",
+    "configs/v3/novel/density_reading.json": "2449422c65e98cf65bae0de4525e1285c1c2ddd1653165b9d073ca614bc7f174",
+    "evals/v3/density_reading/cases/density_reading_novel_01.json": "ccd4a50fc58744975abb73592e53e258944c234353ee4a687f0d22a89fd74e85",
+    "evals/v3/density_reading/cases/density_reading_novel_02.json": "b5d83d991d0e8db245a9377005a88018ce02b84a2c0839527342d65eb5d615b8",
+    "evals/v3/density_reading/cases/density_reading_novel_03.json": "0ecd9d80e6da400216fdaba1f16bcaaddc5e8467974123e28da1a1ae258ca2a3",
+    "evals/v3/density_reading/cases/density_reading_novel_04.json": "ae2cf85eb1000308e8f4b680a8a3564c7ec7001568e74f11c46e71667de2f5f8",
+    "evals/v3/density_reading/cases/density_reading_novel_05.json": "eccfd7ba249a0c211b22bc03b828d1ff1d1750fcc50c49f2d3021d70b1b191ae",
+    "evals/v3/density_reading/cases/density_reading_novel_06.json": "0afaced11a56005efd4b9ecff8f323c82ee0a7b314153ecae68d3c376f5ae93b"
+  },
+  "preserved_draft_directory": "work\\day13-20261024\\density-approved-draft",
+  "approved_files": {
+    "evals/v3/day13/density_standards.json": "52663113ebdd48bc32cc58dc7bfec2939baf80439b8eac0a55bad9318ec51086",
+    "materials/v3/density_reading/manifest.json": "bc63c86bdd717dfb0f3617c77e9c1b56bbc516cee1bdeaef8bbdc4f71f362d49",
+    "configs/v3/novel/density_reading.json": "96ef503277e6950072a0b38dd1ceb02e2768d5dec8d57edf869bdd072b94aaf2"
+  },
+  "independent_pre_review_sha256": "a848357430df6cd4cc9fa5d20ba0e3cf6cc2e00aab60079298baa2ecdd59dd29",
+  "only_changed_fields": "review_status top level and each standard; no answer/rubric/threshold changes"
+}

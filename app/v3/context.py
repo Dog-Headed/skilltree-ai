@@ -57,7 +57,54 @@ class ContextBuilder:
         """Trusted evaluator entry; private references stay internal."""
         return self._build(project_id, node_id, objective_id, purpose="grading", query=query)
 
-    def _build(self, project_id, node_id, objective_id, *, purpose, query):
+    def validate_candidate_bindings(self, project_id, extra_links, *, policy):
+        """Read-only preflight using the same complete context as frozen learning.
+
+        Do this before accepting a confirmation, and again inside freeze's
+        transaction, so oversized references remain editable draft data.
+        """
+        project = self.repository.get_project(project_id)
+        plan = LearningPlan.model_validate(project['candidate_plan'])
+        links = [NodeMaterialLink.model_validate(link) for link in extra_links]
+        for node in plan.nodes:
+            for objective in node.objectives:
+                links.extend(NodeMaterialLink(project_id=project_id, node_id=node.node_id,
+                    objective_id=objective.objective_id, chunk_id=chunk_id, purpose='teaching')
+                    for chunk_id in objective.source_chunk_ids)
+        sources = {(d['source_id'], d['source_version']): d
+                   for d in self.repository.list_sources(project_id, include_private=True)}
+        records = {}
+        for link in links:
+            chunk = self.repository.get_chunk(project_id, link.chunk_id, include_private=True)
+            if chunk is None:
+                raise ValueError('Unknown project material binding')
+            records.setdefault((link.node_id, link.objective_id), []).append({
+                'source': sources[(chunk['source_id'], chunk['source_version'])],
+                'chunk': chunk, 'purpose': link.purpose})
+        from .assessment import quiz_generation_messages
+        from .contracts import EvaluationPolicy
+        policy = EvaluationPolicy.model_validate(policy)
+        selected_sources = {(r['source']['source_id'], r['source']['source_version']): r['source']
+                            for group in records.values() for r in group}
+        snapshot = FrozenSnapshot(profile_version=project['profile']['profile_version'], plan_version=plan.plan_version,
+            policy_id=policy.policy_id, policy_version=policy.policy_version,
+            source_manifest=[{k: d[k] for k in ('source_id', 'source_version', 'content_hash')}
+                             for d in selected_sources.values()], evaluator_manifest=policy.evaluators)
+        for node in plan.nodes:
+            assessment_contexts = {}
+            for objective in node.objectives:
+                for purpose in ('teaching', 'assessment', 'grading'):
+                    selected = [r for r in records.get((node.node_id, objective.objective_id), [])
+                                if r['purpose'] in {'teaching', purpose}]
+                    context = self._build(project_id, node.node_id, objective.objective_id,
+                                          purpose=purpose, query=None, records=selected)
+                    if purpose == 'assessment':
+                        assessment_contexts[objective.objective_id] = context
+            quiz_generation_messages(project_id=project_id, node=node,
+                assessment_id='assessment_' + '0' * 32, snapshot=snapshot,
+                policy=policy, contexts=assessment_contexts)
+
+    def _build(self, project_id, node_id, objective_id, *, purpose, query, records=None):
         project = self.repository.get_project(project_id)
         if project is None:
             raise KeyError(project_id)
@@ -75,7 +122,8 @@ class ContextBuilder:
             raise ValueError("草稿资料已改变，旧计划上下文需要重新规划")
         if snapshot is not None and snapshot.plan_version != plan.plan_version:
             raise ValueError("当前计划不符合冻结版本")
-        records = self.repository.get_bound_chunks(project_id, node_id, objective_id, purpose)
+        if records is None:
+            records = self.repository.get_bound_chunks(project_id, node_id, objective_id, purpose)
         blocks = []
         citations = []
         public_citations = []

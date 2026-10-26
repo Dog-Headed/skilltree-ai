@@ -168,6 +168,35 @@ def test_cross_project_history_is_never_returned_or_used_as_evidence():
     assert context["tool_summary"]["queries"][0]["status"] == "no_history"
 
 
+def test_queried_question_and_feedback_survive_into_fresh_final_call_without_private_key():
+    case=make_case(prerequisites=['foundation'])
+    record=history_record(case)
+    record['quiz']['questions'][0]['prompt']='计算-8除以-2并解释。'
+    record['evaluation']['question_results'][0]['feedback']='历史符号判断有误。'
+    model=ToolModel([ai(query('read')),ai()],[case['diagnosis']])
+    run(model,case=case,history=[record])
+    context=json.loads(model.final_calls[0][1].content)
+    historical=context['queried_history_records'][0]
+    assert historical['questions'][0]['prompt']=='计算-8除以-2并解释。'
+    assert historical['question_results'][0]['feedback']=='历史符号判断有误。'
+    assert 'answer_key' not in json.dumps(context) and 'rubric' not in json.dumps(historical['questions'])
+    unqueried=ToolModel([ai()],[case['diagnosis']])
+    run(unqueried,case=case,history=[record])
+    assert json.loads(unqueried.final_calls[0][1].content)['queried_history_records']==[]
+
+
+def test_current_diagnosis_receives_frozen_criterion_meanings_not_just_numbers():
+    from tests.test_v3_guard import text_case
+    case=text_case()
+    model=FinalOnly([case['diagnosis']])
+    run(model,case=case)
+    context=json.loads(model.final_calls[0][1].content)
+    question=context['frozen_questions'][0]
+    assert question['rubric'][0]['description']=='解释必要联系'
+    assert question['rubric'][0]['criterion_id']=='essential'
+    assert 'answer_key' not in json.dumps(question)
+
+
 def test_queried_history_ids_are_namespaced_and_completion_does_not_exclude_weakness():
     case = make_case(prerequisites=["foundation"])
     case["completed_node_ids"] = ["foundation"]

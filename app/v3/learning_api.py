@@ -13,13 +13,14 @@ from .contracts import ContractModel, Identity
 from .execution import project_execution
 from .learning import LearningService, LearningInput
 from .learning_repository import LearningRepository
-from .materials import MaterialService
+from .materials import ContextBudgetExceeded, MaterialService
 from .preparation import PreparationService
 from .preparation_api import CreateDraft, PreparationInput, SourceUpload, RetryInput
 from .repository import ConflictError
 from .storage import V3Paths, PROJECT_ROOT
 from .public_view import project_view, source_detail
 from . import project_management
+from .reference_bindings import reference_id
 
 logger=logging.getLogger(__name__)
 STATIC=Path(__file__).resolve().parents[1]/'static'
@@ -91,6 +92,11 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
     async def missing(request,exc):
         return JSONResponse(status_code=404,content={'error':{'code':'not_found','message':'项目或记录不存在。'}})
 
+    @app.exception_handler(ContextBudgetExceeded)
+    async def context_limit(request,exc):
+        return JSONResponse(status_code=422,content={'error':{'code':'context_limit',
+            'message':'所选资料超过上下文上限，计划尚未冻结。请排除较大评价参考，或导入精简参考后重新规划。'}})
+
     @app.exception_handler(ValueError)
     async def invalid(request,exc):
         return JSONResponse(status_code=422,content={'error':{'code':'invalid_input','message':'当前状态或输入不允许此操作。'}})
@@ -128,7 +134,8 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
         pid='v3_'+payload.request_id.hex
         with project_execution(pid,paths),LearningRepository(paths) as repo:
             if project_management.metadata(repo,pid).get('deleted_at'):raise ConflictError('Deleted creation request')
-            preparation.create(str(payload.request_id),payload.profile)
+            preparation.create(str(payload.request_id),payload.resolved_profile(),
+                guided_intent=payload.intent.model_dump() if payload.intent else None)
             return read(pid)
 
     @app.get('/projects/{project_id}')
@@ -172,6 +179,7 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
 
     @app.post('/projects/{project_id}/sources')
     def upload(project_id:str,payload:SourceUpload):
+        if payload.source_id and payload.source_id.startswith('ai_notes_'):raise ValueError('Generated source identity is server-owned')
         data=payload.model_dump(mode='json',exclude_none=True);data.pop('filename',None);raw=data.pop('data_base64',None)
         with project_execution(project_id,paths),LearningRepository(paths) as repo:
             visible(project_id)
@@ -183,7 +191,9 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
                 except binascii.Error as exc:raise ValueError('Invalid encoding') from exc
                 result=materials.import_upload(project_id,data=decoded,filename=payload.filename,**data)
             else:result=materials.import_text(project_id,**data)
-        return {'imported':True,'reused':result.reused,'draft_revision':result.draft_revision}
+        response={'imported':True,'reused':result.reused,'draft_revision':result.draft_revision}
+        if result.document.visibility=='assessment_private':response['private_reference_id']=reference_id(result.document.model_dump())
+        return response
 
     @app.get('/projects/{project_id}/sources')
     def sources(project_id:str):return read(project_id)['sources']

@@ -1,0 +1,165 @@
+{
+  "version": "day13-independent-final-1",
+  "review_status": "approved_by_user",
+  "validation_role": "unseen_final_holdout",
+  "approval": {
+    "approved_at": "2026-10-22T09:13:53.504128+00:00",
+    "timezone": "Asia/Shanghai",
+    "reviewed_by": "user",
+    "evidence": "Direct human reply in this conversation",
+    "user_reply": "认可复核稿，按顺序继续真实验证",
+    "review_document_sha256": "db99d85f34050a8754ffd09c41c1ededd6341a9908f1df8e55d8e240ae065bc3",
+    "scope": "dev-v7 output review conclusions with disclosed two-point differences; original exposed12 and new independent final12 reference answers, rubrics and expected actions. Not blanket approval of model outputs not yet generated or a fourth theme.",
+    "exposed_standards.json": {
+      "approved_draft_sha256": "ade5102181eb6e28f8976e1d07685c2f90a67b719d6f50bc09533158bc551d09",
+      "approved_file_sha256": "b3a8b01f1edda6b937bca396edf0636929535d86d6a40627ebb898047d0828b8"
+    },
+    "approved_draft_sha256": "df99f181b5aec7b72cfae0d9a3a512eb50557b9d42931a5dc4005397aa8063c5"
+  },
+  "cases": {
+    "python_holdout_final01": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "python_holdout_final02": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10,
+      "critical_error": true,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "python_holdout_final03": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 90,
+      "max_score": 100,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "python_holdout_final04": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_holdout_final01": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 20,
+      "max_score": 20,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_holdout_final02": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10,
+      "critical_error": true,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_holdout_final03": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 90,
+      "max_score": 100,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "mathematics_holdout_final04": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "english_holdout_final01": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "english_holdout_final02": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 6,
+      "max_score": 10,
+      "critical_error": true,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "english_holdout_final03": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 90,
+      "max_score": 100,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "english_holdout_final04": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "phase": "holdout_reference_review_only",
+  "candidate_freeze_sha256": "c8207e0c1c0c91f2007212df6b5656446e3f952a783eaa05ca4a575e52f1b50f",
+  "candidate_frozen_at": "2026-10-22T05:02:27.819090+00:00",
+  "first_holdout_contents_opened_at": "2026-10-22T05:03:16.757596+00:00",
+  "opening_after_freeze": true,
+  "real_holdout_model_calls": 0,
+  "authorization": "Parent task explicitly authorized holdout specification review after candidate freeze; no execution permission yet."
+}

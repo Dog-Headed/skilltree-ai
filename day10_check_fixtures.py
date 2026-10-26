@@ -182,8 +182,10 @@ def validate_case(case, sections):
 
 def check_fixtures(root=ROOT):
     root = Path(root).resolve()
-    manifests = sorted((root / "materials" / "v3").glob("*/manifest.json"))
-    require({path.parent.name for path in manifests} == SUBJECTS, "Expected the three initial course packs")
+    # This command verifies the immutable Day10 dataset, not every later pack.
+    # New topics retain their own manifests and independent evaluation protocol.
+    manifests = [root / "materials" / "v3" / subject / "manifest.json" for subject in sorted(SUBJECTS)]
+    require(all(path.is_file() for path in manifests), "Expected the three initial course packs")
     summaries = []
     digest_items = []
     for manifest_path in manifests:

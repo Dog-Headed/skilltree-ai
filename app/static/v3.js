@@ -30,7 +30,7 @@
   const list = (value) => Array.isArray(value) ? value : [];
   const actions = () => list(state.view?.allowed_actions);
   const allowed = (action) => actions().includes(action);
-  const isLegacy = () => state.tab === 'legacy';
+  const isLegacy = () => false;
   const currentName = (p) => p?.display_name || p?.profile?.topic || p?.topic || p?.goal || '未命名学习';
   function el(tag, attrs = {}, ...children) {
     const node = document.createElement(tag);
@@ -104,7 +104,7 @@
     state.menu = menu; trigger.setAttribute('aria-expanded', 'true'); menu.querySelector('button').focus();
   }
   function renderList() {
-    $('current-tab').setAttribute('aria-selected', String(!isLegacy())); $('legacy-tab').setAttribute('aria-selected', String(isLegacy()));
+
     $('list-label').textContent = isLegacy() ? 'V2 只读历史记录' : '我的学习';
     const items = isLegacy() ? state.legacyProjects : state.projects; const target = $('project-list'); target.replaceChildren();
     if (!items.length) target.append(el('p', { class: 'empty', text: isLegacy() ? '暂无可读取的 V2 历史。' : '还没有学习记录，从一个目标开始。' }));
@@ -179,58 +179,46 @@
     }
     return root;
   }
-  function profileForm(profile = {}, { editing = false, action = 'update_profile', pack = null } = {}) {
+  function profileForm(profile = {}, { editing = false, action = 'update_profile', pack = null, guided = false } = {}) {
     const saved = editing ? null : storage.read('create-draft'); const p = Object.keys(profile).length ? profile : (saved || {});
     const form = el('form', { id: editing ? 'profile-edit-form' : 'create-form' });
-    const subject = input('subject_label', p.subject_label || '', { required: true, maxlength: 128, placeholder: '例如：Python、数学、英语、摄影…' });
-    const topic = input('topic', p.topic || '', { required: true, maxlength: 256, placeholder: '这一小单元想学什么？' });
-    const goal = textArea('goal', p.goal || '', { required: true, maxlength: 4000, placeholder: '例如：理解循环的执行过程，能解释每一步变量变化。' });
-    const bounded = textArea('bounded_goal', p.bounded_goal || '', { required: true, maxlength: 4000, placeholder: '明确本次做到什么程度，哪些内容留到以后。', rows: 3 });
-    const prior = textArea('prior', list(p.prior_knowledge?.self_reported).join('\n'), { maxlength: 8000, placeholder: '例如：看过变量和列表，但还不会写循环。' });
-    const scopeIn = textArea('scope_in', list(p.scope_in).join('\n'), { placeholder: '每行一项', maxlength: 12000 });
-    const scopeOut = textArea('scope_out', list(p.scope_out).join('\n'), { placeholder: '每行一项', maxlength: 12000 });
-    const mode = el('select', { name: 'learning_mode' }, el('option', { value: 'formal', text: '正式学习 · 依据资料测评与推进' }), el('option', { value: 'exploration', text: '探索讨论 · 不生成正式通过' })); mode.value = p.learning_mode || 'formal';
-    const checks = el('div', { class: 'capability-checks' });
-    const defaults = list(p.requested_capabilities).length ? p.requested_capabilities : ['choice_exact', 'text_rubric'];
-    for (const name of ['choice_exact', 'numeric_scalar', 'text_rubric']) {
-      const cap = state.capabilities.find(c => c.capability_id === name); const available = cap?.formal_assessment_available === true;
-      checks.append(el('label', { class: 'check-label' }, input('capability', name, { type: 'checkbox', checked: defaults.includes(name), disabled: !available }), el('span', { text: (capabilityNames[name] || name) + (available ? '' : '（暂不可用）') })));
-    }
-    const grid = el('div', { class: 'form-grid' }, field('学科 / 领域', subject), field('学习主题', topic), field('学习目标', goal, '', true),
-      field('本次确认的范围', bounded, '用于规划和确认，可在开课前调整。', true), field('已有基础（自述）', prior, '自述不等同于已通过的测评证据。', true), field('学习模式', mode),
-      el('div', { class: 'field' }, el('span', { text: '需要的评价方式' }), checks, el('small', { text: '只能选择服务端已经实现的能力；探索模式不进行正式评价。' })));
-    const advanced = el('details', { class: 'section-details' }, el('summary', { text: '范围、时间与语言设置' }));
-    const level = input('target_level', p.target_level || '入门', { required: true, maxlength: 128 });
+    const goal = textArea('goal', p.goal || '', { required: true, maxlength: 4000, rows: 3, placeholder: '例如：我想从零学习 Python，能自己写一个记账小工具。' });
+    const priorValue = typeof p.prior_knowledge === 'string' ? p.prior_knowledge : list(p.prior_knowledge?.self_reported).join('\n');
+    const prior = textArea('prior', priorValue, { maxlength: 4000, rows: 2, placeholder: '可以写“零基础”“不确定”，或简单说说已经会什么。' });
+    const grid = el('div', { class: 'form-grid' }, field('学习目标', goal, '只说你想学什么、希望做到什么，AI 来整理学科、范围和起步计划。', true), field('已有基础', prior, '可不填；自述用于调整起点，不代表已经通过测评。', true));
     const total = input('time_budget_minutes', p.time_budget_minutes || 120, { type: 'number', min: 1, max: 10080, required: true });
     const session = input('session_minutes', p.session_minutes || 30, { type: 'number', min: 1, max: 480, required: true });
-    const teaching = input('teaching_language', p.language?.teaching || 'zh-CN', { required: true, maxlength: 64 });
-    const answering = input('answering_language', p.language?.answering || 'zh-CN', { required: true, maxlength: 64 });
-    advanced.append(el('div', { class: 'form-grid' }, field('本次包含', scopeIn), field('本次不包含', scopeOut), field('目标水平', level), field('总学习时间（分钟）', total), field('单次时间（分钟）', session), field('讲解语言', teaching), field('作答语言', answering)));
-    form.append(grid, advanced);
-    if (pack) form.append(el('p', { class: 'welcome-note', text: '已填入示例档案。创建后可显式导入配套公开资料，再确认并规划。' }));
-    const submit = el('button', { type: 'submit', class: 'btn primary', text: editing ? '保存学习档案' : '创建学习记录', disabled: state.busy });
-    form.append(el('div', { class: 'actions' }, submit));
+    const advanced = el('details', { class: 'section-details' }, el('summary', { text: '时间安排（可选）' }), el('div', { class: 'form-grid' }, field('总学习时间（分钟）', total), field('单次时间（分钟）', session)));
+    form.append(grid, advanced, el('p', { class: 'muted-line', text: '创建后可直接让 AI 准备，也可以先上传讲义或内部培训文件。没有资料时整理通用知识；具体公司制度以实际文件为准。' }));
+    if (pack) form.append(el('p', { class: 'welcome-note', text: '已填入示例目标，可继续编辑。示例资料可在创建后按需导入。' }));
+    form.append(el('div', { class: 'actions' }, el('button', { type: 'submit', class: 'btn primary', text: editing ? '保存学习档案' : '创建学习记录', disabled: state.busy })));
     function collect() {
-      const selected = [...checks.querySelectorAll('input:checked:not(:disabled)')].map(c => c.value);
-      return { subject_label: subject.value.trim(), topic: topic.value.trim(), goal: goal.value.trim(), bounded_goal: bounded.value.trim(),
-        prior_knowledge: { self_reported: lines(prior.value), assessed_evidence: list(p.prior_knowledge?.assessed_evidence) },
-        target_level: level.value.trim(), language: { teaching: teaching.value.trim(), answering: answering.value.trim() },
-        time_budget_minutes: Number(total.value), session_minutes: Number(session.value), scope_in: lines(scopeIn.value), scope_out: lines(scopeOut.value),
-        learning_mode: mode.value, requested_capabilities: mode.value === 'exploration' ? ['text_explanation', 'text_question_answer'] : selected,
-        profile_version: editing ? Number(p.profile_version || 1) : 1 };
+      return { goal: goal.value.trim(), prior_knowledge: prior.value.trim(), time_budget_minutes: Number(total.value), session_minutes: Number(session.value) };
     }
-    form.addEventListener('input', () => { if (!editing) storage.write('create-draft', collect()); });
+    if (!editing) form.addEventListener('input', () => storage.write('create-draft', collect()));
     form.addEventListener('submit', async event => {
       event.preventDefault(); if (state.busy || !form.reportValidity()) return;
-      const profileData = collect();
-      if (profileData.session_minutes > profileData.time_budget_minutes) { showMessage('单次学习时间不能超过总学习时间。', 'warn'); session.focus(); return; }
-      if (profileData.learning_mode === 'formal' && !profileData.requested_capabilities.length) { showMessage('正式学习至少需要一个已实现的评价方式。', 'warn'); return; }
-      if (editing) await command(action, { profile: profileData });
-      else {
-        const encoded = JSON.stringify(profileData); const previous = storage.read('creation-request'); const requestId = previous?.profile === encoded ? previous.request_id : uuid();
-        storage.write('creation-request', { request_id: requestId, profile: encoded });
+      const intent = collect();
+      if (intent.session_minutes > intent.time_budget_minutes) { showMessage('单次学习时间不能超过总学习时间。', 'warn'); session.focus(); return; }
+      if (editing) {
+        const updated = { ...p, goal: intent.goal, prior_knowledge: { self_reported: intent.prior_knowledge ? [intent.prior_knowledge] : [], assessed_evidence: list(p.prior_knowledge?.assessed_evidence) }, time_budget_minutes: intent.time_budget_minutes, session_minutes: intent.session_minutes,
+          bounded_goal: guided ? null : p.goal === intent.goal ? p.bounded_goal : intent.goal };
+        await command(action, { profile: updated });
+      } else {
+        const encoded = JSON.stringify(intent); let previous = storage.read('creation-request');
+        if (previous?.profile && !previous.intent) {
+          // A pending request from the old form has a different HTTP contract.
+          // Resolve it first; never replay its identity with a new payload.
+          try { const old = await get('/projects/' + encodeURIComponent(creationProjectId(previous))); finishCreation(old.project_id); previous = null; }
+          catch (error) {
+            if (error.status === 404) { storage.remove('creation-request'); previous = null; }
+            else { showMessage('上次创建结果暂时无法确认，请恢复连接后先刷新记录，再创建学习。', 'warn'); return; }
+          }
+        }
+        const requestId = previous?.intent === encoded ? previous.request_id : uuid();
+        storage.write('creation-request', { request_id: requestId, intent: encoded });
         state.selectedPack = pack; state.tab = 'current';
-        await write('/projects', { request_id: requestId, profile: profileData }, { busyText: '正在创建学习档案…', success: '学习档案已创建。请核对范围并准备资料。', after: result => {
+        await write('/projects', { request_id: requestId, intent }, { busyText: '正在保存目标和基础…', success: '学习记录已创建。可选上传资料，或直接让 AI 整理计划。', after: result => {
           if (result?.project_id) { finishCreation(result.project_id); state.id = result.project_id; state.view = result; storage.remove('create-draft'); }
         } });
       }
@@ -254,7 +242,7 @@
     const profile = view.profile || {}; const root = el('div', { class: 'page-heading' }, el('div', {}, el('div', { class: 'eyebrow', text: (profile.subject_label || 'LEARNING') + ' / ' + (view.version === 'v2' || isLegacy() ? 'V2 HISTORY' : 'V3 LEARNING') }),
       el('h1', { text: currentName(view) }), el('p', { text: profile.bounded_goal || profile.goal || view.goal || '' })),
       el('div', { class: 'heading-tags' }, chip(labels[view.page_state] || '学习记录', view.page_state === 'completed' ? 'green' : view.page_state === 'error' ? 'red' : 'cyan'),
-        chip(profile.learning_mode === 'exploration' ? '探索 · 不计正式通过' : isLegacy() ? '只读' : '正式学习', profile.learning_mode === 'exploration' || isLegacy() ? 'amber' : '')));
+        chip(profile.learning_mode === 'exploration' ? '当前仅讲解' : view.learning_basis === 'ai_generated' ? 'AI 整理内容' : view.learning_basis === 'provided_material' ? '依据资料学习' : '学习与练习', profile.learning_mode === 'exploration' || isLegacy() ? 'amber' : '')));
     return root;
   }
   function flow(view) {
@@ -263,7 +251,9 @@
   }
   function profileSummary(view) {
     const p = view.profile || {}; const dl = el('dl', { class: 'profile-summary' });
-    const rows = [['学习主题', p.topic], ['目标范围', p.bounded_goal || p.goal], ['已有基础', list(p.prior_knowledge?.self_reported).join('；') || '暂未自述'],
+    const rows = view.guided ? [['学习目标', p.goal], ['已有基础', list(p.prior_knowledge?.self_reported).join('；') || '零基础 / 暂未自述'],
+      ...(p.bounded_goal ? [['AI 建议范围', p.bounded_goal]] : []),
+      ['时间安排', `${p.time_budget_minutes} 分钟 / 每次 ${p.session_minutes} 分钟`]] : [['学习主题', p.topic], ['目标范围', p.bounded_goal || p.goal], ['已有基础', list(p.prior_knowledge?.self_reported).join('；') || '暂未自述'],
       ['本次包含', list(p.scope_in).join('；') || '以确认的目标范围为准'], ['本次不包含', list(p.scope_out).join('；') || '暂未填写'],
       ['学习方式', p.learning_mode === 'exploration' ? '探索讨论，不产生正式通过' : '正式学习与测评'], ['评价方式', list(p.requested_capabilities).map(s => capabilityNames[s] || s).join('、')],
       ['时间安排', p.time_budget_minutes ? `${p.time_budget_minutes} 分钟 / 每次 ${p.session_minutes} 分钟` : '—']];
@@ -288,7 +278,7 @@
       li.append(el('p', { class: 'node-meta', text: (node.estimated_minutes ? `约 ${node.estimated_minutes} 分钟` : '') + (prereqs.length ? ' · 先修：' + prereqs.map(id => names.get(id) || id).join('、') : ' · 起始节点') }));
       ol.append(li);
     });
-    if (!nodes.length) ol.append(el('p', { class: 'muted', text: '计划尚未生成。先确认范围并准备可用资料。' }));
+    if (!nodes.length) ol.append(el('p', { class: 'muted', text: 'AI 将根据目标、基础和可用资料整理起步计划。' }));
     return ol;
   }
   function citationButtons(citations, view) {
@@ -302,7 +292,8 @@
   function sourceCard(view) {
     const card = el('section', { class: 'card' }, el('div', { class: 'card-header' }, el('h2', { text: '学习资料' }), view.frozen ? chip('已冻结版本', 'green') : chip('草案 v' + (view.draft_revision || 1))));
     const sources = list(view.sources);
-    if (!sources.length) card.append(el('p', { class: 'muted', text: '尚无公开教学资料。正式规划需要能定位原文的依据。' }));
+    if (!sources.length) card.append(el('p', { class: 'muted', text: view.guided ? '资料可选。不上传时，AI 将整理通用学习内容并标明来源；学习具体内部制度时请提供文件。' : '尚无公开教学资料，请先导入本课依据。' }));
+    if (list(view.private_references).length) card.append(el('p', { class: 'muted-line', text: `已导入 ${view.private_references.length} 份评价参考，请在计划预览中选择适用节点，或明确不使用。` }));
     for (const source of sources) card.append(el('div', { class: 'source-row' }, el('div', {}, el('h3', { text: source.title }), el('p', { text: source.source_description }), el('small', { class: 'dim', text: '版本 ' + source.source_version + ' · ' + (source.trust_note || '用户提供，未独立核验') })),
       button('查看来源', () => showSource(source.source_id, source.source_version), 'subtle')));
     if (allowed('import_material')) {
@@ -316,26 +307,51 @@
     const root = el('div', {}, heading(view), flow(view));
     if (view.notice) root.append(el('p', { class: 'notice', text: view.notice }));
     if (view.requires_replan) root.append(el('div', { class: 'notice', text: '资料或范围已经变化。当前计划是旧草案，不能确认。请点击“重新规划”，并核对新计划。' }));
+    if (view.preparation_notice) root.append(el('p', { class: 'notice blue', text: view.preparation_notice }));
     const cap = view.capability_check;
     if (cap && (cap.status !== 'supported' || list(cap.reasons).length)) root.append(el('div', { class: 'notice blue' },
       el('strong', { text: ({ supported: '能力检查通过', needs_material: '需要补充资料', exploration_only: '目前仅支持探索', unsupported: '当前范围包含未支持能力' })[cap.status] || '能力检查' }),
       ...list(cap.reasons).map(s => el('p', { text: s }))));
-    const profileCard = el('section', { class: 'card' }, el('h2', { text: '确认学习档案' }), profileSummary(view));
+    const profileCard = el('section', { class: 'card' }, el('h2', { text: view.guided ? '你的学习起点' : '学习档案' }), profileSummary(view));
     const controls = el('div', { class: 'actions' });
-    for (const action of ['update_profile', 'adjust_scope']) if (allowed(action)) controls.append(button(actionLabels[action], () => openModal(actionLabels[action], profileForm(view.profile, { editing: true, action }))));
-    if (allowed('confirm_profile')) controls.append(button(actionLabels.confirm_profile, () => command('confirm_profile'), 'primary'));
+    for (const action of ['update_profile', 'adjust_scope']) if (allowed(action)) controls.append(button(actionLabels[action], () => openModal(actionLabels[action], profileForm(view.profile, { editing: true, action, guided: view.guided }))));
+    if (allowed('confirm_profile')) controls.append(button(view.guided ? 'AI 整理学习计划' : '生成学习计划', () => command('confirm_profile'), 'primary'));
     if (controls.childElementCount) profileCard.append(controls);
     root.append(profileCard, sourceCard(view));
     if (view.plan || ['plan_review', 'learning', 'exploring'].includes(view.page_state) || allowed('begin')) {
       const plan = el('section', { class: 'card' }, el('div', { class: 'card-header' }, el('h2', { text: view.frozen ? '已确认的学习计划' : '学习计划预览' }), view.frozen ? chip('资料与标准已冻结', 'green') : chip('待确认', 'amber')), renderPlan(view));
       if (!view.frozen) plan.append(el('p', { class: 'muted-line', text: '确认后，计划、资料及评价策略版本会冻结。以后上传的新资料不会改写本项目的正式标准。' }));
+      const referenceChoices = [];
+      if (!view.frozen && list(view.private_references).length) {
+        plan.append(el('h3', { text: '评价参考的用途' }), el('p', { class: 'muted-line', text: '选择每份参考用于哪些节点的出题与评分；参考正文不会交给教学，也不会出现在公开来源中。' }));
+        const localLabels = storage.read('reference-labels-' + view.project_id) || {};
+        for (const reference of view.private_references) {
+          const mode = el('select', { 'aria-label': reference.label + '的用途', 'data-write': 'true' }, el('option', { value: '', text: '请选择用途' }), el('option', { value: 'bind', text: '用于选中的节点' }), el('option', { value: 'exclude', text: '本计划不使用' }));
+          const targets = el('div', { class: 'reference-targets', hidden: true });
+          const checks = nodesFor(view).map(node => {
+            const check = input('reference-node', '', { type: 'checkbox', value: node.node_id, 'data-write': 'true' });
+            targets.append(el('label', {}, check, el('span', { text: node.title })));
+            return check;
+          });
+          mode.addEventListener('change', () => { targets.hidden = mode.value !== 'bind'; });
+          plan.append(el('div', { class: 'reference-choice' }, el('strong', { text: localLabels[reference.reference_id] || reference.label }), mode, targets));
+          referenceChoices.push(() => {
+            const nodeIds = mode.value === 'bind' ? checks.filter(c => c.checked).map(c => c.value) : [];
+            if (!mode.value || (mode.value === 'bind' && !nodeIds.length)) throw new Error('请为每份评价参考选择适用节点，或选择“本计划不使用”。');
+            return { reference_id: reference.reference_id, action: mode.value, node_ids: nodeIds };
+          });
+        }
+      }
       const row = el('div', { class: 'actions' });
       if (allowed('adjust_plan')) row.append(button('调整计划', () => textCommand('adjust_plan', '希望如何调整学习计划？', 'feedback', '例如：把这一部分拆成两个更小的节点。')));
-      if (allowed('confirm_plan')) row.append(button('确认并冻结计划', () => command('confirm_plan'), 'primary'));
+      if (allowed('confirm_plan')) row.append(button('确认并冻结计划', () => {
+        try { return command('confirm_plan', { private_references: referenceChoices.map(read => read()) }); }
+        catch (error) { showMessage(error.message, 'warn'); }
+      }, 'primary'));
       plan.append(row); root.append(plan);
     }
     const row = el('div', { class: 'actions' });
-    for (const action of ['replan', 'choose_exploration', 'begin', 'begin_learning']) if (allowed(action)) row.append(button(actionLabels[action], () => action === 'choose_exploration' ? confirmAction('进入探索模式', '探索模式只提供文字讨论，不产生正式通过或依赖解锁。', () => command(action)) : command(action), action.startsWith('begin') || action === 'replan' ? 'primary' : ''));
+    for (const action of ['replan', 'begin', 'begin_learning']) if (allowed(action)) row.append(button(actionLabels[action], () => action === 'choose_exploration' ? confirmAction('进入探索模式', '探索模式只提供文字讨论，不产生正式通过或依赖解锁。', () => command(action)) : command(action), action.startsWith('begin') || action === 'replan' ? 'primary' : ''));
     if (allowed('rest')) row.append(button('休息，保留当前进度', () => command('rest'), 'subtle'));
     if (row.childElementCount) root.append(row);
     return root;
@@ -348,7 +364,7 @@
     const visibility = el('select', { name: 'visibility' }, el('option', { value: 'teaching', text: '教学资料 · 可用于讲解与公开引用' }), el('option', { value: 'assessment_private', text: '私有测评资料 · 仅供出题与评分' }));
     const replace = el('select', { name: 'source_id' }, el('option', { value: '', text: '作为新资料导入' }), ...list(view.sources).map(s => el('option', { value: s.source_id, text: '更新版本：' + s.title })));
     const submit = el('button', { type: 'submit', class: 'btn primary', text: '导入资料', disabled: state.busy });
-    form.append(el('div', { class: 'form-grid' }, field('资料标题', title, '', true), field('来源说明', description, '请保留可复查的作者、章节或链接。', true), field('原文', content, '文件和粘贴二选一。资料中的脚本只会作为文字显示。', true), field('选择文件', file, 'UTF-8 TXT / Markdown，单文件最多 128 KB。', true), field('可见性', visibility), field('导入方式', replace)), el('div', { class: 'notice blue', text: '资料是学习依据，不能修改服务端权限、评分策略、工具或调用上限。私有资料导入后不会列出标题、原文或答案。' }), el('div', { class: 'actions' }, submit));
+    form.append(el('div', { class: 'form-grid' }, field('资料标题', title, '', true), field('来源说明', description, '请保留可复查的作者、章节或链接。', true), field('原文', content, '文件和粘贴二选一。资料中的脚本只会作为文字显示。', true), field('选择文件', file, 'UTF-8 TXT / Markdown，单文件最多 128 KB。', true), field('可见性', visibility), field('导入方式', replace)), el('div', { class: 'notice blue', text: '资料不能修改权限、评分策略、工具或调用上限。私有参考的正文与答案不进入教学或公开来源；确认计划时需选择适用节点。' }), el('div', { class: 'actions' }, submit));
     file.addEventListener('change', () => { if (file.files[0] && !title.value) title.value = file.files[0].name.replace(/\.(?:txt|md|markdown)$/i, ''); });
     form.addEventListener('submit', async event => {
       event.preventDefault(); if (state.busy || !form.reportValidity()) return;
@@ -363,7 +379,15 @@
           body.filename = selected.name; body.data_base64 = btoa(binary);
         } else body.content = content.value;
       } catch (error) { showMessage(error.message || '文件必须采用 UTF-8 编码。', 'error'); return; }
-      await write('/projects/' + encodeURIComponent(view.project_id) + '/sources', body, { busyText: '正在保存资料版本…', success: '资料已导入。请核对新草案，必要时明确重新规划。' });
+      await write('/projects/' + encodeURIComponent(view.project_id) + '/sources', body, { busyText: '正在保存资料版本…', success: '资料已导入。请核对新草案，必要时明确重新规划。', after: result => {
+        if (result?.private_reference_id) {
+          const labels = storage.read('reference-labels-' + view.project_id) || {};
+          labels[result.private_reference_id] = title.value.trim();
+          storage.write('reference-labels-' + view.project_id, labels);
+        }
+        // A successful import no longer needs its private draft in hidden DOM.
+        content.value = ''; file.value = '';
+      } });
     });
     openModal('导入学习资料', form);
   }
@@ -437,7 +461,7 @@
     const tutor = view.tutor; const node = nodesFor(view).find(n => n.node_id === view.current_node_id);
     const title = view.mode === 'remediate' ? '针对性补弱' : view.mode === 'review' ? '先修知识回顾' : view.page_state === 'exploring' ? '探索讨论' : '一起学这一小步';
     const card = el('section', { class: 'card card-accent' }, el('div', { class: 'card-header' }, el('h2', { text: title }), node ? chip(node.title, 'cyan') : null));
-    if (view.profile?.learning_mode === 'exploration') card.append(el('p', { class: 'notice', text: '探索模式：本次讲解与问答不产生正式通过或依赖解锁。' }));
+    if (view.profile?.learning_mode === 'exploration') card.append(el('p', { class: 'notice', text: '当前课程暂不提供可验证的练习通过记录，可继续提问和讨论。' }));
     const turns = list(view.conversation); const tutorText = typeof tutor === 'string' ? tutor : tutor?.text;
     if (tutorText) card.append(markdown(tutorText), citationButtons(tutor?.citations, view));
     else card.append(el('p', { class: 'muted', text: '当前暂无讲解。请按下方可用操作继续。' }));
@@ -687,7 +711,7 @@
     storage.remove('selection'); showMessage(''); render(); $('content').scrollIntoView({ block: 'start' });
   }
   $('new-project').addEventListener('click', newProject);
-  $('current-tab').addEventListener('click', () => switchTab('current')); $('legacy-tab').addEventListener('click', () => switchTab('legacy'));
+
   $('refresh-list').addEventListener('click', async () => { if (!state.busy) try { await refreshList(); showMessage('记录列表已刷新。'); } catch (error) { showMessage(error.message, 'error'); } });
   $('refresh-project').addEventListener('click', async () => { if (!state.busy && state.id) try { await loadProject(state.id, { announce: true }); } catch (error) { showMessage(error.message, 'error'); } });
   $('mobile-menu').addEventListener('click', () => { const open = !$('sidebar').classList.contains('open'); $('sidebar').classList.toggle('open', open); $('sidebar-shade').hidden = !open; $('mobile-menu').setAttribute('aria-expanded', String(open)); });
@@ -706,8 +730,8 @@
     if (loaded[2].status === 'fulfilled') state.projects = asProjects(loaded[2].value);
     else showMessage('暂时无法连接学习服务。已保存的输入会留在本机，恢复连接后请刷新。', 'error');
     const selection = storage.read('selection');
-    if (selection?.id) {
-      state.tab = selection.tab === 'legacy' ? 'legacy' : 'current';
+    if (selection?.id && selection.tab !== 'legacy') {
+      state.tab = 'current';
       try { if (isLegacy()) await refreshList(); await loadProject(selection.id); } catch { state.id = null; state.view = null; storage.remove('selection'); }
     }
     render();

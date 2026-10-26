@@ -1,0 +1,32 @@
+{
+  "version": "day13-sql-explicit-links-1",
+  "kind": "advanced_repository_caller_configuration_not_browser_feature",
+  "expected_node_count": 2,
+  "bindings": [
+    {
+      "prerequisite_count": 0,
+      "source_id": "sql-curriculum-private",
+      "heading_contains": [
+        "普通目标与关键误解",
+        "SELECT节点"
+      ],
+      "purposes": [
+        "assessment",
+        "grading"
+      ]
+    },
+    {
+      "prerequisite_count": 1,
+      "source_id": "sql-curriculum-private",
+      "heading_contains": [
+        "普通目标与关键误解",
+        "WHERE节点"
+      ],
+      "purposes": [
+        "assessment",
+        "grading"
+      ]
+    }
+  ],
+  "authority": "Versioned scoring reference data; cannot alter policy thresholds, permissions, evaluator availability or budgets"
+}

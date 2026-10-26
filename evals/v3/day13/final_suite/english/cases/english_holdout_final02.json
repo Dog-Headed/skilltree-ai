@@ -1,0 +1,101 @@
+{
+  "case_version": "day13-independent-final-1",
+  "case_id": "english_holdout_final02",
+  "split": "holdout",
+  "subject_label": "英语",
+  "topic": "一般过去时改写",
+  "learning_context": {
+    "node_id": "past_simple_writing",
+    "current_objectives": [
+      {
+        "objective_id": "o1",
+        "observable_outcome": "把Leo wrote a note yesterday.改为一般疑问句。",
+        "required": true,
+        "criterion_ids": [
+          "q1_c1",
+          "q1_c2",
+          "q1_c3"
+        ]
+      }
+    ],
+    "prerequisite_nodes": [
+      {
+        "node_id": "subjects_and_base_verbs",
+        "observable_outcome": "本主题所需基础",
+        "completion_status": "completed"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q1",
+      "objective_ids": [
+        "o1"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "1.0.0",
+      "prompt": "把Leo wrote a note yesterday.改为一般疑问句。",
+      "max_score": 10,
+      "reference_answer": "Did Leo write a note yesterday?",
+      "rubric": [
+        {
+          "criterion_id": "q1_c1",
+          "description": "Did前置、主语与普通实义动词的一般疑问结构正确4分。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q1_c2",
+          "description": "did后使用write原形；明确宣称did后必须用过去式属于关键错误。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          },
+          "critical_failure_definition": "学生原文明确陈述与本项要求相反的一般规则；不是因缺答或标点不一致标为关键错误。"
+        },
+        {
+          "criterion_id": "q1_c3",
+          "description": "保留原叙述意义1分，保留yesterday时间1分；不重复扣动词错误。",
+          "max_score": 2.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "en-question"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "en-affirmative"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "en-private-criteria"
+        }
+      ]
+    }
+  ],
+  "student_answers": {
+    "q1": "Did Leo wrote a note yesterday? 因为是过去，did后必须继续用过去式。"
+  },
+  "available_history": [],
+  "policy_assumptions": {
+    "total_pass_threshold": 0.8,
+    "objective_pass_threshold": 0.8,
+    "critical_criterion_ids": [
+      "q1_c2"
+    ]
+  }
+}

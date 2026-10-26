@@ -1,0 +1,89 @@
+{
+  "version": "day13-sql-reference-1",
+  "review_status": "approved_by_user",
+  "validation_role": "novel",
+  "approval": {
+    "approved_at_utc": "2026-10-22T10:27:09.343368+00:00",
+    "reviewed_by": "user",
+    "evidence": "Direct human reply to the concrete fourth-topic reference question in this conversation",
+    "user_reply": "认可六例标准，继续真实评价",
+    "scope": "SQL reading two-step scope, six answers/rubrics/expected actions, including nine-point critical rejection and actual material conflict pause",
+    "approved_review_document_sha256": "a5b69808d7172687690ea723391af71e697806f5fa59a582fcc8f712d31df716",
+    "approved_draft_standards_sha256": "42539c3adb2ff7857746b4b809ed2e45990edf5406ddf20b52baa33f777a472f",
+    "independent_pre_review_file_sha256": "62ac921bf3d71ff06236d2347f8cd93c595ec4a5cdd5fdfa7a6f419c9c93cab1"
+  },
+  "cases": {
+    "sql_reading_novel_01": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "sql_reading_novel_02": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 4,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "sql_reading_novel_03": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 9,
+      "max_score": 10,
+      "critical_error": true,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "sql_reading_novel_04": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "sql_reading_novel_05": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "sql_reading_novel_06": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    }
+  }
+}

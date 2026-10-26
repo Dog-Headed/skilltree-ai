@@ -1,0 +1,80 @@
+{
+  "version": "day13-density-reference-1",
+  "review_status": "approved_by_user",
+  "validation_role": "novel",
+  "authored_by": "main_agent_draft_not_human_gold",
+  "cases": {
+    "density_reading_novel_01": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "density_reading_novel_02": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 4,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "density_reading_novel_03": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10,
+      "critical_error": true,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "density_reading_novel_04": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "density_reading_novel_05": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 0,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    },
+    "density_reading_novel_06": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {}
+    }
+  }
+}

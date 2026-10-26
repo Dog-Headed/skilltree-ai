@@ -1,0 +1,309 @@
+{
+  "version": "day13-original-exposed-reference-1",
+  "review_status": "approved_by_user",
+  "validation_role": "exposed_validation",
+  "approval": {
+    "approved_at": "2026-10-22T09:13:53.504128+00:00",
+    "timezone": "Asia/Shanghai",
+    "reviewed_by": "user",
+    "evidence": "Direct human reply in this conversation",
+    "user_reply": "认可复核稿，按顺序继续真实验证",
+    "review_document_sha256": "db99d85f34050a8754ffd09c41c1ededd6341a9908f1df8e55d8e240ae065bc3",
+    "scope": "dev-v7 output review conclusions with disclosed two-point differences; original exposed12 and new independent final12 reference answers, rubrics and expected actions. Not blanket approval of model outputs not yet generated or a fourth theme.",
+    "approved_draft_sha256": "ade5102181eb6e28f8976e1d07685c2f90a67b719d6f50bc09533158bc551d09"
+  },
+  "cases": {
+    "python_holdout_09": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {},
+      "reference_source_case_sha256": "4fe1848bcc9a1f1c69a2ee28253fffdbda54d38068df11596652c51555f1667f",
+      "reference_status": "user_approved_reference"
+    },
+    "python_holdout_10": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 4,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c1": "完整正确序列4分；非空正确前缀但多列或漏列终点2分；无正确序列0分。",
+              "q1_c2": "实际取值顺序完全正确4分；列出连续正确前缀但错误地包含stop时2分；无相关证据0分。",
+              "q1_c3": "正确指出最后为4且5排除2分；只正确一项1分；两项都错0分。"
+            }
+          }
+        },
+        "history": {
+          "historical_python_holdout_10": {
+            "score": 10.0,
+            "max_score": 10.0,
+            "feedback": "预置的历史正确作答记录"
+          }
+        }
+      },
+      "reference_source_case_sha256": "6c5d7e06855fd73e7afa64e8842820da058c0d811d5f1b9f221e26b6776f5d2a",
+      "reference_status": "user_approved_reference"
+    },
+    "python_holdout_11": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 90,
+      "max_score": 100.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q2": {
+            "criterion_descriptions": {
+              "q2_c1": "正确判断执行零次4分。",
+              "q2_c2": "说明先判断条件再决定进入循环4分。",
+              "q2_c3": "指出首次0>0为假2分。"
+            }
+          },
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c1": "正确判断条件成立，得36分。",
+              "q1_c2": "根据实际x=4解释4>=3为真，得36分。",
+              "q1_c3": "结合本题取值作出一致判断得18分；不要求未被题面提出的x=3边界举例。"
+            }
+          }
+        }
+      },
+      "reference_source_case_sha256": "e0afdc3c70f1a125ec8473d407e6b497ed1acc38f9cd7d9193957555f3e418da",
+      "reference_status": "user_approved_reference"
+    },
+    "python_holdout_12": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "objectives": {
+          "o1": {
+            "observable_outcome": "列出range(1,4)的取值，说明边界。"
+          }
+        },
+        "questions": {
+          "q1": {
+            "prompt": "列出range(1,4)的取值，说明边界。",
+            "reference_answer": "1、2、3；stop=4被排除。"
+          }
+        }
+      },
+      "reference_source_case_sha256": "38ee7492bfb0592e3f4e57f06ffa749ddf24538c8e61fa1553e995c55f77403c",
+      "reference_status": "user_approved_reference"
+    },
+    "mathematics_holdout_09": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 20,
+      "max_score": 20.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {},
+      "reference_source_case_sha256": "e2804d0f797c02118518609ebd195aa0c3e237a2e5b87f6301e468d2730e5dc4",
+      "reference_status": "user_approved_reference"
+    },
+    "mathematics_holdout_10": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 6,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c1": "给出正确解x=6得4分。",
+              "q1_c2": "明确两边同加5再同除4得4分；仅正确列出4x=24而不说明等价操作得2分；无有效操作证据0分。",
+              "q1_c3": "正确代回并比较19=19得2分；实际算错验证结果0分。"
+            }
+          }
+        },
+        "history": {
+          "historical_mathematics_holdout_10": {
+            "score": 10.0,
+            "max_score": 10.0,
+            "feedback": "预置的历史正确作答记录"
+          }
+        }
+      },
+      "reference_source_case_sha256": "ed7b45740e41626f08f158a73d2dd0446482bead0fe754062a23113c6f1de539",
+      "reference_status": "user_approved_reference"
+    },
+    "mathematics_holdout_11": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 90,
+      "max_score": 100.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q2": {
+            "criterion_descriptions": {
+              "q2_c1": "说明等式两边必须同减6得4分。",
+              "q2_c2": "说明只改变一边通常破坏相等或解集得4分。",
+              "q2_c3": "能将上述理由应用到本题，而非宣称只改左边总成立，得2分。"
+            }
+          }
+        }
+      },
+      "reference_source_case_sha256": "6949602b86f6d80347b0a347eaf5fff703f83b67639b318d117e336b6b67938c",
+      "reference_status": "user_approved_reference"
+    },
+    "mathematics_holdout_12": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "objectives": {
+          "o1": {
+            "observable_outcome": "解2x+3=13，说明等价步骤并检验。"
+          }
+        },
+        "questions": {
+          "q1": {
+            "prompt": "解2x+3=13，说明等价步骤并检验。",
+            "reference_answer": "两边同减3再同除2，x=5；2*5+3=13。"
+          }
+        }
+      },
+      "reference_source_case_sha256": "b69e22382ee287ae8c88a0bbf0724542f99013b5507e40ac98cf8904e2926574",
+      "reference_status": "user_approved_reference"
+    },
+    "english_holdout_09": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "advance",
+      "passed": true,
+      "score_center": 10,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {},
+      "reference_source_case_sha256": "2af816e2b4bb4333bb9c5a21cc22f1b0a7899c67f95de5ca51a4afddd2746616",
+      "reference_status": "user_approved_reference"
+    },
+    "english_holdout_10": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 4,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q1": {
+            "criterion_descriptions": {
+              "q1_c1": "过去肯定构式完整4分；主语与肯定语序正确但过去式错误2分；无相关构式0分。",
+              "q1_c2": "使用go的正确过去式went得4分；goed为0分。",
+              "q1_c3": "保留原叙述意义1分，保留yesterday时间1分；不重复扣语法分。"
+            }
+          }
+        },
+        "history": {
+          "historical_english_holdout_10": {
+            "score": 10.0,
+            "max_score": 10.0,
+            "feedback": "预置的历史正确作答记录"
+          }
+        }
+      },
+      "reference_source_case_sha256": "cc6b77db547732bb5d9674b5cbe4054e3bdc6d1332ccbc65cd1c9897ca68fe9a",
+      "reference_status": "user_approved_reference"
+    },
+    "english_holdout_11": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "graded",
+      "effective_action": "remediate",
+      "passed": false,
+      "score_center": 90,
+      "max_score": 100.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "questions": {
+          "q2": {
+            "criterion_descriptions": {
+              "q2_c1": "用Did前置构成一般疑问结构4分。",
+              "q2_c2": "在Did之后正确使用visit原形4分；重复visited的陈述句不满足本项。",
+              "q2_c3": "完整表达原意和时间的疑问意图2分；只重复原陈述而无疑问表达0分。"
+            }
+          }
+        }
+      },
+      "reference_source_case_sha256": "2a9b2d619421100c8ef5e53882ab840897664b78781bb27e73220fc4cb429f30",
+      "reference_status": "user_approved_reference"
+    },
+    "english_holdout_12": {
+      "review_status": "approved_by_user",
+      "task_type": "ordinary_grading",
+      "grading_status": "needs_review",
+      "effective_action": "pause_review",
+      "passed": false,
+      "score_center": null,
+      "max_score": 10.0,
+      "critical_error": false,
+      "review_node_id": null,
+      "input_revision": {
+        "objectives": {
+          "o1": {
+            "observable_outcome": "把They played cards yesterday.改为否定句。"
+          }
+        },
+        "questions": {
+          "q1": {
+            "prompt": "把They played cards yesterday.改为否定句。",
+            "reference_answer": "They did not play cards yesterday."
+          }
+        }
+      },
+      "reference_source_case_sha256": "60e98a608cf5aaf2d8b990bbdff5ba5e37dce04d29a5c5f15750569365c31872",
+      "reference_status": "user_approved_reference"
+    }
+  }
+}

@@ -70,6 +70,17 @@ class FakeLearningModel:
                 return fault(messages) if callable(fault) else deepcopy(fault)
         if schema == "LearningPlan":
             return self._plan(data)
+        if schema == "LearningPreparation":
+            goal=data['intent']['goal']
+            signals=goal+' '+ ' '.join(item['title'] for item in data['user_material_catalog'])
+            subject='数学' if any(s in signals for s in ('方程','等式','运算','数学','有理数','等号')) else 'Python' if 'python' in signals.lower() else '英语'
+            return {'subject_label':subject,'topic':goal[:80],'bounded_goal':goal,
+                    'scope_in':[goal],'scope_out':['未要求的扩展内容'],
+                    'evaluation_capabilities':['numeric_scalar','text_rubric'] if subject=='数学' else ['choice_exact','text_rubric'],
+                    'basis':'provided_material' if data['user_material_catalog'] else 'general_knowledge',
+                    'explanation':'Fake整理范围，仅用于验证目标与基础流程，不是内容质量结论。'}
+        if schema == "StudyNotes":
+            return {'content':'# Fake通用学习讲义\n'+('这是一份明确标记的Fake教学材料，只用于验证无上传资料时的保存、引用和恢复流程，不用于证明知识正确性。\n'*4)}
         if schema == "TutorReply":
             citations = [item for context in data["teaching_contexts"] for item in context["public_citations"]]
             unique = {(item["source_id"], item["source_version"], item["chunk_id"]): item for item in citations}
@@ -171,9 +182,9 @@ class _BoundFake:
         return self.parent._invoke(self.schema, messages)
 
 
-def preparation_command(service, view, action):
+def preparation_command(service, view, action, **payload):
     return service.resume(view["project_id"], {"request_id": str(uuid4()), "action": action,
-        "pending_input_id": view["pending_input_id"], "draft_revision": view["draft_revision"]})
+        "pending_input_id": view["pending_input_id"], "draft_revision": view["draft_revision"], **payload})
 
 
 def build_frozen_project(directory, subject="python", *, node_count=2, model=None):
@@ -207,7 +218,11 @@ def build_frozen_project(directory, subject="python", *, node_count=2, model=Non
         preview = preparation_command(service, service.read(pid), "confirm_profile")
         if preview["page_state"] != "plan_review":
             raise AssertionError(preview)
-        frozen = preparation_command(service, preview, "confirm_plan")
+        # Preserve this historical Fake fixture's teaching-only snapshot. Private
+        # binding and its public confirmation path have separate integration tests.
+        frozen = preparation_command(service, preview, "confirm_plan", private_references=[
+            {"reference_id": item["reference_id"], "action": "exclude", "node_ids": []}
+            for item in preview["private_references"]])
     if not frozen["frozen"]:
         raise AssertionError(frozen)
     initialize_learning_storage(paths)

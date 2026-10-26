@@ -17,6 +17,10 @@ from .repository import V3Repository, ConflictError, BudgetExhaustedError, encod
 from .execution import project_execution, execution_is_active
 from .state import V3State
 from .storage import V3Paths, open_v3_checkpointer
+from .reference_bindings import public_references, resolve_choices
+from . import onboarding
+from .model_tasks import LogicalTaskExhausted
+from app.services.llm import ModelOutputValidationError, ModelRequestFailedError
 
 def profile_hash(profile):
     return sha256(encode(profile).encode()).hexdigest()
@@ -92,6 +96,7 @@ class PreparationService:
         with V3Repository(self.paths) as repo:
             project=repo.get_project(project_id)
             if project is None:raise KeyError(project_id)
+            guided=onboarding.metadata(repo,project_id)
             stage=project['lifecycle'];stale=project['requires_replan']
             pending=repo.conn.execute('SELECT 1 FROM preparation_execution WHERE project_id=?',(project_id,)).fetchone()
             uninitialized=self._uninitialized(project)
@@ -104,7 +109,7 @@ class PreparationService:
                      'error':['retry','rest'],'budget_exhausted':['continue_with_new_budget','rest']}.get(stage,[])
             capability=json.loads(project['capability_json']) if project.get('capability_json') else None
             if stage=='materials_required':
-                if project['profile_confirmation_hash']==profile_hash(project['profile']):actions.append('replan')
+                if guided or project['profile_confirmation_hash']==profile_hash(project['profile']):actions.append('replan')
                 if capability and capability['status']=='exploration_only':actions.append('choose_exploration')
             if stale:actions=[a for a in actions if a!='confirm_plan']
             if stage in ('error','budget_exhausted') and not project['pending_input_id']:
@@ -114,10 +119,13 @@ class PreparationService:
             sources=[PublicSource.from_document(SourceDocument.model_validate(d)).model_dump()
                      for d in latest.values() if d['visibility']=='teaching']
             return {'project_id':project['id'],'thread_id':project['thread_id'],'profile':project['profile'],
+                    'guided':bool(guided),'learning_basis':guided['basis'] if guided else None,
+                    'preparation_notice':guided['message'] if guided else None,
                     'page_state':stage,'allowed_actions':actions,'pending_input_id':project['pending_input_id'],
                     'draft_revision':project['draft_revision'],'requires_replan':stale,
                     'plan':project['candidate_plan'],'policy':json.loads(project['candidate_policy_json']) if project.get('candidate_policy_json') else None,
                     'sources':sources,'capability_check':capability,'frozen':bool(project['frozen_snapshot']),
+                    'private_references':public_references(repo,project_id) if not project['frozen_snapshot'] else [],
                     'retry_token':project['retry_token'] or (self._creation_token(project_id) if uninitialized else None),
                     'error_type':'ExecutionInterrupted' if recovery_required else project['error_type'],
                     'execution_status':'active' if active else 'interrupted' if recovery_required else 'idle',
@@ -133,8 +141,8 @@ class PreparationService:
     def _config(project_id):
         return {'configurable':{'thread_id':project_id},'recursion_limit':30}
 
-    def create(self,request_id,profile):
-        with V3Repository(self.paths) as repo:project=repo.create_project(request_id,profile)
+    def create(self,request_id,profile,*,guided_intent=None):
+        with V3Repository(self.paths) as repo:project=repo.create_project(request_id,profile,guided_intent=guided_intent)
         project_id=project['id']
         with project_execution(project_id,self.paths),self._graph() as graph:
             snapshot=graph.get_state(self._config(project_id))
@@ -198,8 +206,14 @@ class PreparationService:
                 raise ValueError('Action not allowed by this resume entry')
             # Reject correctable user errors before persisting a Graph command;
             # technical retry must never replay an invalid user payload forever.
-            if event['action']=='confirm_profile' and not view['profile']['bounded_goal']:
+            if event['action']=='confirm_profile' and not view['profile']['bounded_goal'] and not view['guided']:
                 raise ValueError('Confirm a bounded learning goal first')
+            if event.get('private_references') is not None and event['action']!='confirm_plan':
+                raise ValueError('Reference choices require plan confirmation')
+            if event['action']=='confirm_plan':
+                with V3Repository(self.paths) as repo:
+                    project=repo.get_project(project_id)
+                    resolve_choices(repo,project_id,project['candidate_plan'],event.get('private_references'))
             if event['action'] in ('update_profile','adjust_scope'):
                 proposed=LearningProfile.model_validate(event['profile'])
                 if proposed.profile_version!=view['profile']['profile_version'] or proposed.prior_knowledge.assessed_evidence:
@@ -325,7 +339,7 @@ class PreparationService:
                     p=repo._draft(pid,event['draft_revision'])
                     if p['pending_input_id']!=event['pending_input_id']:raise ConflictError('Stale input')
                     if action=='confirm_profile':
-                        if not p['profile']['bounded_goal']:raise ValueError('Confirm a bounded learning goal first')
+                        if not p['profile']['bounded_goal'] and not onboarding.metadata(repo,pid):raise ValueError('Confirm a bounded learning goal first')
                         repo.conn.execute('UPDATE learning_projects SET profile_confirmation_hash=? WHERE id=?',(profile_hash(p['profile']),pid))
                     elif action in ('update_profile','adjust_scope','choose_exploration'):
                         raw={**p['profile'],'learning_mode':'exploration'} if action=='choose_exploration' else event['profile']
@@ -341,10 +355,14 @@ class PreparationService:
 
         def plan_unchecked(state):
             pid=state['project_id']
+            provider=getattr(self,'llm',None)
+            with V3Repository(self.paths) as repo:guided=bool(onboarding.metadata(repo,pid))
+            if guided and not onboarding.prepare(self.paths,pid,state['preparation_event'],
+                    llm=provider if provider is not None else planner.get_llm):return {}
             with V3Repository(self.paths) as repo:
                 p=repo.get_project(pid);profile=LearningProfile.model_validate(p['profile'])
                 if p['profile_confirmation_hash']!=profile_hash(profile):raise ConflictError('Profile not confirmed')
-                catalog=MaterialService(repo).catalog(pid)
+                catalog=onboarding.teaching_catalog(repo,pid) if guided else MaterialService(repo).catalog(pid)
                 check=check_capabilities(profile,has_material=bool(catalog))
                 if profile.learning_mode=='exploration':
                     self._mark(repo,pid,lifecycle='exploring',pending_input_id=None,capability_json=encode(check));return {}
@@ -359,8 +377,26 @@ class PreparationService:
             # Feedback is bounded user data, cannot edit server policy or tools.
             material_catalog=catalog
             provider=getattr(self,'llm',None)
-            model=_ReservedModel(provider if provider is not None else planner.get_llm(),self.paths,pid,operation_id,feedback)
-            proposal=planner.generate_plan(profile,pid,revision,material_catalog,policy,llm=model)
+            model=None if guided else _ReservedModel(provider if provider is not None else planner.get_llm(),self.paths,pid,operation_id,feedback)
+            if guided:
+                from .model_tasks import run_model_task
+                from langchain_core.messages import HumanMessage
+                # Adjustment remains untrusted preference; use the same durable
+                # HTTP budget/cache as scope and generated notes.
+                def generate(tracked,budget):
+                    class Adjusted:
+                        def with_structured_output(inner,*args,**kwargs):
+                            bound=tracked.with_structured_output(*args,**kwargs)
+                            class Bound:
+                                def invoke(inner,messages):
+                                    if feedback:messages=[*messages,HumanMessage(content=encode({'untrusted_plan_adjustment':feedback}))]
+                                    return bound.invoke(messages)
+                            return Bound()
+                    return planner.generate_plan(profile,pid,revision,material_catalog,policy,llm=Adjusted(),budget=budget)
+                proposal=run_model_task(self.paths,pid,operation_id,'guided_plan:'+state['preparation_event']['request_id'],
+                    {'profile':profile.model_dump(),'catalog':material_catalog,'policy':policy.model_dump(),'revision':revision,'feedback':feedback},
+                    LearningPlan,generate,llm=provider if provider is not None else planner.get_llm)
+            else:proposal=planner.generate_plan(profile,pid,revision,material_catalog,policy,llm=model)
             frozen_policy=instantiate_policy(policy,proposal)
             with V3Repository(self.paths) as repo:
                 repo.save_candidate_plan(pid,proposal,expected_revision=revision,policy=frozen_policy)
@@ -373,6 +409,18 @@ class PreparationService:
                     self._mark(repo,state['project_id'],lifecycle='materials_required',pending_input_id='materials_'+uuid4().hex,
                                error_type='ContextBudgetExceeded')
                 return {}
+            except (ModelOutputValidationError,ModelRequestFailedError,LogicalTaskExhausted) as exc:
+                with V3Repository(self.paths) as repo:
+                    if not onboarding.metadata(repo,state['project_id']):raise
+                    # A terminal logical task cannot be repaired by ordinary
+                    # retry. Return to an editable wait; a new explicit prepare
+                    # command owns a new task, while old charges stay recorded.
+                    with repo.transaction():
+                        repo.conn.execute('UPDATE guided_projects SET message=? WHERE project_id=?',
+                            ('这次 AI 准备没有完成，未确认任何计划。可检查模型服务后重新整理，或修改目标；已用请求不会清零。',state['project_id']))
+                        repo.conn.execute("UPDATE learning_projects SET lifecycle='profile_review',pending_input_id=?,error_type=? WHERE id=?",
+                            ('profile_'+uuid4().hex,type(exc).__name__,state['project_id']))
+                return {}
 
         def freeze(state):
             event=state['preparation_event'];pid=state['project_id']
@@ -384,8 +432,11 @@ class PreparationService:
                     return {}
                 if p['profile_confirmation_hash']!=profile_hash(p['profile']):raise ConflictError('Profile not confirmed')
                 policy=EvaluationPolicy.model_validate(json.loads(p['candidate_policy_json']))
-                planner.validate_learnability(p['candidate_plan'],p['profile'],MaterialService(repo).catalog(pid),policy)
-                repo.freeze_plan(pid,policy,expected_revision=event['draft_revision'],pending_input_id=event['pending_input_id'])
+                planner.validate_learnability(p['candidate_plan'],p['profile'],onboarding.teaching_catalog(repo,pid) if onboarding.metadata(repo,pid) else MaterialService(repo).catalog(pid),policy)
+                # Old accepted commands retain their pre-extension semantics.
+                # New submissions validate explicit choices before journaling.
+                links=resolve_choices(repo,pid,p['candidate_plan'],event['private_references']) if 'private_references' in event else []
+                repo.freeze_plan(pid,policy,expected_revision=event['draft_revision'],pending_input_id=event['pending_input_id'],material_links=links)
             return {}
 
         def route(state):

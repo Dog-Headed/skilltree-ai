@@ -1,0 +1,107 @@
+{
+  "case_version": "day13-density-1",
+  "case_id": "density_reading_novel_01",
+  "split": "novel",
+  "subject_label": "物理",
+  "topic": "密度比值与同种均匀材料取样",
+  "learning_context": {
+    "node_id": "density_ratio",
+    "current_objectives": [
+      {
+        "objective_id": "o1",
+        "observable_outcome": "计算并解释密度比值、单位与同比取样不变性。",
+        "required": true,
+        "criterion_ids": [
+          "q1_c1",
+          "q1_c2",
+          "q1_c3"
+        ]
+      }
+    ],
+    "prerequisite_nodes": [
+      {
+        "node_id": "mass_and_volume",
+        "observable_outcome": "区分质量与体积及单位g/cm³所含物理量",
+        "completion_status": "completed"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q1",
+      "objective_ids": [
+        "o1"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "1.0.0",
+      "prompt": "某同种均匀材料质量80g、体积20cm³。请给出密度，解释它的公式、含义与单位；若在同温同物态、无损耗条件下取一半，密度怎样变化？说明理由。",
+      "max_score": 10.0,
+      "reference_answer": "密度ρ=m/V=80/20=4g/cm³，表示单位体积的质量，每立方厘米4克。取半后40g、10cm³，同比减半，比值仍4，密度不变。",
+      "rubric": [
+        {
+          "criterion_id": "q1_c1",
+          "description": "密度数值4给4分，错误或未给数值0分。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "未给本项证据或明确错误0分；不会不视为关键错误。",
+            "partial": "仅按已列子项给部分分，无证据的子项不补分。",
+            "full": "本项全部子要求都有可定位正确表达，不要求符号或固定措辞。"
+          }
+        },
+        {
+          "criterion_id": "q1_c2",
+          "description": "正确表达质量除以体积/单位体积质量2分；正确g/cm³或每立方厘米四克2分，两子项独立。",
+          "max_score": 4.0,
+          "critical_failure_definition": "明确反称密度定义为V/m，并据此把0.25cm³/g当作本题密度。普通遗漏或不会不标critical。",
+          "scoring_guidance": {
+            "zero": "未给本项证据或明确错误0分；不会不视为关键错误。",
+            "partial": "仅按已列子项给部分分，无证据的子项不补分。",
+            "full": "本项全部子要求都有可定位正确表达，不要求符号或固定措辞。"
+          }
+        },
+        {
+          "criterion_id": "q1_c3",
+          "description": "限定条件下取一半密度仍4/不变1分，解释质量和体积同比例减半1分；等价口语可得分。",
+          "max_score": 2.0,
+          "scoring_guidance": {
+            "zero": "未给本项证据或明确错误0分；不会不视为关键错误。",
+            "partial": "仅按已列子项给部分分，无证据的子项不补分。",
+            "full": "本项全部子要求都有可定位正确表达，不要求符号或固定措辞。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "density-quantities"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "density-ratio"
+        },
+        {
+          "document": "teaching.md",
+          "section_id": "density-scaling"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "density-reference"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "density-rubric"
+        }
+      ]
+    }
+  ],
+  "student_answers": {
+    "q1": "密度ρ=m/V=80/20=4g/cm³，表示单位体积的质量，每立方厘米4克。取半后40g、10cm³，同比减半，比值仍4，密度不变。"
+  },
+  "available_history": [],
+  "policy_assumptions": {
+    "total_pass_threshold": 0.8,
+    "objective_pass_threshold": 0.8,
+    "critical_criterion_ids": []
+  }
+}

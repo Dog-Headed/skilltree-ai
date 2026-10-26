@@ -1,0 +1,97 @@
+{
+  "case_version": "day13-independent-final-1",
+  "case_id": "python_holdout_final02",
+  "split": "holdout",
+  "subject_label": "Python",
+  "topic": "条件与循环文字阅读",
+  "learning_context": {
+    "node_id": "control_flow_reading",
+    "current_objectives": [
+      {
+        "objective_id": "o1",
+        "observable_outcome": "x=2\nif x>5:\n    label='A'\nelse:\n    label='B'\n给出label并解释选择原因。",
+        "required": true,
+        "criterion_ids": [
+          "q1_c1",
+          "q1_c2",
+          "q1_c3"
+        ]
+      }
+    ],
+    "prerequisite_nodes": [
+      {
+        "node_id": "variables_and_lists",
+        "observable_outcome": "本主题所需基础",
+        "completion_status": "completed"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q1",
+      "objective_ids": [
+        "o1"
+      ],
+      "question_type": "text",
+      "evaluator_id": "text_rubric",
+      "evaluator_version": "1.0.0",
+      "prompt": "x=2\nif x>5:\n    label='A'\nelse:\n    label='B'\n给出label并解释选择原因。",
+      "max_score": 10,
+      "reference_answer": "B；2>5是假，所以执行else。",
+      "rubric": [
+        {
+          "criterion_id": "q1_c1",
+          "description": "给出正确的B。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        },
+        {
+          "criterion_id": "q1_c2",
+          "description": "结合2>5为假解释分支选择；不能声称有if就无条件执行首分支。",
+          "max_score": 4.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          },
+          "critical_failure_definition": "学生原文明确陈述与本项要求相反的一般规则；不是因缺答或标点不一致标为关键错误。"
+        },
+        {
+          "criterion_id": "q1_c3",
+          "description": "说明此处走else而不执行A分支。",
+          "max_score": 2.0,
+          "scoring_guidance": {
+            "zero": "缺失或明确错误0分。",
+            "partial": "只满足本项部分明示条件且有原文证据，可得本项一半；不把其他分项的错误重复扣分。",
+            "full": "完整满足本项要求且能引用实际作答原文。"
+          }
+        }
+      ],
+      "source_refs": [
+        {
+          "document": "teaching.md",
+          "section_id": "py-condition"
+        },
+        {
+          "document": "assessment_private.md",
+          "section_id": "py-private-criteria"
+        }
+      ]
+    }
+  ],
+  "student_answers": {
+    "q1": "A；有if就执行第一个分支，不需要判断真假。"
+  },
+  "available_history": [],
+  "policy_assumptions": {
+    "total_pass_threshold": 0.8,
+    "objective_pass_threshold": 0.8,
+    "critical_criterion_ids": [
+      "q1_c2"
+    ]
+  }
+}

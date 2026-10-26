@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from app.services.llm import ModelOutputValidationError, get_llm, invoke_with_shared_budget
 from app.v3.capabilities import require_evaluator, validate_policy
 from app.v3.config import SERVER_LIMITS
+from app.v3.materials import ContextBudgetExceeded
 from app.v3.contracts import (
     AssessmentQuiz, EvaluationResult, FrozenSnapshot, ObjectiveResult,
     SkillNode, validate_evaluation_context,
@@ -137,11 +138,11 @@ def validate_quiz(quiz, *, node, policy, contexts, previous_question_prompts=())
     return quiz
 
 
-def generate_quiz(*, project_id, node, assessment_id, snapshot, policy, contexts,
-                  previous_assessment_id=None, llm=None, budget=None, previous_question_prompts=()):
+def quiz_generation_messages(*, project_id, node, assessment_id, snapshot, policy, contexts,
+                             previous_assessment_id=None, previous_question_prompts=()):
+    """Pure prompt construction, also used by plan-freeze context preflight."""
     node, snapshot, policy = _standards(node, snapshot, policy)
     bound = _contexts(contexts, project_id=project_id, node=node, snapshot=snapshot)
-    budget = call_budget(budget)
     payload = {"project_id": project_id, "node": node.model_dump(), "assessment_id": assessment_id,
         "snapshot": snapshot.model_dump(), "policy": policy.model_dump(), "contexts": bound,
         "previous_assessment_id": previous_assessment_id, "previous_question_prompts": list(previous_question_prompts),
@@ -159,7 +160,17 @@ def generate_quiz(*, project_id, node, assessment_id, snapshot, policy, contexts
         "NumericRules.abs_tolerance/rel_tolerance不得超过冻结policy.numeric_abs_tolerance/numeric_rel_tolerance；默认0要求精确结果，不能自行放宽。")),
         HumanMessage(content="出题数据：\n" + encode(payload))]
     if sum(len(str(message.content)) for message in messages) > SERVER_LIMITS.max_context_characters:
-        raise ValueError("Assessment generation context exceeds server limit")
+        raise ContextBudgetExceeded("Assessment generation context exceeds server limit")
+    return messages, bound
+
+
+def generate_quiz(*, project_id, node, assessment_id, snapshot, policy, contexts,
+                  previous_assessment_id=None, llm=None, budget=None, previous_question_prompts=()):
+    node, snapshot, policy = _standards(node, snapshot, policy)
+    messages, bound = quiz_generation_messages(project_id=project_id, node=node, assessment_id=assessment_id,
+        snapshot=snapshot, policy=policy, contexts=contexts, previous_assessment_id=previous_assessment_id,
+        previous_question_prompts=previous_question_prompts)
+    budget = call_budget(budget)
     structured = (get_llm() if llm is None else llm).with_structured_output(AssessmentQuiz, method="json_mode")
     def invoke(repair):
         current = list(messages)

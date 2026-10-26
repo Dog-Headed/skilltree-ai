@@ -8,7 +8,7 @@ This guide describes the current V3 implementation. The browser runs locally wit
 | --- | --- |
 | `app.py` | Default V3 launcher on loopback port 8765 |
 | `app/v3/learning_api.py`, `public_view.py` | Current product API and public response projections |
-| `app/v3/preparation.py`, `planner.py`, `materials.py` | Profile, source import, planning, and explicit confirmation |
+| `app/v3/onboarding.py`, `preparation.py`, `planner.py`, `materials.py` | Profile, source import, planning, and explicit confirmation |
 | `app/v3/learning.py`, `tutor.py`, `assessment.py`, `diagnosis.py` | Learning graph and model-assisted learning operations |
 | `app/v3/capabilities.py`, `evaluators.py`, `guard.py` | Runtime capability registry, evaluators, and deterministic progression checks |
 | `app/v3/repository.py`, `learning_repository.py` | Business facts and idempotent writes |
@@ -32,7 +32,7 @@ python -X utf8 -m pytest tests/test_app_launcher.py tests/test_day12_public_api.
 
 For offline subject-pack consistency:
 
-Keep `.gitattributes` in place: frozen material Markdown uses LF; case JSON and pack manifests use CRLF. These rules preserve the existing content hashes and aggregate freeze digest across Git checkouts without changing content or expectations.
+Keep `.gitattributes` in place: `* -text` preserves original bytes, including existing LF/CRLF, across Git checkouts. This avoids changing frozen source, material, and case hashes; do not normalize these files as part of unrelated edits.
 
 ```sh
 python -X utf8 day10_check_fixtures.py
@@ -72,7 +72,7 @@ On Linux the browser may also require system libraries; use Playwright's `instal
 
 - Choice and restricted numeric evaluation run in application code; text-rubric evaluation uses the configured model and can be wrong.
 - Valid JSON, valid citations, or a completed workflow do not establish teaching or scoring quality.
-- The 36 V3 subject cases remain draft expectations pending human review. The [evaluation dataset notes](../evals/v3/README.md) describe the frozen preparation snapshot, debug/holdout split, and review discipline. Their original statements about missing evaluators describe that earlier snapshot; the current runtime has numeric and text handlers.
+- Day 13 user-approved standards and finite real-model results are indexed in [the delivery report](v3/day13/FINAL_DELIVERY.md). Original exposed cases and independent revalidation are explicitly distinguished. The [older dataset notes](../evals/v3/README.md) describe the Day 10 preparation snapshot; their pending-review and unavailable-evaluator statements are historical. The current runtime has numeric and text handlers.
 - Keep human approval, Fake workflow checks, and real-model quality reports distinct. Review standards before evaluation; avoid tuning on held-out cases.
 
 ## Screenshots
@@ -87,7 +87,7 @@ The three homepage PNGs are unaltered captures of the shipped V3 interface at **
 
 Capture method: run `day12_demo_server.py` with a fresh root under `work/`, then use an isolated Playwright/Edge browser to create a mathematics record, import its example materials, confirm the profile, confirm the plan, start learning, and start an assessment. No mock HTML, image generation, or page-content replacement is used. The demo's existing Fake provider supplies content and shortened plans; no paid model calls or deployment databases are involved. The visible Fake label is preserved.
 
-These screenshots prove the V3 pages and workflow render; they do not measure real-model learning outcomes. Existing V2 screenshots remain available as historical assets and are not presented as V3.
+These screenshots predate the goal-first creation update and still show the former V2 history entry. They document that earlier UI; the current creation form has only a goal and optional prior knowledge, and no V2 history entry. They do not measure real-model learning outcomes. Existing V2 screenshots remain available as historical assets and are not presented as V3.
 
 ## Documentation contributions
 

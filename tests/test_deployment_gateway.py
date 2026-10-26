@@ -45,3 +45,17 @@ def test_large_request_is_rejected_before_quota_or_business_write(tmp_path):
     client = gateway(tmp_path)
     assert client.post('/projects', content='x' * 262145).status_code == 413
     assert not (tmp_path / 'quota.sqlite').exists()
+
+
+def test_model_timeout_reaches_underlying_transport(monkeypatch):
+    from langchain_openai import ChatOpenAI
+    from deploy import asgi
+    import app.services.llm
+
+    monkeypatch.setattr(app.services.llm, 'get_llm', lambda: ChatOpenAI(
+        model='unit-test-model', api_key='unit-test-placeholder',
+        base_url='http://127.0.0.1:1/v1', timeout=45, max_retries=0))
+    monkeypatch.setattr(asgi, 'create_learning_app', lambda paths, llm: llm)
+    model = asgi.create_app().application()
+    assert model.root_client.timeout == 150
+    assert model.root_client.max_retries == 0

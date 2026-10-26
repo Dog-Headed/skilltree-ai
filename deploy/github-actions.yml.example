@@ -1,0 +1,36 @@
+name: Deploy SkillTree V3
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+concurrency:
+  group: skilltree-production
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+  deploy:
+    needs: test
+    runs-on: ubuntu-24.04
+    environment: production
+    steps:
+      - name: Deploy tested revision
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SKILLTREE_DEPLOY_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SKILLTREE_KNOWN_HOSTS }}
+          DEPLOY_COMMIT: ${{ github.sha }}
+        run: |
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes admin@47.82.118.171 "bash /home/admin/skilltree-ai/deploy/update.sh '$DEPLOY_COMMIT'"

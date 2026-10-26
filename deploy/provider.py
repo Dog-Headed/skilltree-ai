@@ -28,6 +28,9 @@ class StructuredReply:
         self.schema_name = schema_name
 
     def invoke(self, messages, *args, **kwargs):
+        if self.schema_name == 'TextBatchScore':
+            from deploy.text_evidence import with_text_evidence
+            messages = with_text_evidence(messages)
         if self.schema_name == 'StudyNotes':
             messages = [SystemMessage(content=(
                 'StudyNotes.content 请用紧凑的中文 Markdown：一个总标题，最多三个小标题；'

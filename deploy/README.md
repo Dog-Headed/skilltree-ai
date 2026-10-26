@@ -37,7 +37,11 @@ not repeatedly restart a healthy process after provider failures.
 Nginx has a 600-second response timeout for multi-task model operations. The
 deployment adapter allows 150 seconds for a model response (the provider documents
 a 120-second response window); the original local adapter and business budgets
-remain unchanged. Deep thinking remains enabled. Durable recovery is retained.
+remain unchanged. `SKILLTREE_THINKING_MODE=auto|true|false` controls the provider's
+documented thinking option. The evaluation deployment uses `false`: the same
+frozen quiz timed out at 150 seconds in default deep-thinking mode, while the
+non-thinking call plus existing bounded output repair produced a valid quiz.
+Strict schema, scoring, progression guards and durable recovery remain intact.
 Journald is bounded to 150 MiB/14 days; Nginx logs rotate daily/10 MiB, 14 copies.
 Access logs exclude query strings, credentials, and request/response bodies.
 

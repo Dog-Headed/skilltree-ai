@@ -60,3 +60,7 @@ def test_model_timeout_reaches_underlying_transport(monkeypatch):
     assert hasattr(model, 'invoke') and hasattr(model, 'with_structured_output')
     assert model.root_client.timeout == 150
     assert model.root_client.max_retries == 0
+    assert model.extra_body is None
+    monkeypatch.setenv('SKILLTREE_THINKING_MODE', 'false')
+    model = asgi.create_app().application
+    assert model.extra_body == {'thinking_mode': False}

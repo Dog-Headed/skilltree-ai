@@ -56,6 +56,7 @@ def test_model_timeout_reaches_underlying_transport(monkeypatch):
         model='unit-test-model', api_key='unit-test-placeholder',
         base_url='http://127.0.0.1:1/v1', timeout=45, max_retries=0))
     monkeypatch.setattr(asgi, 'create_learning_app', lambda paths, llm: llm)
-    model = asgi.create_app().application()
+    model = asgi.create_app().application
+    assert hasattr(model, 'invoke') and hasattr(model, 'with_structured_output')
     assert model.root_client.timeout == 150
     assert model.root_client.max_retries == 0

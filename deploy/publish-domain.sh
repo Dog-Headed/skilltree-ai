@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 test "${1:-}" = '--approved-public-access' || { echo 'Explicit public-access approval required'; exit 1; }
 domain=skilltree.goutouren.work
-test -s /etc/skilltree/evaluators.htpasswd
+sudo test -s /etc/skilltree/evaluators.htpasswd
 test -x /opt/skilltree-certbot/bin/certbot
 test ! -e /etc/nginx/conf.d/skilltree-public.conf
 python3 - <<'PY'

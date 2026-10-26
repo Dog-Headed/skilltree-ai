@@ -90,4 +90,6 @@ def create_app():
         return ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
                           base_url=model.openai_api_base, temperature=model.temperature,
                           timeout=seconds, max_retries=0)
-    return EvaluationGateway(create_learning_app(paths, llm=production_model), paths, os.environ.get('SKILLTREE_QUOTA_DB', 'data/deployment-quota.sqlite'))
+    # LearningService expects an actual model instance; its own provider method
+    # already supplies lazy access to durable model tasks.
+    return EvaluationGateway(create_learning_app(paths, llm=production_model()), paths, os.environ.get('SKILLTREE_QUOTA_DB', 'data/deployment-quota.sqlite'))

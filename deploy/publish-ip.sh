@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 test "${1:-}" = '--approved-public-access' || { echo 'Explicit public-access approval required'; exit 1; }
 ip=47.82.118.171
-test -s /etc/skilltree/evaluators.htpasswd
+sudo test -s /etc/skilltree/evaluators.htpasswd
 test -x /opt/skilltree-certbot/bin/certbot
 test ! -e /etc/nginx/conf.d/skilltree-public.conf
 sudo install -d -m 755 /var/www/skilltree-acme/.well-known/acme-challenge

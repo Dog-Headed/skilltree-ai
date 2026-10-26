@@ -47,6 +47,8 @@ class StructuredReply:
             hint = ('AssessmentQuiz 的条件字段规则必须遵守：single_choice 的 answer_key 是单个字符串选项ID，'
                     '例如 "answer_key":"A"，绝不能是 ["A"]；multiple_choice 的 answer_key 是不重复的选项ID数组。'
                     '选择题选项字段为 option_id 和 text，答案ID必须存在于本题选项。'
+                    'single_choice、multiple_choice 使用 choice_exact 确定性评分，rubric 必须为 []；'
+                    'numeric_scalar 的 rubric 也为 []。只有 text 题提供非空 rubric。'
                     'text 的 answer_key 是非空字符串，并提供满分合计等于 max_score 的 rubric；'
                     'numeric_scalar 必须提供 numeric_rules，其他题型 numeric_rules 为 null。'
                     '原样保留所有项目、节点、测评身份和完整 frozen snapshot，不改变评分标准。')

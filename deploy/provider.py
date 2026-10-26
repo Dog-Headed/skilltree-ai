@@ -36,8 +36,11 @@ class StructuredReply:
         if self.schema_name == 'LearningPlan':
             messages = [SystemMessage(content=(
                 'LearningPlan 必须覆盖已请求的全部必要评价能力，同时保持节点与目标描述简洁。'
+                '每一个 observable_outcome 都必须使用明确可观察动词，例如选出、辨认、识别、指出、解释、描述或判断。'
+                'choice_exact 目标必须写成从给定选项中选出、辨认或判断具体内容，不能写成仅理解、知道、熟悉或口头说出。'
                 '每个 source_chunk_ids 引用片段的正文必须与该目标存在具体内容词汇关联，'
-                '不能只因片段是章节标题就引用它。逐字复制目录中的片段身份，不能编造。')),*messages]
+                '不能只因片段是章节标题就引用它。逐字复制目录中的片段身份，不能编造。'
+                '对全部目标逐项核对这些要求，不能只修复报错的第一个目标。')),*messages]
         if self.schema_name == 'AssessmentQuiz':
             # Pydantic's union schema cannot express these existing conditional
             # validators. Explain them to the provider; never coerce its answer.

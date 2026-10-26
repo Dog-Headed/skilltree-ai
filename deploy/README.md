@@ -42,6 +42,10 @@ documented thinking option. The evaluation deployment uses `false`: the same
 frozen quiz timed out at 150 seconds in default deep-thinking mode, while the
 non-thinking call plus existing bounded output repair produced a valid quiz.
 Strict schema, scoring, progression guards and durable recovery remain intact.
+The deployment provider retains LangChain/Pydantic's strict parsing and reports
+concise field paths or JSON syntax locations to the existing single-repair
+budget. It does not copy an entire failed completion/frozen snapshot into the
+repair prompt, guess missing fields, rewrite identities, or add hidden retries.
 Journald is bounded to 150 MiB/14 days; Nginx logs rotate daily/10 MiB, 14 copies.
 Access logs exclude query strings, credentials, and request/response bodies.
 

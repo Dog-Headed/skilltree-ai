@@ -11,6 +11,7 @@ from uuid import UUID
 from app.v3.learning_api import create_learning_app
 from app.v3.storage import V3Paths
 from .ownership import Ownership
+from .provider import StrictProvider
 
 
 class EvaluationGateway:
@@ -144,9 +145,9 @@ def create_app():
         extra_body = None if thinking == 'auto' else {'thinking_mode': thinking == 'true'}
         # Construct the SDK client with the timeout. Changing a Pydantic field
         # on an already-built model leaves its underlying HTTP client unchanged.
-        return ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
+        return StrictProvider(ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
                           base_url=model.openai_api_base, temperature=model.temperature,
-                          timeout=seconds, max_retries=0, extra_body=extra_body)
+                          timeout=seconds, max_retries=0, extra_body=extra_body))
     # LearningService expects an actual model instance; its own provider method
     # already supplies lazy access to durable model tasks.
     return EvaluationGateway(create_learning_app(paths, llm=production_model()), paths, os.environ.get('SKILLTREE_QUOTA_DB', 'data/deployment-quota.sqlite'))

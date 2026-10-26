@@ -8,10 +8,13 @@ not tenant-isolated accounts. Only use nonsensitive evaluation content.
 
 ## Runtime
 
-Ubuntu 24.04 / Python 3.12, existing `.venv`, one Uvicorn worker bound to
-127.0.0.1:8765. Nginx initially listens on 127.0.0.1:8080. Public publishing
+Ubuntu 24.04 / Python 3.12, existing `.venv`, one Uvicorn worker per service.
+`skilltree` retains the existing data/v3 records on 127.0.0.1:8765;
+`skilltree-evaluation` uses a separate data/evaluation-v3 store on 127.0.0.1:8767.
+Nginx only proxies the isolated evaluation store and initially listens on
+127.0.0.1:8080. Public publishing
 requires the owner's explicit approval and the cloud firewall allowing 80/443.
-Never open 8765. Keep `.env` mode 600, data/backups private, and credentials
+Never open 8765 or 8767. Keep `.env` mode 600, data/backups private, and credentials
 outside Git. Provision evaluation password hashes with `create_evaluators.py`;
 the script never prints passwords or replaces existing credentials.
 
@@ -36,7 +39,7 @@ Access logs exclude query strings, credentials, and request/response bodies.
 
 ## Backup and rollback
 
-Stop all writers before `python deploy/backup.py REPO NEW_BACKUP_DIRECTORY`.
+Stop both services/all writers before `python deploy/backup.py REPO NEW_BACKUP_DIRECTORY`.
 It backs up all SQLite stores with SQLite's backup API and integrity checks,
 copies `.env` privately, and archives the current committed code. A backup
 contains a manifest and must remain outside the repository. The initial
@@ -59,6 +62,12 @@ only ACME validation. Once the certificate succeeds, HTTP redirects to HTTPS
 and authenticated HTTPS proxies to the loopback application. The timer checks
 renewal twice daily and reloads Nginx after renewal. Do not bypass a browser
 certificate warning. If issuance fails, check cloud firewall access to port 80.
+
+With the owner's domain, prefer `skilltree.goutouren.work`: create an A record
+`skilltree -> 47.82.118.171`, wait until public DNS resolves correctly, then run
+`bash deploy/publish-domain.sh --approved-public-access`. Existing root-domain
+and other service records must remain untouched. The domain script obtains a
+regular domain certificate and sets up twice-daily renewal checks.
 
 ## GitHub deployment automation
 

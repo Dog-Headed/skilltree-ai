@@ -1,0 +1,35 @@
+[Unit]
+Description=SkillTree V3 isolated competition evaluation
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/skilltree-ai
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONUTF8=1
+EnvironmentFile=/etc/skilltree/runtime.env
+Environment=SKILLTREE_DATA_ROOT=data/evaluation-v3
+Environment=SKILLTREE_QUOTA_DB=data/evaluation-quota.sqlite
+ExecStart=/home/admin/skilltree-ai/.venv/bin/python -m uvicorn deploy.asgi:create_app --factory --host 127.0.0.1 --port 8767 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --timeout-keep-alive 10 --timeout-graceful-shutdown 180 --limit-concurrency 24 --no-access-log
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=200
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/admin/skilltree-ai/data /home/admin/skilltree-ai/work
+MemoryHigh=500M
+MemoryMax=700M
+TasksMax=128
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=skilltree-evaluation
+
+[Install]
+WantedBy=multi-user.target

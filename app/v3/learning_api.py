@@ -113,6 +113,11 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
     @app.get('/',include_in_schema=False)
     def home():return FileResponse(STATIC/'v3.html')
 
+    @app.get('/session')
+    def local_session():
+        # Production's authenticated gateway supplies the actual account.
+        return {'account':None}
+
     @app.get('/assets/{filename}',include_in_schema=False)
     def asset(filename:str):
         if filename not in {'v3.js','v3.css'}:raise KeyError(filename)

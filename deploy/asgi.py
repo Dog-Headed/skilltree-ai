@@ -6,16 +6,19 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+from uuid import UUID
 
 from app.v3.learning_api import create_learning_app
 from app.v3.storage import V3Paths
+from .ownership import Ownership
 
 
 class EvaluationGateway:
     def __init__(self, application, paths, quota_path):
         self.application = application
         self.paths = paths
-        self.quota_path = Path(quota_path)
+        self.quota_path = Path(quota_path).resolve()
+        self.ownership = Ownership(self.quota_path)
         self.active_writes = 0
 
     async def reply(self, send, status, value):
@@ -42,6 +45,14 @@ class EvaluationGateway:
         if scope['type'] != 'http':
             return await self.application(scope, receive, send)
         path, method = scope['path'], scope['method']
+        headers = dict(scope['headers'])
+        # Nginx replaces this header after successful HTTP authentication. Both
+        # application ports bind only to loopback; they are never public.
+        user = headers.get(b'x-evaluation-user', b'local').decode('ascii', errors='ignore')
+        if not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', user):
+            return await self.reply(send, 401, {'error': {'code': 'invalid_account', 'message': '请重新登录。'}})
+        if path == '/session' and method == 'GET':
+            return await self.reply(send, 200, {'account': user})
         if path == '/healthz' and method == 'GET':
             try:
                 with sqlite3.connect(self.paths.learning.as_uri() + '?mode=ro', uri=True) as conn:
@@ -54,20 +65,62 @@ class EvaluationGateway:
         allowed = path == '/' or path == '/capabilities' or path.startswith('/assets/') or path == '/projects' or path.startswith('/projects/') or path == '/material-packs' or path.startswith('/material-packs/')
         if not allowed or method not in {'GET', 'HEAD', 'POST', 'PATCH'}:
             return await self.reply(send, 403, {'error': {'code': 'evaluation_restricted', 'message': '评审环境不开放此操作。'}})
-        headers = dict(scope['headers'])
         length = headers.get(b'content-length', b'0')
         if not length.isdigit() or int(length) > 262144:
             return await self.reply(send, 413, {'error': {'code': 'request_too_large', 'message': '请求超过大小限制。'}})
+        match = re.match(r'^/projects/([^/]+)(?:/|$)', path)
+        if match and match[1] not in await asyncio.to_thread(self.ownership.owned, user):
+            return await self.reply(send, 404, {'error': {'code': 'not_found', 'message': '项目或记录不存在。'}})
+        if path == '/projects' and method == 'GET':
+            owned = await asyncio.to_thread(self.ownership.owned, user)
+            if not owned:
+                return await self.reply(send, 200, [])
+            chunks = []
+            status = 500
+            async def capture(message):
+                nonlocal status
+                if message['type'] == 'http.response.start':
+                    status = message['status']
+                elif message['type'] == 'http.response.body':
+                    chunks.append(message.get('body', b''))
+            await self.application(scope, receive, capture)
+            value = json.loads(b''.join(chunks))
+            if status == 200:
+                value = [p for p in value if p.get('project_id') in owned]
+            return await self.reply(send, status, value)
         if method in {'POST', 'PATCH'}:
-            user = headers.get(b'x-evaluation-user', b'local').decode('ascii', errors='ignore')
-            if not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', user):
-                user = 'local'
             if self.active_writes >= 2:
                 return await self.reply(send, 429, {'error': {'code': 'busy', 'message': '服务正在处理其他学习操作，请稍后重试。'}})
             self.active_writes += 1
             try:
                 if not await asyncio.to_thread(self.reserve, user):
                     return await self.reply(send, 429, {'error': {'code': 'daily_limit', 'message': '今日体验操作额度已用完，请联系演示负责人。'}})
+                if path == '/projects' and method == 'POST':
+                    body = b''
+                    while True:
+                        message = await receive()
+                        if message['type'] == 'http.disconnect':
+                            return
+                        body += message.get('body', b'')
+                        if len(body) > 262144:
+                            return await self.reply(send, 413, {'error': {'code': 'request_too_large', 'message': '请求超过大小限制。'}})
+                        if not message.get('more_body'):
+                            break
+                    try:
+                        project_id = 'v3_' + UUID(json.loads(body)['request_id']).hex
+                    except (ValueError, TypeError, KeyError, AttributeError):
+                        project_id = None
+                    if project_id and not await asyncio.to_thread(self.ownership.claim, project_id, user):
+                        return await self.reply(send, 404, {'error': {'code': 'not_found', 'message': '项目或记录不存在。'}})
+                    original_receive = receive
+                    delivered = False
+                    async def replay():
+                        nonlocal delivered
+                        if not delivered:
+                            delivered = True
+                            return {'type': 'http.request', 'body': body, 'more_body': False}
+                        return await original_receive()
+                    receive = replay
                 return await self.application(scope, receive, send)
             finally:
                 self.active_writes -= 1

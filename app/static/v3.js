@@ -6,10 +6,11 @@
   const state = { projects: [], legacyProjects: [], tab: 'current', id: null, view: null,
     busy: false, loading: false, capabilities: [], packs: [], selectedPack: null, menu: null,
     loadSequence: 0, pendingWrite: null };
+  let accountStoragePrefix = '';
   const storage = {
-    read(key, fallback = null) { try { return JSON.parse(localStorage.getItem('skilltree.v3.' + key)) ?? fallback; } catch { return fallback; } },
-    write(key, value) { try { localStorage.setItem('skilltree.v3.' + key, JSON.stringify(value)); } catch { /* Storage can be disabled. */ } },
-    remove(key) { try { localStorage.removeItem('skilltree.v3.' + key); } catch { /* No stored draft. */ } },
+    read(key, fallback = null) { try { return JSON.parse(localStorage.getItem('skilltree.v3.' + accountStoragePrefix + key)) ?? fallback; } catch { return fallback; } },
+    write(key, value) { try { localStorage.setItem('skilltree.v3.' + accountStoragePrefix + key, JSON.stringify(value)); } catch { /* Storage can be disabled. */ } },
+    remove(key) { try { localStorage.removeItem('skilltree.v3.' + accountStoragePrefix + key); } catch { /* No stored draft. */ } },
   };
   const uuid = () => crypto.randomUUID();
   const creationProjectId = (request) => request?.request_id ? 'v3_' + request.request_id.replaceAll('-', '') : null;
@@ -723,6 +724,14 @@
   window.addEventListener('resize', closeMenu); document.addEventListener('scroll', closeMenu, true);
   window.addEventListener('beforeunload', event => { if (state.busy) { event.preventDefault(); event.returnValue = ''; } });
   async function initialize() {
+    try {
+      const session = await get('/session');
+      if (session?.account) {
+        accountStoragePrefix = encodeURIComponent(session.account) + '.';
+        const account = el('span', { class: 'chip', text: '当前账号：' + session.account, id: 'current-account' });
+        $('new-project').before(account);
+      }
+    } catch { /* Standalone local V3 has no authenticated gateway. */ }
     render();
     const loaded = await Promise.allSettled([get('/capabilities'), get('/material-packs'), get('/projects')]);
     if (loaded[0].status === 'fulfilled') state.capabilities = list(loaded[0].value);

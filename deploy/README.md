@@ -3,8 +3,12 @@
 The original V3 graphs and business rules are unchanged. `deploy.asgi` adds
 evaluation-only controls outside the application: persistent daily quotas,
 two simultaneous writes, a local health route, and blocked destructive,
-legacy, and documentation routes. This remains a **shared single-user demo**,
-not tenant-isolated accounts. Only use nonsensitive evaluation content.
+legacy, and documentation routes. Authenticated accounts have separate project
+lists and authorization on every project, source, quiz and write route. Creation
+request replay cannot take ownership of another account's project. Ownership
+persists alongside quota records; old unassigned projects stay hidden until the
+owner confirms their account. This is Basic-auth account isolation, without
+self-service registration, password recovery, or a full account management UI.
 
 ## Runtime
 
@@ -36,6 +40,14 @@ a 120-second response window); the original local adapter and business budgets
 remain unchanged. Deep thinking remains enabled. Durable recovery is retained.
 Journald is bounded to 150 MiB/14 days; Nginx logs rotate daily/10 MiB, 14 copies.
 Access logs exclude query strings, credentials, and request/response bodies.
+
+The authenticated gateway returns `/session`; the UI displays the current
+account and separates browser drafts/selections by account. Standalone local
+V3 returns an anonymous session and retains its previous local storage keys.
+After an offline backup, confirmed historical ownership can be assigned with
+`python -m deploy.assign_projects --root data/evaluation-v3 --registry data/evaluation-quota.sqlite PROJECT_ID=ACCOUNT`.
+Assignments never replace an existing owner. Always back up the ownership/quota
+database together with business and checkpoint stores.
 
 ## Backup and rollback
 

@@ -22,10 +22,17 @@ env_hash=$(sha256sum .env | cut -d' ' -f1)
 sudo systemctl stop skilltree skilltree-evaluation
 trap 'sudo systemctl start skilltree skilltree-evaluation' EXIT
 .venv/bin/python deploy/backup.py "$PWD" "$backup_dir"
+sudo cp -a /etc/skilltree/runtime.env "$backup_dir/runtime.env"
 git merge --ff-only "$target"
 test "$env_hash" = "$(sha256sum .env | cut -d' ' -f1)"
 .venv/bin/python -c 'from app.v3.learning_api import create_learning_app; create_learning_app()'
-printf 'SKILLTREE_COMMIT=%s\nSKILLTREE_DAILY_WRITES=120\nSKILLTREE_ACCOUNT_DAILY_WRITES=40\n' "$target" | sudo tee /etc/skilltree/runtime.env >/dev/null
+sudo python3 - "$target" <<'PY'
+from pathlib import Path
+import sys
+path=Path('/etc/skilltree/runtime.env')
+lines=[line for line in path.read_text().splitlines() if not line.startswith('SKILLTREE_COMMIT=')]
+path.write_text('\n'.join([f'SKILLTREE_COMMIT={sys.argv[1]}',*lines])+'\n')
+PY
 sudo systemctl start skilltree skilltree-evaluation
 for attempt in $(seq 1 20); do
     if curl --fail --silent --max-time 5 http://127.0.0.1:8080/healthz; then

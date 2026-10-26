@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 import pytest
 
 from deploy.provider import StrictProvider, compact_parse_error
+from deploy.provider import StructuredReply
+from types import SimpleNamespace
 
 
 class RequiredScore(BaseModel):
@@ -61,3 +63,21 @@ def test_missing_parsed_output_remains_an_error():
     bound = StrictProvider(Model({'parsed': None, 'parsing_error': None})).with_structured_output(RequiredScore, method='json_mode')
     with pytest.raises(OutputParserException):
         bound.invoke([])
+
+
+@pytest.mark.parametrize('kind', ['single_choice', 'multiple_choice', 'numeric_scalar'])
+def test_non_text_rubric_is_rejected_before_an_ungradable_quiz_is_saved(kind):
+    question = SimpleNamespace(question_type=kind, rubric=['private criterion'])
+    parsed = SimpleNamespace(questions=[question])
+    model = Model({'parsed': parsed, 'parsing_error': None})
+    with pytest.raises(OutputParserException, match=r'questions.0.rubric must be') as error:
+        StructuredReply(model, 'AssessmentQuiz').invoke([])
+    assert question.rubric == ['private criterion']  # Reject; never silently rewrite model data.
+    assert 'private criterion' not in str(error.value) and model.calls == 1
+
+
+def test_valid_choice_and_text_rubrics_pass_without_mutation():
+    parsed = SimpleNamespace(questions=[SimpleNamespace(question_type='single_choice', rubric=[]),
+                                        SimpleNamespace(question_type='text', rubric=['criterion'])])
+    model = Model({'parsed': parsed, 'parsing_error': None})
+    assert StructuredReply(model, 'AssessmentQuiz').invoke([]) is parsed

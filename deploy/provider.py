@@ -51,6 +51,9 @@ class StructuredReply:
                     'numeric_scalar 的 rubric 也为 []。只有 text 题提供非空 rubric。'
                     'text 的 answer_key 是非空字符串，并提供满分合计等于 max_score 的 rubric；'
                     'numeric_scalar 必须提供 numeric_rules，其他题型 numeric_rules 为 null。'
+                    '每道题都必须包含完整 source_citations 数组，复制本目标上下文的真实来源身份；每个选项都必须有 text。'
+                    '按冻结 min_items 与证据种类满足最少覆盖即可，窄目标优先一道完整题，避免无谓扩题。'
+                    'previous_question_prompts 是禁止重用的历史题，换题必须设计不同的新题干与比较实例，不要复述历史题。'
                     '原样保留所有项目、节点、测评身份和完整 frozen snapshot，不改变评分标准。')
             messages = [SystemMessage(content=hint), *messages]
         result = self.runnable.invoke(messages, *args, **kwargs)
@@ -59,6 +62,12 @@ class StructuredReply:
             raise OutputParserException(compact_parse_error(error)) from error
         if result.get('parsed') is None:
             raise OutputParserException('A complete schema-valid JSON object is required.')
+        if self.schema_name == 'AssessmentQuiz':
+            for index, question in enumerate(result['parsed'].questions):
+                if question.question_type != 'text' and question.rubric:
+                    raise OutputParserException(
+                        f'questions.{index}.rubric must be [] for deterministic choice/numeric grading. '
+                        'Return the complete corrected JSON without changing frozen standards.')
         return result['parsed']
 
 

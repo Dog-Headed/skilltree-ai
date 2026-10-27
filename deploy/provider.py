@@ -75,8 +75,10 @@ class StructuredReply:
 
 
 class StrictProvider:
-    def __init__(self, model):
+    def __init__(self, model, *, structured_model=None, tools_model=None):
         self.model = model
+        self._structured_model = structured_model
+        self._tools_model = tools_model
 
     def __getattr__(self, name):
         return getattr(self.model, name)
@@ -89,7 +91,9 @@ class StrictProvider:
         # never returned to the business layer or copied into repair prompts.
         kwargs['include_raw'] = True
         schema = args[0] if args else kwargs.get('schema')
-        return StructuredReply(self.model.with_structured_output(*args, **kwargs), getattr(schema, '__name__', None))
+        model = self._structured_model(schema) if self._structured_model else self.model
+        return StructuredReply(model.with_structured_output(*args, **kwargs), getattr(schema, '__name__', None))
 
     def bind_tools(self, *args, **kwargs):
-        return self.model.bind_tools(*args, **kwargs)
+        model = self._tools_model() if self._tools_model else self.model
+        return model.bind_tools(*args, **kwargs)

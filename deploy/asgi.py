@@ -134,7 +134,7 @@ def create_app():
     # JSON. Configure transport here; retain business budgets and deep thinking.
     def production_model():
         from langchain_openai import ChatOpenAI
-        from app.services.llm import get_llm
+        from app.services.llm import get_llm, TASK_TIMEOUTS
         model = get_llm()
         seconds = float(os.environ.get('SKILLTREE_MODEL_TIMEOUT', '150'))
         if not 45 <= seconds <= 180:
@@ -145,9 +145,24 @@ def create_app():
         extra_body = None if thinking == 'auto' else {'thinking_mode': thinking == 'true'}
         # Construct the SDK client with the timeout. Changing a Pydantic field
         # on an already-built model leaves its underlying HTTP client unchanged.
-        return StrictProvider(ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
-                          base_url=model.openai_api_base, temperature=model.temperature,
-                          timeout=seconds, max_retries=0, extra_body=extra_body))
+        clients = {}
+        def client(timeout):
+            if timeout not in clients:
+                clients[timeout] = ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
+                    base_url=model.openai_api_base, temperature=model.temperature,
+                    timeout=timeout, max_retries=0, extra_body=extra_body)
+            return clients[timeout]
+        def structured_model(schema):
+            name = getattr(schema, '__name__', '')
+            kind = {'TextBatchScore': 'grade', 'AssessmentQuiz': 'quiz',
+                    'DiagnosisDecision': 'diagnosis', 'TutorReply': 'tutor'}.get(name)
+            timeout = TASK_TIMEOUTS.get(kind, 45) if kind else 120 if name in {
+                'LearningPlan', 'LearningPreparation', 'StudyNotes'} else seconds
+            return client(timeout)
+        # Core injection remains an actual model. Route at the structured schema
+        # boundary so its task-specific transports and strict adapters both apply.
+        return StrictProvider(client(seconds), structured_model=structured_model,
+                              tools_model=lambda: client(TASK_TIMEOUTS['diagnosis']))
     # LearningService expects an actual model instance; its own provider method
     # already supplies lazy access to durable model tasks.
     return EvaluationGateway(create_learning_app(paths, llm=production_model()), paths, os.environ.get('SKILLTREE_QUOTA_DB', 'data/deployment-quota.sqlite'))

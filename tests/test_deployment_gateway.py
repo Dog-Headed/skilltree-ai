@@ -64,3 +64,33 @@ def test_model_timeout_reaches_underlying_transport(monkeypatch):
     monkeypatch.setenv('SKILLTREE_THINKING_MODE', 'false')
     model = asgi.create_app().application
     assert model.extra_body == {'thinking_mode': False}
+
+
+def test_production_injection_uses_task_timeouts_and_keeps_strict_provider(monkeypatch):
+    from types import SimpleNamespace
+    from langchain_openai import ChatOpenAI
+    from deploy import asgi
+    from deploy.provider import StructuredReply
+    from app.v3.contracts import AssessmentQuiz, LearningPlan
+    from app.v3.evaluators import TextBatchScore
+    from app.v3.diagnosis import DiagnosisDecision
+    from app.v3.tutor import TutorReply
+    import app.services.llm
+    monkeypatch.setattr(app.services.llm, 'get_llm', lambda: ChatOpenAI(
+        model='unit-test-model', api_key='unit-test-placeholder',
+        base_url='http://127.0.0.1:1/v1', timeout=45, max_retries=0))
+    monkeypatch.setattr(asgi, 'create_learning_app', lambda paths, llm: llm)
+    monkeypatch.setenv('SKILLTREE_THINKING_MODE', 'false')
+    def bind(self, schema, **kwargs):
+        assert kwargs == {'method': 'json_mode', 'include_raw': True}
+        return SimpleNamespace(model=self)
+    monkeypatch.setattr(ChatOpenAI, 'with_structured_output', bind)
+    monkeypatch.setattr(ChatOpenAI, 'bind_tools', lambda self, *a, **kw: self)
+    provider = asgi.create_app().application
+    for schema, seconds in [(TextBatchScore,180),(AssessmentQuiz,120),(DiagnosisDecision,120),(TutorReply,45),(LearningPlan,120)]:
+        bound = provider.with_structured_output(schema, method='json_mode')
+        assert isinstance(bound, StructuredReply) and bound.schema_name == schema.__name__
+        assert bound.runnable.model.root_client.timeout == seconds
+        assert bound.runnable.model.root_client.max_retries == 0
+        assert bound.runnable.model.extra_body == {'thinking_mode': False}
+    assert provider.bind_tools([]).root_client.timeout == 120

@@ -3,35 +3,47 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0b1017">
+  <meta name="theme-color" content="#edf0ea">
   <meta name="description" content="SkillTree AI：从开放主题和可信资料出发，规划、学习、测评，逐步点亮学习路径。">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101720'/%3E%3Cpath d='M9 24V7h13M9 16h13M22 7v4M22 16v4' fill='none' stroke='%23c8f36a' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
-  <title>SkillTree AI · 学习工作台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2022%2026%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M11%2025%20C11%2018%2010%2013%2011%206%22%20fill%3D%22none%22%20stroke%3D%22%23716652%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M11%2012%20C%2015%2011%2018%207%2018%202%20C%2013%202%2011%206%2011%2012Z%22%20fill%3D%22%2339765e%22%2F%3E%3Cpath%20d%3D%22M11%2016%20C%207%2015.5%204%2012.5%204%208.5%20C%208%208.5%2010.5%2011.5%2011%2016Z%22%20fill%3D%22%23a7c5b1%22%20stroke%3D%22%2339765e%22%20stroke-width%3D%221.2%22%2F%3E%3C%2Fsvg%3E">
+  <title>SkillTree · 生长图谱</title>
+  <link rel="stylesheet" href="/assets/fonts.css">
   <link rel="stylesheet" href="/assets/v3.css">
+  <link rel="stylesheet" href="/assets/garden.css">
+  <link rel="stylesheet" href="/assets/botanical.css">
+  <script src="/assets/botanical.js" defer></script>
+  <script src="/assets/garden.js" defer></script>
   <script src="/assets/v3.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#content">跳到学习内容</a>
   <button id="sidebar-shade" class="shade" aria-label="关闭学习记录列表" hidden></button>
   <aside class="sidebar" id="sidebar" aria-label="学习记录">
-    <a class="brand" href="/" aria-label="SkillTree AI 首页"><span class="brand-icon">↳</span><span>SkillTree <b>AI</b><small>让每一步学习都有依据</small></span></a>
-    <button id="new-project" class="btn primary wide">＋ 新建学习</button>
-    <div class="record-heading">学习记录</div>
-    <div class="list-caption"><span id="list-label">我的学习</span><button id="refresh-list" class="icon-button" aria-label="刷新学习记录">↻</button></div>
+    <a class="brand" href="/" aria-label="SkillTree AI 首页"><svg viewBox="0 0 22 26" aria-hidden="true"><path d="M11 25 C11 18 10 13 11 6" fill="none" stroke="var(--stem)" stroke-width="2" stroke-linecap="round"/><path d="M11 12 C 15 11 18 7 18 2 C 13 2 11 6 11 12Z" fill="var(--leaf)"/><path d="M11 16 C 7 15.5 4 12.5 4 8.5 C 8 8.5 10.5 11.5 11 16Z" fill="var(--leaf-soft)" stroke="var(--leaf)" stroke-width="1.2"/></svg><span>SkillTree <b>AI</b><small>让好奇慢慢生长</small></span></a>
+    <button id="new-project" class="btn primary wide">＋ 种一棵树</button>
+    <div class="record-heading">我的树</div>
+    <div class="list-caption"><span id="list-label">我的树</span><button id="refresh-list" class="icon-button" aria-label="刷新学习记录">↻</button></div>
     <nav id="project-list" aria-label="选择学习记录"></nav>
     <div class="sidebar-foot"><span class="status-dot"></span>文字学习 · V3.0 <button id="capabilities-button" class="text-button">能力范围</button></div>
   </aside>
   <main>
     <header class="topbar">
       <button id="mobile-menu" class="icon-button mobile-only" aria-label="打开学习记录" aria-expanded="false" aria-controls="sidebar">☰</button>
-      <div class="breadcrumb">学习工作台 <span>/</span> <strong id="page-title">新的学习旅程</strong></div>
-      <button id="refresh-project" class="btn subtle" title="只读取状态，不调用模型">↻ 刷新状态</button>
+      <button id="garden-home" class="top-brand" aria-label="回到我的花园"><svg viewBox="0 0 22 26" aria-hidden="true"><path d="M11 25 C11 18 10 13 11 6" fill="none" stroke="var(--stem)" stroke-width="2" stroke-linecap="round"/><path d="M11 12 C 15 11 18 7 18 2 C 13 2 11 6 11 12Z" fill="var(--leaf)"/><path d="M11 16 C 7 15.5 4 12.5 4 8.5 C 8 8.5 10.5 11.5 11 16Z" fill="var(--leaf-soft)" stroke="var(--leaf)" stroke-width="1.2"/></svg>SkillTree</button>
+      <div class="course-compass"><div class="breadcrumb"><strong id="page-title">我的花园</strong></div><div id="growth-compass"></div></div>
+      <nav id="view-tabs" class="view-tabs" aria-label="学习树视图" hidden></nav>
+      <div id="compass-action" class="compass-action"></div>
+      <div class="top-tools"><button id="refresh-project" class="btn subtle" title="读取最新进度">↻ 刷新状态</button><button id="records-toggle" class="btn subtle">我的花园</button><button id="theme-toggle" class="icon-button" aria-label="切换深色外观">☾</button></div>
     </header>
     <div class="main-inner">
       <div id="message" class="message" role="status" aria-live="polite" hidden></div>
-      <div id="busy-notice" class="busy-notice" role="status" aria-live="polite" hidden><span class="spinner"></span><span id="busy-text">正在处理，请稍候…</span></div>
+      <div id="busy-notice" class="busy-notice" role="status" aria-live="polite" hidden><svg class="seed thinking-seed" viewBox="0 0 120 120" aria-hidden="true"><path class="ground" d="M14 94 Q60 88 106 94"/><ellipse class="seed-b" cx="60" cy="97" rx="8" ry="5"/><path class="sprout" pathLength="1" d="M60 93 C60 80 57 70 61 52"/><g transform="translate(61 58)"><g class="pop"><path class="lf" d="M0 0 C6 -2 12 -8 13 -15 C6 -14 1 -8 0 0Z"/></g></g><g transform="translate(60 66)"><g class="pop two"><path class="lf" d="M0 0 C-6 -1 -12 -6 -13 -13 C-6 -12 -1 -7 0 0Z"/></g></g></svg><span class="thinking-copy"><span id="busy-text">正在处理，请稍候…</span><span id="busy-elapsed" class="busy-elapsed"></span><span class="thinking-dots" aria-hidden="true"><i></i><i></i><i></i></span></span></div>
+      <section id="grading-state" class="grading-state" role="status" hidden>
+        <svg class="seed" viewBox="0 0 120 120" aria-hidden="true"><path class="ground" d="M14 94 Q60 88 106 94"/><ellipse class="seed-b" cx="60" cy="97" rx="8" ry="5"/><path class="sprout" pathLength="1" d="M60 93 C60 80 57 70 61 52"/><g transform="translate(61 58)"><g class="pop"><path class="lf" d="M0 0 C6 -2 12 -8 13 -15 C6 -14 1 -8 0 0Z"/></g></g><g transform="translate(60 66)"><g class="pop two"><path class="lf" d="M0 0 C-6 -1 -12 -6 -13 -13 C-6 -12 -1 -7 0 0Z"/></g></g></svg>
+        <h1>正在批改你的作答</h1><p class="muted">正在核对作答、阅读文字回答，并判断下一步怎么安排。</p>
+      </section>
       <section id="content" tabindex="-1" aria-label="当前学习内容"></section>
-      <footer class="main-foot">以实际作答与目标证据判断通过 · 页面刷新不会消耗模型请求</footer>
+      <footer class="main-foot">SKILLTREE · 让每一次好奇，都有生长的方向</footer>
     </div>
   </main>
   <dialog id="modal" aria-labelledby="modal-title">

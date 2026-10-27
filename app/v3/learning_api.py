@@ -120,8 +120,16 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
 
     @app.get('/assets/{filename}',include_in_schema=False)
     def asset(filename:str):
-        if filename not in {'v3.js','v3.css'}:raise KeyError(filename)
+        if filename not in {'v3.js','v3.css','garden.js','garden.css','botanical.js','botanical.css','fonts.css'}:raise KeyError(filename)
         return FileResponse(STATIC/filename)
+
+    @app.get('/assets/fonts/{filename}',include_in_schema=False)
+    def font(filename:str):
+        import re
+        if not re.fullmatch(r'design-[0-9]{3}\.(?:woff2|ttf)',filename):raise KeyError(filename)
+        path=STATIC/'fonts'/filename
+        if not path.is_file():raise KeyError(filename)
+        return FileResponse(path)
 
     @app.get('/projects')
     def projects():

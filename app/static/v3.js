@@ -6,6 +6,7 @@
   const state = { projects: [], legacyProjects: [], tab: 'current', id: null, view: null,
     busy: false, loading: false, capabilities: [], packs: [], selectedPack: null, menu: null,
     loadSequence: 0, pendingWrite: null };
+  let garden;
   let accountStoragePrefix = '';
   const storage = {
     read(key, fallback = null) { try { return JSON.parse(localStorage.getItem('skilltree.v3.' + accountStoragePrefix + key)) ?? fallback; } catch { return fallback; } },
@@ -20,13 +21,13 @@
     if (projectId && creationProjectId(storage.read('creation-request')) === projectId) storage.remove('creation-request');
   }
   const labels = { profile_review: '确认学习档案', materials_required: '准备学习资料', plan_review: '确认学习计划',
-    learning: '正在学习', quiz: '等待作答', assessment_review: '需要复核', budget_exhausted: '请求额度已用完',
+    learning: '正在学习', quiz: '等待作答', assessment_review: '需要复核', budget_exhausted: '额度暂时用完',
     exploring: '探索学习', paused: '已暂停', completed: '学习已完成', error: '需要恢复', running: '正在处理', legacy_readonly: 'V2 只读历史' };
   const actionLabels = { confirm_profile: '确认档案与范围', update_profile: '修改档案', import_material: '导入资料', adjust_scope: '调整学习范围',
-    choose_exploration: '明确进入探索模式', replan: '重新规划', confirm_plan: '确认并冻结计划', adjust_plan: '调整计划', begin: '开始学习', begin_learning: '开始学习',
-    ask: '发送问题', start_quiz: '开始测评', return_to_current: '返回当前节点', submit_answer: '提交本卷答案',
-    view_feedback: '查看评价反馈', annotate_dispute: '补充说明', replace_assessment: '申请换题', rest: '休息，保留当前进度', retry_3: '再试 3 轮',
-    continue_with_new_budget: '追加一次请求额度并继续', retry: '重试这次操作', return_to_teaching: '返回教学' };
+    choose_exploration: '明确进入探索模式', replan: '重新规划', confirm_plan: '确认这条路线', adjust_plan: '调整计划', begin: '开始学习', begin_learning: '开始学习',
+    ask: '发送问题', start_quiz: '我准备好了，开始小测', return_to_current: '返回当前节点', submit_answer: '提交这次小测',
+    view_feedback: '查看评价反馈', annotate_dispute: '补充说明', replace_assessment: '申请换题', rest: '休息，保留当前进度', retry_3: '再给 3 次闯关机会',
+    continue_with_new_budget: '追加一次额度，继续', retry: '重试这次操作', return_to_teaching: '返回教学' };
   const capabilityNames = { choice_exact: '选择题', numeric_scalar: '数值与单位', text_rubric: '文字与步骤', text_explanation: '文字讲解', text_question_answer: '文字问答' };
   const list = (value) => Array.isArray(value) ? value : [];
   const actions = () => list(state.view?.allowed_actions);
@@ -50,10 +51,17 @@
   function button(text, callback, style = '') { return el('button', { type: 'button', class: 'btn ' + style, text, onclick: callback, 'data-write': 'true', disabled: state.busy }); }
   function chip(text, kind = '') { return el('span', { class: 'chip ' + kind, text }); }
   function showMessage(message, kind = '') { $('message').textContent = message; $('message').className = 'message ' + kind; $('message').hidden = !message; }
-  function busy(value, text = '正在处理，请稍候…') {
-    state.busy = value; $('busy-notice').hidden = !value; $('busy-text').textContent = text;
+  let busyTimer = null;
+  function busy(value, text = null) {
+    // Long AI steps show how long they have been waiting instead of a bare spinner.
+    if (value && !state.busy) { const started = Date.now(); $('busy-elapsed').textContent = ''; clearInterval(busyTimer); busyTimer = setInterval(() => { const s = Math.round((Date.now() - started) / 1000); $('busy-elapsed').textContent = s >= 3 ? `已等待 ${s} 秒` : ''; }, 1000); }
+    if (!value) { clearInterval(busyTimer); busyTimer = null; $('busy-elapsed').textContent = ''; }
+    state.busy = value; $('busy-notice').hidden = !value;
+    if (text) $('busy-text').textContent = text;
+    const grading = value && $('busy-text').textContent.includes('评分');
+    $('grading-state').hidden = !grading; $('content').hidden = grading;
     document.body.setAttribute('aria-busy', String(value));
-    document.querySelectorAll('[data-write],form button[type=submit],.project-link,.project-more').forEach(n => { n.disabled = value; });
+    document.querySelectorAll('[data-write],form button[type=submit],.project-link,.project-more,#view-tabs button').forEach(n => { n.disabled = value; });
     $('new-project').disabled = value; $('refresh-project').disabled = value;
     // Inputs remain editable, but their submission captures immutable identities.
   }
@@ -81,7 +89,7 @@
   }
   async function selectProject(id) {
     if (state.busy) return; closeMenu(); closeSidebar(); showMessage('');
-    try { await loadProject(id); $('content').scrollIntoView({ block: 'start' }); } catch (error) { showMessage(error.message, 'error'); }
+    try { await loadProject(id); window.scrollTo({ top: 0, behavior: 'instant' }); } catch (error) { showMessage(error.message, 'error'); }
   }
   async function switchTab(tab) {
     if (state.busy) return; state.tab = tab; state.id = null; state.view = null; ++state.loadSequence;
@@ -102,7 +110,7 @@
     document.body.append(menu); const rect = trigger.getBoundingClientRect();
     menu.style.left = Math.max(8, Math.min(rect.left, innerWidth - menu.offsetWidth - 8)) + 'px';
     menu.style.top = Math.max(8, Math.min(rect.bottom + 4, innerHeight - menu.offsetHeight - 8)) + 'px';
-    state.menu = menu; trigger.setAttribute('aria-expanded', 'true'); menu.querySelector('button').focus();
+    state.menu = menu; trigger.setAttribute('aria-expanded', 'true'); menu.querySelector('button').focus({ preventScroll: true });
   }
   function renderList() {
 
@@ -119,7 +127,7 @@
       target.append(row);
     }
   }
-  function openModal(title, body) { closeMenu(); $('modal-title').textContent = title; $('modal-content').replaceChildren(body); if (!$('modal').open) $('modal').showModal(); }
+  function openModal(title, body) { closeMenu(); $('modal').classList.remove('source-drawer'); $('modal-title').textContent = title; $('modal-content').replaceChildren(body); if (!$('modal').open) $('modal').showModal(); }
   function closeModal() { if (!state.busy) $('modal').close(); }
   function field(label, input, hint = '', full = false) {
     const id = input.id || 'field-' + uuid(); input.id = id;
@@ -186,13 +194,16 @@
     const goal = textArea('goal', p.goal || '', { required: true, maxlength: 4000, rows: 3, placeholder: '例如：我想从零学习 Python，能自己写一个记账小工具。' });
     const priorValue = typeof p.prior_knowledge === 'string' ? p.prior_knowledge : list(p.prior_knowledge?.self_reported).join('\n');
     const prior = textArea('prior', priorValue, { maxlength: 4000, rows: 2, placeholder: '可以写“零基础”“不确定”，或简单说说已经会什么。' });
-    const grid = el('div', { class: 'form-grid' }, field('学习目标', goal, '只说你想学什么、希望做到什么，AI 来整理学科、范围和起步计划。', true), field('已有基础', prior, '可不填；自述用于调整起点，不代表已经通过测评。', true));
-    const total = input('time_budget_minutes', p.time_budget_minutes || 120, { type: 'number', min: 1, max: 10080, required: true });
+    const grid = el('div', { class: 'form-grid' }, field('你想学会什么？', goal, '日语、Python、心理学……写下想长期探索的方向，或一个具体目标。', true), field('已有基础', prior, '可不填；让这棵树从适合你的地方开始。', true));
+    const total = input('time_budget_minutes', p.time_budget_minutes || 1440, { type: 'number', min: 1, max: 10080, required: true });
     const session = input('session_minutes', p.session_minutes || 30, { type: 'number', min: 1, max: 480, required: true });
-    const advanced = el('details', { class: 'section-details' }, el('summary', { text: '时间安排（可选）' }), el('div', { class: 'form-grid' }, field('总学习时间（分钟）', total), field('单次时间（分钟）', session)));
+    const rhythm = el('summary');
+    const describeRhythm = () => { rhythm.textContent = `生长节奏 · 每次 ${session.value} 分钟，初始路线总预算 ${Number(total.value) >= 60 ? (Math.round(Number(total.value) / 60 * 10) / 10) + ' 小时' : total.value + ' 分钟'}（可调整）`; };
+    total.addEventListener('input', describeRhythm); session.addEventListener('input', describeRhythm); describeRhythm();
+    const advanced = el('details', { class: 'section-details' }, rhythm, el('div', { class: 'form-grid' }, field('初始路线总预算（分钟）', total, '分多次完成，不要求一天学完。调整总预算会影响路线范围。'), field('每次学习（分钟）', session, '控制每次的节奏，不会把整棵树缩成一课。')));
     form.append(grid, advanced, el('p', { class: 'muted-line', text: '创建后可直接让 AI 准备，也可以先上传讲义或内部培训文件。没有资料时整理通用知识；具体公司制度以实际文件为准。' }));
     if (pack) form.append(el('p', { class: 'welcome-note', text: '已填入示例目标，可继续编辑。示例资料可在创建后按需导入。' }));
-    form.append(el('div', { class: 'actions' }, el('button', { type: 'submit', class: 'btn primary', text: editing ? '保存学习档案' : '创建学习记录', disabled: state.busy })));
+    form.append(el('div', { class: 'actions' }, el('button', { type: 'submit', class: 'btn primary', text: editing ? '保存学习档案' : '种下这棵树', disabled: state.busy })));
     function collect() {
       return { goal: goal.value.trim(), prior_knowledge: prior.value.trim(), time_budget_minutes: Number(total.value), session_minutes: Number(session.value) };
     }
@@ -219,7 +230,7 @@
         const requestId = previous?.intent === encoded ? previous.request_id : uuid();
         storage.write('creation-request', { request_id: requestId, intent: encoded });
         state.selectedPack = pack; state.tab = 'current';
-        await write('/projects', { request_id: requestId, intent }, { busyText: '正在保存目标和基础…', success: '学习记录已创建。可选上传资料，或直接让 AI 整理计划。', after: result => {
+        await write('/projects', { request_id: requestId, intent }, { busyText: '正在记下这棵树的目标与起点…', success: '这棵树已种下。可以补充资料，再让 AI 规划生长路线。', after: result => {
           if (result?.project_id) { finishCreation(result.project_id); state.id = result.project_id; state.view = result; storage.remove('create-draft'); }
         } });
       }
@@ -233,11 +244,11 @@
     }
     const presets = el('div', { class: 'preset-row' });
     for (const pack of state.packs) presets.append(el('button', { class: 'preset-button', type: 'button', 'data-write': 'true', disabled: state.busy, onclick: async () => {
-      try { const data = await get('/material-packs/' + encodeURIComponent(pack.subject)); state.selectedPack = pack.subject; $('create-card').replaceChildren(el('h2', { text: '新建学习档案' }), profileForm(data.profile, { pack: pack.subject })); showMessage('已填入示例档案，可继续编辑。资料需创建后另行导入。'); }
+      try { const data = await get('/material-packs/' + encodeURIComponent(pack.subject)); state.selectedPack = pack.subject; $('create-card').replaceChildren(el('h2', { text: '种下一棵新的树' }), profileForm(data.profile, { pack: pack.subject })); showMessage('已填入示例档案，可继续编辑。资料需创建后另行导入。'); }
       catch (error) { showMessage(error.message, 'error'); }
     } }, el('span', { text: pack.title || pack.subject }), el('small', { text: '使用示例档案与资料' })));
     if (state.packs.length) root.append(presets);
-    root.append(el('section', { class: 'card card-accent', id: 'create-card' }, el('h2', { text: '新建学习档案' }), profileForm())); return root;
+    root.append(el('section', { class: 'card card-accent', id: 'create-card' }, el('h2', { text: '种下一棵新的树' }), profileForm())); return root;
   }
   function heading(view) {
     const profile = view.profile || {}; const root = el('div', { class: 'page-heading' }, el('div', {}, el('div', { class: 'eyebrow', text: (profile.subject_label || 'LEARNING') + ' / ' + (view.version === 'v2' || isLegacy() ? 'V2 HISTORY' : 'V3 LEARNING') }),
@@ -248,7 +259,7 @@
   }
   function flow(view) {
     const stage = view.page_state; const index = stage === 'profile_review' ? 0 : stage === 'materials_required' ? 1 : stage === 'plan_review' ? 2 : ['quiz','completed','assessment_review'].includes(stage) ? 4 : ['learning', 'exploring'].includes(stage) ? 3 : -1;
-    return el('div', { class: 'flow-steps', 'aria-label': '学习流程' }, ['档案', '资料', '计划', '学习', '测评'].map((s, i) => el('span', { class: 'flow-step' + (index === i ? ' active' : '') }, el('span', { class: 'step-dot', text: i + 1 }), s)));
+    return el('div', { class: 'flow-steps', 'aria-label': '学习流程' }, ['起点', '资料', '路线', '学习', '小测'].map((s, i) => el('span', { class: 'flow-step' + (index === i ? ' active' : '') }, el('span', { class: 'step-dot', text: i + 1 }), s)));
   }
   function profileSummary(view) {
     const p = view.profile || {}; const dl = el('dl', { class: 'profile-summary' });
@@ -291,7 +302,7 @@
     return group;
   }
   function sourceCard(view) {
-    const card = el('section', { class: 'card' }, el('div', { class: 'card-header' }, el('h2', { text: '学习资料' }), view.frozen ? chip('已冻结版本', 'green') : chip('草案 v' + (view.draft_revision || 1))));
+    const card = el('section', { class: 'card' }, el('div', { class: 'card-header' }, el('h2', { text: '学习资料' }), view.frozen ? chip('已随路线确认', 'green') : null));
     const sources = list(view.sources);
     if (!sources.length) card.append(el('p', { class: 'muted', text: view.guided ? '资料可选。不上传时，AI 将整理通用学习内容并标明来源；学习具体内部制度时请提供文件。' : '尚无公开教学资料，请先导入本课依据。' }));
     if (list(view.private_references).length) card.append(el('p', { class: 'muted-line', text: `已导入 ${view.private_references.length} 份评价参考，请在计划预览中选择适用节点，或明确不使用。` }));
@@ -300,18 +311,18 @@
     if (allowed('import_material')) {
       const row = el('div', { class: 'actions' }, button('＋ 粘贴 / 上传资料', () => sourceForm(view)));
       if (state.packs.length) row.append(button('导入示例资料', () => choosePack(view)));
-      card.append(row, el('p', { class: 'source-foot', text: '支持 UTF-8 TXT / Markdown。资料更新会使旧计划确认失效，需显式重新规划。私有测评资料只用于评价，不会出现在教学和来源列表中。' }));
+      card.append(row, el('p', { class: 'source-foot', text: '支持 TXT / Markdown 文字资料。更新资料后需要重新规划路线；仅供评分的参考资料不会出现在讲解里。' }));
     }
     return card;
   }
   function prepareView(view) {
     const root = el('div', {}, heading(view), flow(view));
     if (view.notice) root.append(el('p', { class: 'notice', text: view.notice }));
-    if (view.requires_replan) root.append(el('div', { class: 'notice', text: '资料或范围已经变化。当前计划是旧草案，不能确认。请点击“重新规划”，并核对新计划。' }));
+    if (view.requires_replan) root.append(el('div', { class: 'notice', text: '资料或目标已经变化，这条路线需要重新规划后才能确认。' }));
     if (view.preparation_notice) root.append(el('p', { class: 'notice blue', text: view.preparation_notice }));
     const cap = view.capability_check;
-    if (cap && (cap.status !== 'supported' || list(cap.reasons).length)) root.append(el('div', { class: 'notice blue' },
-      el('strong', { text: ({ supported: '能力检查通过', needs_material: '需要补充资料', exploration_only: '目前仅支持探索', unsupported: '当前范围包含未支持能力' })[cap.status] || '能力检查' }),
+    if (cap && cap.status !== 'supported') root.append(el('div', { class: 'notice blue' },
+      el('strong', { text: ({ needs_material: '还需要一份学习资料', exploration_only: '这门课目前只能自由探索', unsupported: '有一部分内容暂时还不能练习和评分' })[cap.status] || '学习条件检查' }),
       ...list(cap.reasons).map(s => el('p', { text: s }))));
     const profileCard = el('section', { class: 'card' }, el('h2', { text: view.guided ? '你的学习起点' : '学习档案' }), profileSummary(view));
     const controls = el('div', { class: 'actions' });
@@ -320,8 +331,8 @@
     if (controls.childElementCount) profileCard.append(controls);
     root.append(profileCard, sourceCard(view));
     if (view.plan || ['plan_review', 'learning', 'exploring'].includes(view.page_state) || allowed('begin')) {
-      const plan = el('section', { class: 'card' }, el('div', { class: 'card-header' }, el('h2', { text: view.frozen ? '已确认的学习计划' : '学习计划预览' }), view.frozen ? chip('资料与标准已冻结', 'green') : chip('待确认', 'amber')), renderPlan(view));
-      if (!view.frozen) plan.append(el('p', { class: 'muted-line', text: '确认后，计划、资料及评价策略版本会冻结。以后上传的新资料不会改写本项目的正式标准。' }));
+      const plan = el('section', { class: 'card' }, el('div', { class: 'card-header' }, el('h2', { text: view.frozen ? '已确认的生长路线' : '预览生长路线' }), view.frozen ? chip('路线已确认', 'green') : chip('待确认', 'amber')), renderPlan(view));
+      if (!view.frozen) plan.append(el('p', { class: 'muted-line', text: '确认后，这条路线和对应资料会固定下来；之后上传的新资料不会改变本课的评分标准。' }));
       const referenceChoices = [];
       if (!view.frozen && list(view.private_references).length) {
         plan.append(el('h3', { text: '评价参考的用途' }), el('p', { class: 'muted-line', text: '选择每份参考用于哪些节点的出题与评分；参考正文不会交给教学，也不会出现在公开来源中。' }));
@@ -345,14 +356,14 @@
       }
       const row = el('div', { class: 'actions' });
       if (allowed('adjust_plan')) row.append(button('调整计划', () => textCommand('adjust_plan', '希望如何调整学习计划？', 'feedback', '例如：把这一部分拆成两个更小的节点。')));
-      if (allowed('confirm_plan')) row.append(button('确认并冻结计划', () => {
+      if (allowed('confirm_plan')) row.append(button(actionLabels.confirm_plan, () => {
         try { return command('confirm_plan', { private_references: referenceChoices.map(read => read()) }); }
         catch (error) { showMessage(error.message, 'warn'); }
       }, 'primary'));
       plan.append(row); root.append(plan);
     }
     const row = el('div', { class: 'actions' });
-    for (const action of ['replan', 'begin', 'begin_learning']) if (allowed(action)) row.append(button(actionLabels[action], () => action === 'choose_exploration' ? confirmAction('进入探索模式', '探索模式只提供文字讨论，不产生正式通过或依赖解锁。', () => command(action)) : command(action), action.startsWith('begin') || action === 'replan' ? 'primary' : ''));
+    for (const action of ['replan', 'begin', 'begin_learning']) if (allowed(action)) row.append(button(actionLabels[action], () => action === 'choose_exploration' ? confirmAction('进入探索模式', '探索模式只提供文字讨论，不产生正式通过或依赖解锁。', () => command(action)) : command(action), action.startsWith('begin') || (action === 'replan' && (view.requires_replan || !allowed('confirm_plan'))) ? 'primary' : ''));
     if (allowed('rest')) row.append(button('休息，保留当前进度', () => command('rest'), 'subtle'));
     if (row.childElementCount) root.append(row);
     return root;
@@ -419,9 +430,14 @@
       const data = await get('/projects/' + encodeURIComponent(state.id) + '/sources/' + encodeURIComponent(sourceId) + '/versions/' + encodeURIComponent(version));
       const root = el('div', {}, el('p', { class: 'muted', text: data.source_description || '' }), chip('版本 ' + (data.source_version || version)), el('p', { class: 'muted-line', text: data.trust_note || '用户提供，未独立核验。引用定位不等同于内容已被人工核实。' }));
       const chunks = list(data.chunks);
-      if (chunks.length) for (const chunk of chunks) root.append(el('section', { class: 'source-chunk', id: 'source-' + chunk.chunk_id }, el('small', { text: `第 ${chunk.line_start}–${chunk.line_end} 行` + (chunk.heading ? ' · ' + chunk.heading : '') }), el('pre', { class: 'source-content', text: chunk.content })));
+      if (chunks.length) for (const chunk of chunks) {
+        const lines = el('div', { class: 'source-content' });
+        String(chunk.content || '').split('\n').forEach((line, index) => lines.append(el('span', { class: 'source-line' }, el('span', { class: 'source-line-number', 'aria-hidden': 'true', text: Number(chunk.line_start || 1) + index }), line)));
+        root.append(el('section', { class: 'source-chunk' + (chunk.chunk_id === chunkId ? ' highlighted' : ''), id: 'source-' + chunk.chunk_id }, el('small', { text: `第 ${chunk.line_start}–${chunk.line_end} 行` + (chunk.heading ? ' · ' + chunk.heading : '') }), lines));
+      }
       else root.append(el('pre', { class: 'source-content', text: data.content || '' }));
       openModal(data.title || '来源原文', root);
+      $('modal').classList.add('source-drawer');
       if (chunkId) document.getElementById('source-' + chunkId)?.scrollIntoView({ block: 'nearest' });
     } catch (error) { showMessage(error.status === 404 ? '该来源或版本不可公开读取，请刷新查看当前可用引用。' : error.message, 'error'); }
   }
@@ -492,8 +508,8 @@
   function quizCard(view) {
     const quiz = view.quiz; if (!quiz) return el('section', { class: 'card' }, el('h2', { text: '正在准备试卷' }), el('p', { class: 'muted', text: '请查看当前状态和可用恢复操作。' }));
     const form = el('form', { id: 'quiz-form' }); const key = 'answers-' + view.project_id + '-' + quiz.assessment_id; const saved = storage.read(key, {});
-    const card = el('section', { class: 'card card-accent' }, el('div', { class: 'card-header' }, el('h2', { text: '完成这一小轮测评' }), chip(list(quiz.questions).length + ' 道题', 'cyan')),
-      el('p', { class: 'muted-line', text: '本卷和评价标准已冻结。请独立作答；数值题填写数值与允许单位，解释步骤请写在文字题中。' }));
+    const card = el('section', { class: 'card card-accent' }, el('div', { class: 'card-header' }, el('h2', { text: '这一节的小测' }), chip(list(quiz.questions).length + ' 道题', 'cyan')),
+      el('p', { class: 'muted-line', text: '请独立作答。数值题写数值和单位，解题思路写在文字题里。' }));
     const answers = {};
     list(quiz.questions).forEach((q, index) => {
       const type = q.question_type || q.type; const fieldset = el('fieldset', { class: 'question' }, el('legend', { text: `第 ${index + 1} 题` }),
@@ -514,21 +530,25 @@
       for (const control of controls) control.addEventListener('input', () => storage.write(key, Object.fromEntries(Object.entries(answers).map(([id, read]) => [id, read()]))));
       form.append(fieldset);
     });
-    if (allowed('submit_answer')) form.append(el('div', { class: 'actions' }, el('button', { type: 'submit', class: 'btn primary', text: '提交本卷答案', disabled: state.busy })));
+    if (allowed('submit_answer')) form.append(el('div', { class: 'actions' }, el('button', { type: 'submit', class: 'btn primary', text: actionLabels.submit_answer, disabled: state.busy })));
     form.addEventListener('submit', async event => {
       event.preventDefault(); if (state.busy || !form.reportValidity()) return; const payload = Object.fromEntries(Object.entries(answers).map(([id, read]) => [id, read()]));
-      if (Object.values(payload).some(v => Array.isArray(v) ? !v.length : !v.trim())) { showMessage('请先完成每一道题，再提交本卷答案。', 'warn'); return; }
+      const missing = Object.values(payload).map((v, i) => (Array.isArray(v) ? !v.length : !v.trim()) ? i + 1 : 0).filter(Boolean);
+      if (missing.length) { showMessage(`还有第 ${missing.join('、')} 题没有作答，完成后再提交。`, 'warn'); document.getElementById('question-' + (missing[0] - 1))?.scrollIntoView({ block: 'center' }); return; }
       await command('submit_answer', { assessment_id: quiz.assessment_id, answers: payload }, { after: () => storage.remove(key) });
     }); card.append(form); return card;
   }
   function recoveryCard(view) {
     const stage = view.page_state; const headings = { running: '正在完成本次操作', error: '这一步需要恢复', paused: '暂停一下，进度已保留',
-      budget_exhausted: '本次请求额度已用完', assessment_review: '本轮暂时无法可靠判断', completed: '这次学习已经完成' };
-    const defaults = { running: '处理结束后点击“刷新状态”查看结果。刷新只读，不会再次请求模型。', error: '重试沿用原项目、试卷和剩余额度；不会因为重启重新计数。', paused: '休息不会自动调用教学、出题或诊断。只有你选择继续后才会进入下一步。',
-      budget_exhausted: '普通重试不会恢复额度。如仍可追加，需由你明确追加一次；额度已经追加过则保留进度休息。', assessment_review: '不确定、无效题或技术问题不算学生低分，也不计入有效失败轮次。', completed: '节点通过记录由后端守卫确认，已保存的结果可随时回来查看。' };
-    const card = el('section', { class: 'card status-card' }, el('div', { class: 'status-symbol' + (stage === 'completed' ? ' green' : ''), text: stage === 'completed' ? '✓' : stage === 'running' ? '◌' : '↳' }), el('h2', { text: headings[stage] || labels[stage] || '当前状态' }), el('p', { class: 'muted', text: view.notice || defaults[stage] || '' }));
+      budget_exhausted: '这一步的 AI 额度用完了', assessment_review: '这次没能可靠评分', completed: '这次学习已经完成' };
+    const defaults = { running: '处理结束后点击“刷新状态”查看结果。刷新只读，不会再次请求模型。', error: '重试会接着原来的进度和试卷继续，不会重复计数。', paused: '休息期间什么都不会自动发生。准备好了，再点继续。',
+      budget_exhausted: '为了避免无限消耗，每一步的 AI 调用都有上限。你可以追加一次额度继续；已经追加过时，进度会保留，稍后再来。', assessment_review: '题目或评分出了问题，这不算你答错，也不会消耗闯关机会。', completed: '每一节的通过记录都已保存，可以随时回来复习。' };
+    // A timed-out or failed model request is a service problem, not the learner's answer.
+    const modelTrouble = stage === 'error' && (['ModelRequestFailedError', 'LogicalTaskExhausted'].includes(view.error_type) || view.error_code === 'model_task_exhausted');
+    const modelTroubleText = 'AI 响应太慢或网络不稳定，这一步没有按时完成。这不是你作答的问题。' + (allowed('replace_assessment') ? '可以申请换一份新的小测重新作答，' : '') + (allowed('return_to_teaching') ? '也可以先返回教学，' : '') + '进度都已保存。';
+    const card = el('section', { class: 'card status-card' }, el('div', { class: 'status-symbol' + (stage === 'completed' ? ' green' : ''), text: stage === 'completed' ? '✓' : stage === 'running' ? '◌' : '↳' }), el('h2', { text: modelTrouble ? 'AI 这一步没能完成' : headings[stage] || labels[stage] || '当前状态' }), el('p', { class: 'muted', text: modelTrouble ? modelTroubleText : view.notice || defaults[stage] || '' }));
     if (view.pause_reason === 'replacement_limit') card.append(el('p', { class: 'notice', text: '已达到系统原因连续换题上限，当前保持暂停。请保留记录，待题目与评价问题修复后再继续。' }));
-    if (view.pause_reason === 'extension_ready') card.append(el('p', { class: 'notice green', text: '额外 3 轮已增加一次。选择“返回教学”才开始继续。' }));
+    if (view.pause_reason === 'extension_ready') card.append(el('p', { class: 'notice green', text: '已追加 3 次闯关机会。点“返回教学”继续学习。' }));
     if (view.error_type) card.append(view.recovery_required
       ? el('p', { class: 'muted-line', text: '检测到上次执行中断，可以从已保存的结果恢复。' })
       : el('details', { class: 'muted-line' }, el('summary', { text: '查看错误标识' }), el('code', { text: view.error_type })));
@@ -537,9 +557,9 @@
       if (!allowed(action)) continue;
       const label=action==='return_to_teaching' && view.error_code==='model_task_exhausted' && view.failed_task_kind==='tutor' ? '重新生成讲解' : actionLabels[action];
       row.append(button(label, () => {
-        if (action === 'continue_with_new_budget') confirmAction('追加请求额度', '同一操作链最多主动追加一次。追加请求幂等，普通重试与重启都不会刷新额度。', () => command(action));
-        else if (action === 'retry_3') confirmAction('追加 3 轮测评', '本节点只能主动追加一次。原有有效轮数保留，追加完成后仍暂停，需再选择返回教学。', () => command(action));
-        else if (action === 'replace_assessment') confirmAction('申请新卷', '系统原因换题有次数上限。新卷使用新的测验身份，旧卷与说明保留，冻结标准不变。', () => command(action, { assessment_id: view.assessment_id }));
+        if (action === 'continue_with_new_budget') confirmAction('追加请求额度', '每一步最多追加一次额度。追加后会从中断处继续。', () => command(action));
+        else if (action === 'retry_3') confirmAction('追加 3 轮测评', '每一节只能追加一次。之前的记录会保留，追加后点“返回教学”继续。', () => command(action));
+        else if (action === 'replace_assessment') confirmAction('申请新卷', '换一份新的小测。旧试卷和你的说明会保留，评分标准不变。', () => command(action, { assessment_id: view.assessment_id }));
         else if (action === 'annotate_dispute') textCommand(action, '补充本轮评价说明', 'annotation', '说明你认为需要复核的地方。补充只留档，不改写正式评分，也不当作新的作答。', view.assessment_id);
         else if (action === 'view_feedback') { document.getElementById('evaluation-feedback')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         else command(action);
@@ -601,15 +621,16 @@
     return root;
   }
   function render() {
-    renderList(); $('page-title').textContent = state.view ? currentName(state.view) : isLegacy() ? 'V2 只读历史' : '新的学习旅程';
+    renderList(); $('page-title').textContent = state.view ? currentName(state.view) : '我的花园';
+    garden.shell();
     $('refresh-project').hidden = !state.id;
     let content;
-    if (!state.view) content = welcome();
+    if (!state.view) content = garden.home(welcome());
     else if (isLegacy() || state.view.version === 'v2' || state.view.page_state === 'legacy_readonly') content = legacyView(state.view);
     else if (!state.view.learning_runtime_ready || allowed('begin') || allowed('begin_learning')) {
-      content = prepareView(state.view);
+      content = garden.prepare(state.view, prepareView(state.view));
       if (['error', 'running', 'budget_exhausted'].includes(state.view.page_state)) content.prepend(recoveryCard(state.view));
-    } else content = learningView(state.view);
+    } else content = garden.lesson(state.view);
     $('content').replaceChildren(content); busy(state.busy);
   }
   function capture() { return { project_id: state.view.project_id, pending_input_id: state.view.pending_input_id, draft_revision: state.view.draft_revision, assessment_id: state.view.assessment_id }; }
@@ -630,7 +651,7 @@
   }
   async function write(url, body, { method = 'POST', busyText, success = '', after = null } = {}) {
     if (state.busy) return; closeMenu(); busy(true, busyText); showMessage('');
-    const projectId = state.id; const pendingIdentity = state.view?.pending_input_id; let result, confirmed = false;
+    const projectId = state.id; const pendingIdentity = state.view?.pending_input_id; const previousView = state.view; let result, confirmed = false;
     state.pendingWrite = { url, body, method };
     try {
       const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) });
@@ -645,6 +666,7 @@
       confirmed = true; if (after) after(result);
       if (result?.project_id && !result.deleted) { state.id = result.project_id; state.view = result; storage.write('selection', { id: state.id, tab: state.tab }); }
       else if (state.id) await loadProject(state.id);
+      garden.afterWrite(body, state.view, previousView);
       $('modal').close(); await refreshList(); render();
       if (success) showMessage(success);
     } catch (error) {
@@ -709,7 +731,7 @@
       finally { busy(false); }
     }
     closeSidebar(); closeMenu(); state.tab = 'current'; state.id = null; state.view = null; ++state.loadSequence;
-    storage.remove('selection'); showMessage(''); render(); $('content').scrollIntoView({ block: 'start' });
+    storage.remove('selection'); showMessage(''); render(); window.scrollTo({ top: 0, behavior: 'instant' });
   }
   $('new-project').addEventListener('click', newProject);
 
@@ -721,7 +743,11 @@
   $('capabilities-button').addEventListener('click', showCapabilities);
   document.addEventListener('click', event => { if (state.menu && !state.menu.contains(event.target) && !event.target.closest('.project-more')) closeMenu(); });
   document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeMenu(); closeSidebar(); } });
-  window.addEventListener('resize', closeMenu); document.addEventListener('scroll', closeMenu, true);
+  window.addEventListener('resize', closeMenu);
+  // Font loading and focus can cause a scroll immediately after opening a menu.
+  // Close on user scroll intent rather than on those unrelated layout changes.
+  document.addEventListener('wheel', closeMenu, { passive: true });
+  document.addEventListener('touchmove', closeMenu, { passive: true });
   window.addEventListener('beforeunload', event => { if (state.busy) { event.preventDefault(); event.returnValue = ''; } });
   async function initialize() {
     try {
@@ -732,6 +758,7 @@
         $('new-project').before(account);
       }
     } catch { /* Standalone local V3 has no authenticated gateway. */ }
+    const initialRoute = location.hash;
     render();
     const loaded = await Promise.allSettled([get('/capabilities'), get('/material-packs'), get('/projects')]);
     if (loaded[0].status === 'fulfilled') state.capabilities = list(loaded[0].value);
@@ -739,11 +766,16 @@
     if (loaded[2].status === 'fulfilled') state.projects = asProjects(loaded[2].value);
     else showMessage('暂时无法连接学习服务。已保存的输入会留在本机，恢复连接后请刷新。', 'error');
     const selection = storage.read('selection');
-    if (selection?.id && selection.tab !== 'legacy') {
+    if (initialRoute.startsWith('#/p/') && selection?.id && selection.tab !== 'legacy') {
       state.tab = 'current';
       try { if (isLegacy()) await refreshList(); await loadProject(selection.id); } catch { state.id = null; state.view = null; storage.remove('selection'); }
     }
     render();
+    if (initialRoute) { history.replaceState(null, '', initialRoute); await garden.readRoute(); }
   }
+  garden = window.SkillTreeGarden({el, button, chip, list, nodesFor, currentName, state, allowed, command,
+    selectProject, projectMenu, tutorCard, quizCard, recoveryCard, objectiveFeedback, budgetCard,
+    sourceCard, renderPlan, storage, labels, actionLabels, render, newProject, markdown, citationButtons, textCommand, uuid});
+  garden.init();
   initialize();
 })();

@@ -260,7 +260,7 @@ def invoke_with_shared_budget(
             raise
 
 
-def get_llm():
+def get_llm(*, timeout=45):
     config = {
         name: os.getenv(name, "").strip()
         for name in ("LLM_MODEL", "LLM_API_KEY", "LLM_BASE_URL")
@@ -276,6 +276,21 @@ def get_llm():
         api_key=config["LLM_API_KEY"],
         base_url=config["LLM_BASE_URL"],
         temperature=0,
-        timeout=45,
+        timeout=timeout,
         max_retries=0,
     )
+
+
+def get_planning_llm():
+    """A full multi-session route needs longer than a single tutor response."""
+    return get_llm(timeout=120)
+
+
+# Grading several text answers against rubrics took 63–78 s per request with a
+# thinking model, so the 45 s default timed out on both attempts.
+TASK_TIMEOUTS = {"grade": 180, "quiz": 120, "diagnosis": 120}
+
+
+def get_task_llm(kind):
+    """Per learning task kind (tutor, quiz, grade, diagnosis) request timeout."""
+    return get_llm(timeout=TASK_TIMEOUTS.get(kind, 45))

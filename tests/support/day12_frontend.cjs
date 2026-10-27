@@ -18,7 +18,10 @@ const path = require('node:path');
   const api = async route => { const response = await context.request.get(route); assert.equal(response.status(), 200); return response.json(); };
   const pending = () => page.evaluate(() => JSON.parse(localStorage.getItem('skilltree.v3.creation-request')));
   const idle = () => page.locator('body[aria-busy="false"]').waitFor();
-  const clicks = name => page.getByRole('button', { name, exact: true }).click();
+  const clicks = async name => {
+    if (name === '＋ 种一棵树' && !await page.locator('#sidebar').evaluate(n=>n.classList.contains('open'))) await page.getByRole('button',{name:'我的花园',exact:true}).click();
+    await page.getByRole('button', { name, exact: true }).click();
+  };
   async function writeClick(name) {
     const sent = page.waitForRequest(request => request.method() === 'POST');
     await clicks(name); await sent; await idle();
@@ -33,9 +36,9 @@ const path = require('node:path');
   }
   const creations = () => requests.filter(r => r.method === 'POST' && r.path === '/projects');
   async function create(subject = 'mathematics') {
-    if (!(await page.locator('#create-form').count())) await clicks('＋ 新建学习');
+    if (!(await page.locator('#create-form').count())) await clicks('＋ 种一棵树');
     await page.locator('#create-form').waitFor(); await preset(subject);
-    await writeClick('创建学习记录');
+    await writeClick('种下这棵树');
     const request = creations().at(-1), pid = 'v3_' + request.body.request_id.replaceAll('-', '');
     ids.push(pid); return { pid, request, view: await api('/projects/' + pid) };
   }
@@ -52,8 +55,10 @@ const path = require('node:path');
     for (const button of await buttons.all()) assert.equal(await button.isEnabled(), true);
   }
   async function selectAndOpenMenu(topic) {
+    if (!await page.locator('#sidebar').evaluate(n=>n.classList.contains('open'))) await clicks('我的花园');
     await page.locator('.project-link').filter({ hasText: topic }).first().click();
     await page.waitForFunction(title => document.getElementById('page-title').textContent === title, topic);
+    await clicks('我的花园');
     await page.locator('.project-row.active .project-more').click();
     assert.equal(await page.getByRole('menuitem', { name: '重命名', exact: true }).isVisible(), true);
   }
@@ -61,17 +66,18 @@ const path = require('node:path');
     await page.goto('/'); await page.locator('.preset-button').first().waitFor();
     if (scenario === 'completed-new') {
       const a = await create(); await importPack('mathematics');
-      await writeClick('AI 整理学习计划'); await writeClick('确认并冻结计划'); await writeClick('开始学习');
+      await writeClick('AI 整理学习计划'); await writeClick('确认这条路线'); await writeClick('开始学习');
       for (const answer of ['-5', '7']) {
-        await writeClick('开始测评');
+        await writeClick('我准备好了，开始小测');
         await page.locator('#quiz-form .answer-numeric').fill(answer);
         await page.locator('#quiz-form textarea').fill('对等式两边做同样的运算，并将结果代回验证。');
-        await writeClick('提交本卷答案');
+        await writeClick('提交这次小测');
+        await clicks(answer === '7' ? '查看学习小结' : '继续学习');
       }
       const finished = await api('/projects/' + a.pid);
       assert.equal(finished.page_state, 'completed'); assert.equal(finished.completed_node_ids.length, 2);
       assert.equal(await pending(), null);
-      await clicks('＋ 新建学习'); const b = await create();
+      await clicks('＋ 种一棵树'); const b = await create();
       assert.notEqual(b.pid, a.pid); assert.notEqual(b.request.body.request_id, a.request.body.request_id);
       assert.deepEqual(b.request.body.intent, a.request.body.intent);
       assert.equal(b.view.page_state, 'profile_review'); assert.deepEqual(b.view.completed_node_ids || [], []);
@@ -87,34 +93,34 @@ const path = require('node:path');
       });
       await page.route('**/projects/*', route => hideQuery && route.request().method() === 'GET'
         ? route.abort('connectionfailed') : route.continue());
-      await preset(); await writeClick('创建学习记录');
+      await preset(); await writeClick('种下这棵树');
       assert.equal(creations().length, 1, 'A lost response must not automatically replay the POST');
       assert.ok(requests.some(r => r.method === 'GET' && r.path === '/projects/' + failedId));
       if (scenario === 'response-lost-found') {
         ids.push(failedId); assert.equal(await pending(), null);
-        await clicks('＋ 新建学习'); const next = await create(); assert.notEqual(next.pid, failedId);
+        await clicks('＋ 种一棵树'); const next = await create(); assert.notEqual(next.pid, failedId);
       } else {
         const original = await pending(); assert.equal(original.request_id, creations()[0].body.request_id);
         // Reload and the explicit New button must preserve an unresolved attempt.
         await page.reload(); await page.locator('.preset-button').first().waitFor();
-        await clicks('＋ 新建学习'); await idle();
+        await clicks('＋ 种一棵树'); await idle();
         assert.equal((await pending()).request_id, original.request_id);
-        hideQuery = false; await preset(); await writeClick('创建学习记录');
+        hideQuery = false; await preset(); await writeClick('种下这棵树');
         assert.equal(creations().length, 2); assert.deepEqual(creations()[0].body, creations()[1].body);
         assert.equal(await pending(), null); ids.push(failedId);
         assert.equal((await api('/projects/' + failedId)).page_state, 'profile_review');
       }
     } else if (scenario === 'legacy-request') {
-      const a = await create(); await clicks('＋ 新建学习'); const b = await create('english');
+      const a = await create(); await clicks('＋ 种一棵树'); const b = await create('english');
       // Simulate the stale successful request retained by the older frontend.
       await page.evaluate(record => localStorage.setItem('skilltree.v3.creation-request', JSON.stringify(record)),
         { request_id: a.request.body.request_id, intent: JSON.stringify(a.request.body.intent) });
-      await clicks('＋ 新建学习'); await page.locator('#create-form').waitFor();
+      await clicks('＋ 种一棵树'); await page.locator('#create-form').waitFor();
       assert.equal(await pending(), null);
       const c = await create(); assert.notEqual(c.pid, a.pid); assert.notEqual(c.pid, b.pid);
       assert.deepEqual(c.request.body.intent, a.request.body.intent);
     } else {
-      const a = await create(); await clicks('＋ 新建学习'); const b = await create('english');
+      const a = await create(); await clicks('＋ 种一棵树'); const b = await create('english');
       let release; const gate = new Promise(resolve => { release = resolve; });
       let started; const arrived = new Promise(resolve => { started = resolve; });
       let injected = false, hideQuery = false;

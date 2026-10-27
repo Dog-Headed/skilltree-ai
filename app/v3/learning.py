@@ -1,5 +1,6 @@
 """Day 11 learning graph: frozen facts, durable commands and bounded model tasks."""
 from contextlib import contextmanager
+from functools import partial
 from hashlib import sha256
 import json
 from typing import TypedDict
@@ -66,10 +67,10 @@ class LearningService:
             if repo.conn.execute("SELECT 1 FROM runtime_metadata WHERE key='demo_only'").fetchone():
                 raise ValueError('Fake preparation stores are not live learning stores')
 
-    def _provider(self):
+    def _provider(self,kind):
         if self.llm is not None: return self.llm
-        from app.services.llm import get_llm
-        return get_llm()
+        from app.services.llm import get_task_llm
+        return partial(get_task_llm,kind)
 
     @staticmethod
     def _config(pid): return {'configurable': {'thread_id': pid}, 'recursion_limit': 30}
@@ -302,7 +303,7 @@ class LearningService:
 
     def _task(self,pid,key,data,kind,callback):
         with LearningRepository(self.paths) as repo: p=repo.get_project(pid)
-        return run_model_task(self.paths,pid,p['operation_id'],key,data,kind,callback,llm=self._provider)
+        return run_model_task(self.paths,pid,p['operation_id'],key,data,kind,callback,llm=self._provider(key.split(':')[0]))
 
     def _contexts(self,repo,pid,node,purpose):
         builder=ContextBuilder(repo)

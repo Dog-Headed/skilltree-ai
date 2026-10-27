@@ -201,24 +201,44 @@ def _historical_entries(history, *, quiz, node):
     return entries
 
 
+def _without_empty(value):
+    """Drop null and empty fields; a text answer's evidence has no option or numeric slots."""
+    if isinstance(value, dict):
+        return {key: _without_empty(item) for key, item in value.items() if item not in (None, [], {}, "")}
+    if isinstance(value, list):
+        return [_without_empty(item) for item in value]
+    return value
+
+
+def _prompt_json(value):
+    # Several text questions yield dozens of evidence records; compact JSON keeps
+    # the full content inside the server context limit.
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
 def _current_context(quiz, evaluation, node, policy, completed_node_ids):
+    # The project policy holds rules for every node; a wide plan would push the
+    # prompt past the server limit. Diagnosis only judges this node's objectives.
+    objectives = {objective.objective_id for objective in node.objectives}
+    node_policy = policy.model_dump()
+    node_policy["objective_rules"] = [rule for rule in node_policy["objective_rules"] if rule["objective_id"] in objectives]
     return {
         "project_id": quiz.project_id, "node_id": quiz.node_id, "assessment_id": quiz.assessment_id,
         "snapshot": quiz.snapshot.model_dump(), "node": node.model_dump(),
-        "policy": policy.model_dump(), "grading_status": evaluation.grading_status,
+        "policy": node_policy, "grading_status": evaluation.grading_status,
         "frozen_questions": [{"question_id": question.question_id,"prompt": question.prompt,
                               "rubric": [criterion.model_dump() for criterion in question.rubric]}
                              for question in quiz.questions],
-        "question_results": [item.model_dump() for item in evaluation.question_results],
+        "question_results": [_without_empty(item.model_dump()) for item in evaluation.question_results],
         "uncertainty_reasons": evaluation.uncertainty_reasons, "missing_evidence": evaluation.missing_evidence,
-        "current_evidence": [{**item.model_dump(), "quote": (item.quote or "")[:600]} for item in evaluation.evidence],
+        "current_evidence": [_without_empty({**item.model_dump(), "quote": (item.quote or "")[:600]}) for item in evaluation.evidence],
         "completed_prerequisite_ids": [identity for identity in node.prerequisite_ids if identity in completed_node_ids],
         "history_query_node_ids": [node.node_id, *node.prerequisite_ids],
     }
 
 
 def _tool_loop(base_llm, *, context, history, node, completed_node_ids, budget):
-    messages = [SystemMessage(content=SYSTEM), HumanMessage(content=json.dumps(context, ensure_ascii=False))]
+    messages = [SystemMessage(content=SYSTEM), HumanMessage(content=_prompt_json(context))]
     tool_llm = base_llm.bind_tools(TOOL_SCHEMAS)
     logs, queried_evidence, queried_records = [], {}, {}
     rounds = executions = 0
@@ -339,7 +359,7 @@ def diagnose(*, quiz, evaluation, node, policy, history, completed_node_ids, llm
     identity = {key: context[key] for key in ('project_id', 'node_id', 'assessment_id')}
     for key, value in identity.items():
         context['output_schema']['properties'][key]['const'] = value
-    prompt = json.dumps(context, ensure_ascii=False)
+    prompt = _prompt_json(context)
     if len(prompt) > SERVER_LIMITS.max_context_characters:
         raise ValueError("诊断上下文超过服务端字符上限")
     structured = llm.with_structured_output(DiagnosisDecision, method="json_mode")

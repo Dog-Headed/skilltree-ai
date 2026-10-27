@@ -128,9 +128,9 @@ These finite evaluations do not guarantee quality for arbitrary topics or docume
 
 ## Latest Development
 
-**2026-10-25 · Goal-first creation and optional materials.** Create a record with a goal and optional prior knowledge; AI proposes the scope. The mode selector and V2 history entry are removed. Uploaded files guide the plan; missing organization-specific policy documents are requested rather than invented. Restart the server after updating.
+**2026-10-27 · Botanical learning workbench.** The growth graph, garden home, lessons and feedback now use the live V3 backend. New trees support multi-session planning; diagnosis context is compacted and model timeouts are selected per task without raising request budgets. Restart the server after updating.
 
-[Read the latest development and verification record](docs/v3/GOAL_FIRST_ONBOARDING.md). The current increment passed 934 automated tests on 2026-10-25; real-model usability checks are reported separately. The user accepted Day 13's finite evaluation and recovery scope on 2026-10-24. Historical reports and frozen evidence remain in the repository.
+[Read the latest implementation and publication checks](docs/v3/BOTANICAL_UPDATE_20261027.md). The selected 46 distinct checks, including 16 browser scenarios, passed after adapting one old test to the new project route. This is workflow regression evidence; previous full-suite and real-model handoff results are recorded separately.
 
 ## Contributing
 

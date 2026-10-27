@@ -43,7 +43,7 @@ const path = require('node:path');
     const details = await api('/material-packs/mathematics');
     await page.locator('.preset-button').filter({ hasText: pack.title }).click();
     await page.waitForFunction(topic => document.querySelector('#create-form textarea[name=goal]').value === topic, details.profile.goal);
-    await writeClick('创建学习记录');
+    await writeClick('种下这棵树');
     pid = requests.find(r => r.method === 'POST' && r.path === '/projects').body.request_id.replaceAll('-', ''); pid = 'v3_' + pid;
     await click('导入示例资料'); await page.getByRole('dialog').getByRole('button', { name: pack.title, exact: true }).click();
     await writeClick('确认继续'); await writeClick('AI 整理学习计划');
@@ -102,11 +102,11 @@ const path = require('node:path');
       await page.screenshot({ path: path.join(evidence, 'mobile-generic-reference-selected.png'), fullPage: true });
     } else if (scenario === 'missing-choice') {
       const before = confirmations().length;
-      await click('确认并冻结计划'); assert.match(await page.locator('#message').innerText(), /请为每份评价参考选择/);
+      await click('确认这条路线'); assert.match(await page.locator('#message').innerText(), /请为每份评价参考选择/);
       assert.equal(confirmations().length, before, 'Unselected reference must not send a POST');
       checks.missing_purpose_post_count = confirmations().length - before;
       await page.locator('.reference-choice select').selectOption('bind');
-      await click('确认并冻结计划'); assert.match(await page.locator('#message').innerText(), /请为每份评价参考选择/);
+      await click('确认这条路线'); assert.match(await page.locator('#message').innerText(), /请为每份评价参考选择/);
       assert.equal(confirmations().length, before, 'Binding without nodes must not send a POST');
       checks.missing_nodes_post_count = confirmations().length - before;
       await choose(page, 'exclude');
@@ -125,7 +125,7 @@ const path = require('node:path');
 
     if (scenario === 'stale-and-duplicate') {
       const stale = await context.newPage(); stale.setDefaultTimeout(15000);
-      await stale.goto('/'); await stale.locator('.reference-choice').waitFor(); await choose(stale);
+      await stale.goto('/#/p/' + encodeURIComponent(pid) + '/learn'); await stale.locator('.reference-choice').waitFor(); await choose(stale);
       let release, started; const gate = new Promise(resolve => { release = resolve; }); const arrived = new Promise(resolve => { started = resolve; });
       let intercepted = false;
       await page.route('**/projects/' + pid + '/resume', async route => {
@@ -133,22 +133,22 @@ const path = require('node:path');
         return route.continue();
       });
       const before = confirmations().length;
-      await page.getByRole('button', { name: '确认并冻结计划', exact: true }).dblclick(); await arrived;
+      await page.getByRole('button', { name: '确认这条路线', exact: true }).dblclick(); await arrived;
       assert.equal(confirmations().length, before + 1, 'A double click must submit only once');
       checks.double_click_post_count = confirmations().length - before;
-      assert.equal(await page.getByRole('button', { name: '确认并冻结计划', exact: true }).isEnabled(), false);
+      assert.equal(await page.getByRole('button', { name: '确认这条路线', exact: true }).isEnabled(), false);
       release(); await idle(page);
       const original = confirmations().at(-1).body;
       const replay = await context.request.post('/projects/' + pid + '/resume', { data: original });
       assert.equal(replay.status(), 200, 'Exact request replay must reuse frozen facts');
       checks.exact_replay_status = replay.status();
       const rejected = stale.waitForResponse(r => r.url().endsWith('/resume') && r.status() === 409);
-      await writeClick('确认并冻结计划', stale); checks.stale_confirmation_status = (await rejected).status();
+      await writeClick('确认这条路线', stale); checks.stale_confirmation_status = (await rejected).status();
       assert.match(await stale.locator('#message').innerText(), /过期|最新|变化|冲突/);
       await stale.getByRole('button', { name: '开始学习', exact: true }).waitFor({ state: 'visible' });
       await stale.screenshot({ path: path.join(evidence, 'stale-confirmation-refreshed.png'), fullPage: true });
       await stale.close();
-    } else await writeClick('确认并冻结计划');
+    } else await writeClick('确认这条路线');
 
     const frozen = await api('/projects/' + pid);
     assert.equal(frozen.frozen, true); assert.deepEqual(frozen.private_references, []);

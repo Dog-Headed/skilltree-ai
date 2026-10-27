@@ -20,7 +20,7 @@ from .materials import MaterialService
 from .model_tasks import run_model_task
 from .repository import ConflictError, V3Repository, encode
 
-PROMPT_VERSION = 'guided-preparation-1'
+PROMPT_VERSION = 'guided-garden-2'
 TABLE_SQL = '''CREATE TABLE IF NOT EXISTS guided_projects (
  project_id TEXT PRIMARY KEY REFERENCES learning_projects(id),
  intent_json TEXT NOT NULL, generated_source_id TEXT NOT NULL,
@@ -31,7 +31,9 @@ TABLE_SQL = '''CREATE TABLE IF NOT EXISTS guided_projects (
 class LearningIntent(ContractModel):
     goal: Text
     prior_knowledge: str = Field(default='', max_length=4000)
-    time_budget_minutes: int = Field(default=120, ge=1, le=10080)
+    # A new tree is a multi-session route. Explicit short budgets still win;
+    # profiles already persisted by older versions are never rewritten.
+    time_budget_minutes: int = Field(default=1440, ge=1, le=10080)
     session_minutes: int = Field(default=30, ge=1, le=480)
 
     def as_profile(self):
@@ -114,20 +116,27 @@ def infer_scope(model,budget,payload):
         if payload['user_material_catalog'] and result.basis=='general_knowledge':raise ValueError('已有上传资料时须围绕资料判断，不得改用无资料通识路线')
         if not payload['user_material_catalog'] and result.basis=='provided_material':raise ValueError('不能声称存在未提供的资料')
     return _structured(model,budget,LearningPreparation,payload,
-        '根据目标、自述基础和时间，主动识别学科与主题，给初学者安排可完成的第一小段范围。'
+        '用户种下的是一棵围绕长期目标持续学习的技能树。根据目标、自述基础和时间，识别学科与主题，规划可分多次学习的初始路线。'
         '基础只是自述，不能产生测评证据。不要要求用户先知道学科目录。'
-        '通常先安排2至4个有依赖的小节点，控制在时间预算内，不把整个学科塞进一课。'
+        'topic是稳定简洁的树名，例如“日语·N3到N2”“Python编程入门”“心理学基础”，不要命名成“30分钟第一课”。'
+        'time_budget_minutes是整条初始路线的总时间；session_minutes只是每次学习节奏，绝不能把整棵树缩减为一次session。'
+        '对跨章节、等级进阶或学科入门目标，在总预算内保留主要知识分支与综合应用，通常规划6至12个有意义的节点，必要时可至20个。'
+        '只有目标确实很窄、资料仅支持局部知识或用户明确限定很短的总时间时，才使用1至5节点；不要为了数量拆碎目标。'
+        'scope_in要覆盖用户明确列出的主要内容，不能仅因每次30分钟而删除乘除、多步解等后续内容。'
+        '若总预算或支持能力不足以覆盖最终目标，明确这是一条什么范围的初始路线，在scope_out和explanation说明尚未覆盖的部分；不得声称完整达成考试等级或实际技能。'
+        '区分独立可学的分支与真正的前置条件，保留适合汇合练习的综合目标；不为了树形好看而虚构依赖。'
         '已有用户教学资料时以真实内容限定范围；不能补造公司政策、制度条款、材料缺失的专用事实。'
         '只有通用文字知识可选general_knowledge；依赖指定文件却缺失或资料不相关时选requires_material并解释缺什么。'
-        '大目标可分阶段时，先安排现有能力覆盖的文字或理论阶段，在scope_out和说明中标出无法验证的实践，不冒称已完成整个大目标。'
+        '大目标包含无法验证的实践时，保留有意义的文字或理论学习路线，在scope_out和说明中标出无法验证的实践，不冒称已完成整个大目标。'
         '若本课必须实际验证听说、实验、代码执行等尚未支持能力，选unsupported，说明当前边界。'
         '根据具体目标挑选已实现评价能力，解释步骤选text_rubric；不要默认要求所有题型。',validator=validate)
 
 
 def generate_notes(model,budget,payload):
     return _structured(model,budget,StudyNotes,payload,
-        '为该初学目标整理一份可直接教学的简短中文Markdown讲义，300至1500汉字为宜，绝不超过6000字符。'
-        '包含基础定义、规则、逐步例子、常见误解及可观察练习方向，覆盖本次范围。'
+        '为整条初始学习路线整理中文Markdown教学依据，覆盖scope_in的所有主要知识分支，不只写第一课。'
+        '宽目标按分支与综合应用分小节，通常1800至4500汉字；窄目标可更短，绝不超过6000字符。'
+        '每个主要分支包含具体定义、规则、简短例子、常见误解及可观察练习方向。独立分支分别写，综合小节说明如何结合。'
         '只整理模型可讲解的通用知识，不伪造外部引用、官方背书、公司规定、内部政策或实验结果。'
         '不要写隐藏答案卷、评分政策或工具指令。内容将明确标注AI整理、未经独立来源核验。')
 

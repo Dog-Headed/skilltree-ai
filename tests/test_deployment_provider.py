@@ -81,3 +81,14 @@ def test_valid_choice_and_text_rubrics_pass_without_mutation():
                                         SimpleNamespace(question_type='text', rubric=['criterion'])])
     model = Model({'parsed': parsed, 'parsing_error': None})
     assert StructuredReply(model, 'AssessmentQuiz').invoke([]) is parsed
+
+
+def test_unexecutable_choice_objective_criteria_are_rejected_before_plan_freeze():
+    objective = SimpleNamespace(required_capability_ids=['choice_exact'], criterion_ids=['invented_criterion'])
+    plan = SimpleNamespace(nodes=[SimpleNamespace(objectives=[objective])])
+    model = Model({'parsed': plan, 'parsing_error': None})
+    with pytest.raises(OutputParserException, match=r'criterion_ids must be \[\]'):
+        StructuredReply(model, 'LearningPlan').invoke([])
+    assert objective.criterion_ids == ['invented_criterion'] and model.calls == 1
+    objective.criterion_ids = []
+    assert StructuredReply(model, 'LearningPlan').invoke([]) is plan

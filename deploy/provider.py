@@ -41,6 +41,8 @@ class StructuredReply:
                 'LearningPlan 必须覆盖已请求的全部必要评价能力，同时保持节点与目标描述简洁。'
                 '每一个 observable_outcome 都必须使用明确可观察动词，例如选出、辨认、识别、指出、解释、描述或判断。'
                 'choice_exact 目标必须写成从给定选项中选出、辨认或判断具体内容，不能写成仅理解、知道、熟悉或口头说出。'
+                'criterion_ids 只适用于 text_rubric 文字量规目标；纯 choice_exact 或 numeric_scalar 目标必须给空数组 []，'
+                '这些确定性题型没有分项量规，不能编造标准ID。'
                 '每个 source_chunk_ids 引用片段的正文必须与该目标存在具体内容词汇关联，'
                 '不能只因片段是章节标题就引用它。逐字复制目录中的片段身份，不能编造。'
                 '对全部目标逐项核对这些要求，不能只修复报错的第一个目标。')),*messages]
@@ -65,6 +67,13 @@ class StructuredReply:
             raise OutputParserException(compact_parse_error(error)) from error
         if result.get('parsed') is None:
             raise OutputParserException('A complete schema-valid JSON object is required.')
+        if self.schema_name == 'LearningPlan':
+            for ni, node in enumerate(result['parsed'].nodes):
+                for oi, objective in enumerate(node.objectives):
+                    if 'text_rubric' not in objective.required_capability_ids and objective.criterion_ids:
+                        raise OutputParserException(
+                            f'nodes.{ni}.objectives.{oi}.criterion_ids must be [] without text_rubric. '
+                            'Deterministic choice/numeric grading has no rubric criteria. Return the complete corrected plan.')
         if self.schema_name == 'AssessmentQuiz':
             for index, question in enumerate(result['parsed'].questions):
                 if question.question_type != 'text' and question.rubric:

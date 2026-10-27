@@ -69,3 +69,6 @@ dialog{background:var(--sheet);color:var(--text);border:1px solid var(--line);bo
 
 /* Wide routes: the preview gets the room it needs; plates scroll before they shrink. */
 .preparation-view:has(.route-preview){max-width:1140px}@media(min-width:781px){.route-preview{grid-template-columns:minmax(0,1fr) 280px}}.graph-scroll{overflow-x:auto;overscroll-behavior-x:contain}
+
+/* Compass progress stays on one line on phones; the lesson title truncates instead. */
+#growth-compass>span:first-child{min-width:0;flex:0 1 auto}#growth-compass>span:last-child{white-space:nowrap;flex-shrink:0}

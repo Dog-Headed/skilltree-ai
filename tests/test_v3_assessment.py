@@ -58,6 +58,37 @@ def test_numeric_generation_schema_lists_only_executable_units():
     assert 'unit=null、allowed_units=[]' in messages[0].content
 
 
+def test_request_identities_are_literal_constraints_with_actionable_parser_errors():
+    from app.services.llm import compact_parse_error
+    from pydantic import ValidationError
+    quiz, _, _, _, _=setup(('single_choice',))
+    schema=assessment._quiz_output_contract(quiz.project_id,quiz.node_id,quiz.assessment_id,quiz.snapshot,'previous')
+    raw=quiz.model_dump();raw.update(project_id='wrong_project',assessment_id='wrong_assessment',previous_assessment_id=None)
+    with pytest.raises(ValidationError) as caught:schema.model_validate(raw)
+    error=compact_parse_error(caught.value)
+    assert quiz.project_id in error and quiz.assessment_id in error and 'previous' in error
+    assert all(issue['type']=='literal_error' for issue in caught.value.errors())
+    raw.update(project_id=quiz.project_id,assessment_id=quiz.assessment_id,previous_assessment_id='previous')
+    assert schema.model_validate(raw).snapshot==quiz.snapshot
+    definition=schema.model_json_schema()['properties']
+    assert definition['snapshot']['const']==quiz.snapshot.model_dump()
+
+
+def test_question_metadata_uses_only_frozen_objectives_criteria_evaluators_and_sources():
+    from pydantic import ValidationError
+    from app.services.llm import compact_parse_error
+    quiz, _, node, policy, contexts=setup(('text',))
+    schema=assessment._quiz_output_contract(quiz.project_id,quiz.node_id,quiz.assessment_id,quiz.snapshot,None,
+        node=node,policy=policy,contexts=contexts)
+    good=quiz.model_dump();assert schema.model_validate(good).questions[0].rubric
+    bad=deepcopy(good);question=bad['questions'][0]
+    question['objective_ids']=['forged_objective'];question['rubric'][0]['criterion_id']='renamed'
+    question['source_citations'][0]['chunk_id']='forged_chunk';question['evaluator_version']='future'
+    with pytest.raises(ValidationError) as caught:schema.model_validate(bad)
+    error=compact_parse_error(caught.value)
+    assert all(key in error for key in ('objective_ids','criterion_id','chunk_id','evaluator_version'))
+
+
 @pytest.mark.parametrize('field', ['previous_assessment_id','assessment_id','snapshot'])
 def test_identity_repair_identifies_changed_field_and_retains_frozen_values(field):
     quiz, _, node, policy, contexts=setup(('single_choice',))
@@ -115,6 +146,17 @@ def test_history_duplicates_use_same_shared_repair_budget():
     model = FakeModel(quiz.model_dump(), repaired)
     result = generate(model, quiz, node, policy, contexts, previous_question_prompts=[quiz.questions[0].prompt])
     assert result.questions[0].prompt == repaired["questions"][0]["prompt"] and len(model.calls) == 2
+
+
+def test_repeated_question_repair_identifies_every_reused_prompt():
+    quiz, _, node, policy, contexts=setup(('single_choice','numeric_scalar'))
+    bad=quiz.model_dump();valid=deepcopy(bad)
+    for question in valid['questions']:question['prompt']+='请选择或计算第二个例子的结果。'
+    model=FakeModel(bad,valid)
+    result=generate(model,quiz,node,policy,contexts,previous_question_prompts=[q.prompt for q in quiz.questions])
+    assert result.questions[0].prompt==valid['questions'][0]['prompt']
+    repair=model.calls[1][-1].content
+    assert 'question_ids' in repair and all(q.question_id in repair for q in quiz.questions)
 
 
 def test_contexts_must_be_actual_owned_frozen_blocks_before_model_call():

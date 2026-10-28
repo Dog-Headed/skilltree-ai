@@ -3,10 +3,11 @@ from decimal import Decimal
 from hashlib import sha256
 import json
 import re
+from typing import Literal
 
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import HumanMessage, SystemMessage
-from pydantic import ValidationError
+from pydantic import Field, ValidationError, create_model
 
 from app.services.llm import ModelOutputValidationError, get_llm, invoke_with_shared_budget
 from app.v3.capabilities import require_evaluator, validate_policy
@@ -14,7 +15,7 @@ from app.v3.config import SERVER_LIMITS
 from app.v3.materials import ContextBudgetExceeded
 from app.v3.contracts import (
     AssessmentQuiz, EvaluationResult, FrozenSnapshot, ObjectiveResult,
-    SkillNode, validate_evaluation_context,
+    SkillNode, AssessmentQuestion, RubricCriterion, SourceCitation, validate_evaluation_context,
 )
 from app.v3.evaluators import (
     call_budget, data, encode, evaluate_choice_question, evaluate_numeric_scalar,
@@ -25,6 +26,34 @@ from app.v3.evaluators import (
 QUIZ_PROMPT_VERSION = "v3-day11-quiz-2"
 _TYPE_EVALUATOR = {"single_choice": "choice_exact", "multiple_choice": "choice_exact", "text": "text_rubric", "numeric_scalar": "numeric_scalar"}
 _TYPE_EVIDENCE = {"single_choice": "choice", "multiple_choice": "choice", "text": "text_excerpt", "numeric_scalar": "numeric_result"}
+
+
+def _quiz_output_contract(project_id, node_id, assessment_id, snapshot, previous_assessment_id, *, node=None, policy=None, contexts=None):
+    """Fixed request identities are constants, never model-selected identifiers."""
+    fields={}
+    if node is not None:
+        fields['objective_ids']=(list[Literal[tuple(o.objective_id for o in node.objectives)]],Field(min_length=1,max_length=5))
+        mapped=[o for o in node.objectives if 'text_rubric' in o.required_capability_ids]
+        if mapped and all(o.criterion_ids for o in mapped):
+            ids=tuple(dict.fromkeys(identity for o in mapped for identity in o.criterion_ids))
+            criterion=create_model('RubricCriterion',__base__=RubricCriterion,criterion_id=(Literal[ids],...))
+            fields['rubric']=(list[criterion],Field(default_factory=list,max_length=20))
+    if policy is not None:
+        fields['evaluator_id']=(Literal[tuple(dict.fromkeys(r.evaluator_id for r in policy.evaluators))],...)
+        fields['evaluator_version']=(Literal[tuple(dict.fromkeys(r.evaluator_version for r in policy.evaluators))],...)
+        fields['question_type']=(Literal[tuple(policy.allowed_question_types)],...)
+    if contexts:
+        citations=[block['citation'] for context in contexts.values() for block in context['blocks']]
+        citation_fields={key:(Literal[tuple(dict.fromkeys(c[key] for c in citations))],...) for key in ('source_id','source_version','chunk_id')}
+        citation=create_model('SourceCitation',__base__=SourceCitation,**citation_fields)
+        fields['source_citations']=(list[citation],Field(min_length=1,max_length=20))
+    question=create_model('AssessmentQuestion',__base__=AssessmentQuestion,**fields)
+    return create_model('AssessmentQuiz', __base__=AssessmentQuiz,
+        project_id=(Literal[project_id], ...), node_id=(Literal[node_id], ...),
+        assessment_id=(Literal[assessment_id], ...),
+        previous_assessment_id=(Literal[previous_assessment_id], ...),
+        snapshot=(FrozenSnapshot, Field(json_schema_extra={'const': snapshot.model_dump()})),
+        questions=(list[question],Field(min_length=1,max_length=10)))
 
 
 def _contexts(contexts, *, project_id, node, snapshot):
@@ -89,11 +118,16 @@ def validate_quiz(quiz, *, node, policy, contexts, previous_question_prompts=())
     kinds = {key: set() for key in objectives}
     prior = {_fingerprint(prompt) for prompt in previous_question_prompts}
     seen = set()
+    duplicates=[]
     for question in quiz.questions:
         fingerprint = _fingerprint(question.prompt)
         if not fingerprint or fingerprint in seen or fingerprint in prior:
-            raise ValueError("Quiz contains duplicate or previously used questions")
+            duplicates.append(question.question_id)
         seen.add(fingerprint)
+    if duplicates:
+        raise ValueError('Quiz contains duplicate or previously used questions: question_ids='+encode(duplicates)+
+            '. Replace every listed prompt with a genuinely different task or an unused supported example; changing only its ID or punctuation is insufficient.')
+    for question in quiz.questions:
         if question.question_type not in policy.allowed_question_types or question.evaluator_id != _TYPE_EVALUATOR[question.question_type]:
             raise ValueError("Question type/evaluator violates frozen policy")
         require_evaluator(question.evaluator_id, question.evaluator_version)
@@ -128,8 +162,11 @@ def validate_quiz(quiz, *, node, policy, contexts, previous_question_prompts=())
             if any(not criterion.description.strip() for criterion in question.rubric):
                 raise ValueError("Text rubric must have nonempty criterion descriptions")
             criterion_ids = {criterion.criterion_id for criterion in question.rubric}
-            if any(not set(objectives[key].criterion_ids) <= criterion_ids for key in question.objective_ids):
-                raise ValueError("Text question omits frozen objective criteria")
+            missing={key:sorted(set(objectives[key].criterion_ids)-criterion_ids) for key in question.objective_ids
+                if not set(objectives[key].criterion_ids)<=criterion_ids}
+            if missing:
+                raise ValueError('Text question omits frozen objective criteria: question_id='+question.question_id+
+                    ', missing_criterion_ids_by_objective='+encode(missing)+'. Include every listed frozen criterion ID without renaming it.')
             if len(question.objective_ids) > 1 and any(not objectives[key].criterion_ids for key in question.objective_ids):
                 raise ValueError("Multi-objective text questions need explicit frozen objective-to-criterion mappings")
     for key, objective in objectives.items():
@@ -146,10 +183,12 @@ def quiz_generation_messages(*, project_id, node, assessment_id, snapshot, polic
     """Pure prompt construction, also used by plan-freeze context preflight."""
     node, snapshot, policy = _standards(node, snapshot, policy)
     bound = _contexts(contexts, project_id=project_id, node=node, snapshot=snapshot)
-    schema = AssessmentQuiz.model_json_schema()
+    schema = _quiz_output_contract(project_id,node.node_id,assessment_id,snapshot,previous_assessment_id,node=node,policy=policy,contexts=bound).model_json_schema()
     units = list(UNIT_RULES)
     schema['$defs']['NumericRules']['properties']['unit']['anyOf'][0]['enum'] = units
     schema['$defs']['NumericRules']['properties']['allowed_units']['items']['enum'] = units
+    if previous_question_prompts:
+        schema['$defs']['AssessmentQuestion']['properties']['prompt']['not']={'enum':list(previous_question_prompts)}
     payload = {"project_id": project_id, "node": node.model_dump(), "assessment_id": assessment_id,
         "snapshot": snapshot.model_dump(), "policy": policy.model_dump(), "contexts": bound,
         "previous_assessment_id": previous_assessment_id, "previous_question_prompts": list(previous_question_prompts),
@@ -157,7 +196,7 @@ def quiz_generation_messages(*, project_id, node, assessment_id, snapshot, polic
     rules = {rule.objective_id: rule for rule in policy.objective_rules}
     payload['required_coverage'] = [{'objective_id': objective.objective_id,
         'min_items': rules[objective.objective_id].min_items,
-        'evidence_kinds': objective.evidence_requirement}
+        'evidence_kinds': objective.evidence_requirement,'criterion_ids':objective.criterion_ids}
         for objective in node.objectives if objective.required]
     messages = [SystemMessage(content=(
         f"你是通用测评出题Agent，提示版本 {QUIZ_PROMPT_VERSION}。按冻结资料、节点目标、策略生成完整AssessmentQuiz JSON。"
@@ -169,6 +208,8 @@ def quiz_generation_messages(*, project_id, node, assessment_id, snapshot, polic
         "如果题目涉及的node.objectives含有criterion_ids，逐字保留这些冻结标准身份作为rubric.criterion_id，不得重新命名或自行发明替代ID。"
         "每道文字题必须覆盖其每个对应冻结目标所需的全部criterion_ids；多目标题须使用已有目标到标准映射。"
         "不要重复本卷或历史题。题目只引用对应目标绑定的真实chunk，严格保留身份和snapshot。"
+        "重测优先使用绑定资料中尚未用过的例子；同一目标可改用纠错、比较两种解释、解释另一个已给例子等设问，不能照抄历史题模板。"
+        "输出前逐题与previous_question_prompts对照，去掉标点和空白后仍相同的题干必须重写；只改question_id不算新题。"
         "来源存在并不自动证明结论正确；资料冲突、无依据时不要编造唯一正确答案。"
         "数值仅支持有限十进制/科学记数与已支持的单位，不要求执行代码或证明符号等价。"
         "数值题的期望结果写入numeric_rules.expected，answer_key为null，不得把JSON数字放入answer_key。"
@@ -193,7 +234,8 @@ def generate_quiz(*, project_id, node, assessment_id, snapshot, policy, contexts
         snapshot=snapshot, policy=policy, contexts=contexts, previous_assessment_id=previous_assessment_id,
         previous_question_prompts=previous_question_prompts)
     budget = call_budget(budget)
-    structured = (get_llm() if llm is None else llm).with_structured_output(AssessmentQuiz, method="json_mode")
+    output_contract=_quiz_output_contract(project_id,node.node_id,assessment_id,snapshot,previous_assessment_id,node=node,policy=policy,contexts=bound)
+    structured = (get_llm() if llm is None else llm).with_structured_output(output_contract, method="json_mode")
     def invoke(repair):
         current = list(messages)
         if repair is not None:
@@ -210,7 +252,7 @@ def generate_quiz(*, project_id, node, assessment_id, snapshot, policy, contexts
             for field, expected in (('project_id',project_id),('node_id',node.node_id),
                     ('assessment_id',assessment_id),('previous_assessment_id',previous_assessment_id)):
                 if getattr(quiz,field) != expected:
-                    raise ValueError(f"Quiz identity changed: {field}; copy the supplied identity exactly, including null. Do not use a historical assessment identity.")
+                    raise ValueError(f"Quiz identity changed: {field}; expected={encode(expected)}. Copy this supplied identity exactly; do not use a historical assessment identity.")
             for field, expected in snapshot.model_dump().items():
                 if quiz.snapshot.model_dump()[field] != expected:
                     raise ValueError(f"Quiz frozen versions changed: snapshot.{field}; copy this field and its manifest entries exactly from the supplied snapshot.")

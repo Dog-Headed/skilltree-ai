@@ -17,7 +17,7 @@ from pydantic import Field, ValidationError
 
 from app.services.llm import (
     ModelCallBudget, ModelOutputValidationError, RepairContext, get_planning_llm as get_llm,
-    invoke_with_shared_budget,
+    invoke_with_shared_budget, compact_parse_error,
 )
 from app.services.observability import log_event
 from app.v3.capabilities import check_capabilities, get_capability, list_capabilities, validate_policy
@@ -29,7 +29,7 @@ from app.v3.contracts import (
 )
 
 
-PLANNER_PROMPT_VERSION = "v3-garden-planner-3"
+PLANNER_PROMPT_VERSION = "v3-garden-planner-7"
 _EVIDENCE_CAPABILITIES = {
     "choice": "choice_exact", "numeric_result": "numeric_scalar", "text_excerpt": "text_rubric",
 }
@@ -66,6 +66,15 @@ def _dump(value: Any) -> Any:
 
 def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _source_aliases(catalog):
+    """Short request-local references; only real verified chunks can be resolved."""
+    real = {item.chunk_id for item in catalog}
+    prefix = 's'
+    while any(prefix + str(i) in real for i in range(1, len(catalog) + 1)):
+        prefix = 'ref_' + prefix
+    return {prefix + str(i): item.chunk_id for i, item in enumerate(catalog, 1)}
 
 
 def _catalog(material_catalog: Any, project_id: str) -> list[PlannerMaterial]:
@@ -199,17 +208,41 @@ def build_planner_messages(
     plan_version: int = 1,
     repair_context: RepairContext | None = None,
 ) -> list[Any]:
+    aliases = _source_aliases(material_catalog)
+    short_ids = {value: key for key, value in aliases.items()}
+    schema = LearningPlan.model_json_schema()
+    # The global schema accepts capability identities; the model-facing schema
+    # lists only this project's already confirmed capabilities. Validation still
+    # rechecks the original server contracts before any plan can be persisted.
+    schema['$defs']['LearningObjective']['properties']['required_capability_ids']['items']['enum'] = list(profile.requested_capabilities)
+    schema['$defs']['LearningObjective']['properties']['source_chunk_ids']['items']['enum'] = list(aliases)
+    per_node = min(480, profile.time_budget_minutes, max(30, profile.session_minutes * 3))
+    schema['$defs']['SkillNode']['properties']['estimated_minutes']['maximum'] = per_node
+    schema['$defs']['SkillNode']['properties']['title']['maxLength'] = 40
+    schema['$defs']['SkillNode']['properties']['description']['maxLength'] = 100
+    schema['$defs']['LearningObjective']['properties']['observable_outcome']['maxLength'] = 120
     payload = {
         "project_id": project_id, "draft_revision": draft_revision, "plan_version": plan_version,
-        "learning_plan_schema": LearningPlan.model_json_schema(),
+        "learning_plan_schema": schema,
         "profile": profile.model_dump(), "policy": policy.model_dump(),
-        "teaching_material_catalog": [item.model_dump() for item in material_catalog],
-        "capabilities": list_capabilities(),
+        # Project membership, hashes and visibility were checked before this
+        # projection and are checked again on the returned references. Send all
+        # source text, without repeating those server-only checks on every chunk.
+        "teaching_material_catalog": [{**{k: v for k, v in item.model_dump().items()
+            if k not in {'project_id', 'content_hash', 'visibility'}}, 'chunk_id': short_ids[item.chunk_id]}
+            for item in material_catalog],
+        "allowed_objective_capability_ids": list(profile.requested_capabilities),
+        "capabilities": [item for item in list_capabilities() if item['capability_id'] in profile.requested_capabilities],
         "server_limits": {
             "max_nodes": SERVER_LIMITS.max_nodes,
             "max_objectives_per_node": SERVER_LIMITS.max_objectives_per_node,
             "default_nodes": [SERVER_LIMITS.default_min_nodes, SERVER_LIMITS.default_max_nodes],
             "time_budget_minutes": profile.time_budget_minutes,
+        },
+        "planning_guidance": {
+            "preferred_minutes_per_node": min(profile.session_minutes * 2, per_node),
+            "suggested_max_minutes_per_node": per_node,
+            "must_not_fill_the_entire_budget": True,
         },
     }
     messages = [
@@ -219,8 +252,13 @@ def build_planner_messages(
             "只规划已确认 bounded_goal 与 scope_in，遵守 scope_out，不扩大学科或评价能力。"
             "这是一棵可分多次学习的技能树，不是一节微课。宽目标通常6至12节点，必要时可至20节点；明确的小范围或短总预算允许1至5节点。每节点1至5目标。"
             "覆盖scope_in的全部主要分支和综合应用，不得仅为了少生成内容而把不同知识塞入同一节点。"
+            "把不同规则、操作和综合练习拆成可逐步学习的节点，不要把多项内容压成一个300至360分钟的大章节。"
             "session_minutes只影响每次学习的节奏，不限制整棵树的总时长；树的总时间限制是time_budget_minutes。"
             "节点预计总分钟数不得超过项目预算。目标写明可观察行为及具体内容，不能只有掌握、理解。"
+            "不用填满总预算；参考planning_guidance按每节一至三次session分配分钟数，最后逐项相加核对总量。"
+            "默认每节点一个可观察目标，确需独立证据时可增加，最多五个；全树仍须覆盖全部请求能力和主要知识分支。"
+            "node_id用n1、n2等短身份，objective_id用o1、o2等全树唯一短身份；不要输出schema或重复资料正文。"
+            "title简短，description一句话，observable_outcome只写具体可检查任务；有默认值且语义相同的可选字段可省略。"
             "observable_outcome用明确可检查的动词，例如选出、辨认、指出、解释、说明、写出、计算、分析，并写明具体考查内容。"
             "选择题目标可写成‘从给定选项中选出/辨认具体规则或结果’，不要写成笼统知识点名称。"
             "严格保留project_id/draft_revision/plan_version；依赖只引用本计划节点，无自依赖、无环。"
@@ -228,8 +266,14 @@ def build_planner_messages(
             "能独立学习的知识形成并行分支，共用基础可以共享前置，综合应用应汇合实际需要的多个分支；真正线性的目标允许线性。"
             "先分析知识关系再选边，不为增加交错、分叉数量或装饰树形而添加依赖，不用多余的传递依赖凑边。"
             "每目标仅使用请求且正式可用的评价能力，证据形式必须匹配策略评价器。"
+            "required_capability_ids只能从allowed_objective_capability_ids逐字选取；全局存在的其他能力不代表本项目已经请求。"
+            "例如仅允许text_rubric时，所有目标仅使用text_rubric和text_excerpt，不得加入choice_exact、numeric_scalar或教学能力。"
+            "criterion_ids只用于text_rubric；纯choice_exact或numeric_scalar目标必须为空数组[]，不能编造量规标准。"
             "每目标引用目录内真实教学chunk_id，正文须与该目标相关，不引用私有答案或假造资料。"
+            "本次目录的s1等短片段ID是服务端提供的有效引用，服务端会恢复正式身份；它们不是节点序号，必须按正文内容挑选。"
+            "每目标默认仅引用一个直接支持该任务的正文片段，确需结合两段规则才引用两段；不要附加其他章节或只有标题的片段。"
             "引用前逐条核对片段正文，目标中写出该片段实际包含的知识术语，不要把目录第一段或章节标题误当成支持所有目标的正文。"
+            "运算目标也要点明被考查的具体规则，例如依据去括号规则求解，不能只给算式或笼统作答要求。"
             "用户自述基础仅调整起点，不产生已测通过或完成记录。"
             "不输出或降低policy；policy已有objective_rules时复用其目标身份，否则自行生成稳定身份。"
             "不要用选择识别替代用户要求的数值求解或文字解释能力。"
@@ -282,6 +326,7 @@ def generate_plan(
     if type(plan_version) is not int or plan_version < 1:
         raise ValueError("计划版本必须是服务端提供的正整数")
     profile, catalog, policy, checker = _inputs(profile, project_id, material_catalog, policy, capability_checker)
+    aliases = _source_aliases(catalog)
     # Validate input size before constructing/invoking a model.
     build_planner_messages(profile=profile, project_id=project_id, draft_revision=draft_revision, material_catalog=catalog, policy=policy, plan_version=plan_version)
     if budget is None:
@@ -304,16 +349,24 @@ def generate_plan(
         try:
             return structured.invoke(messages)
         except (ValidationError, OutputParserException) as exc:
-            raise ModelOutputValidationError(f"V3 Planner 结构化输出非法：{exc}") from exc
+            raise ModelOutputValidationError("V3 Planner 结构化输出非法："+compact_parse_error(exc)) from exc
 
     def validate_output(raw: Any):
         try:
-            candidate = LearningPlan.model_validate(_dump(raw))
+            data = LearningPlan.model_validate(_dump(raw)).model_dump()
+            # Restore trusted identities before any business validation/save.
+            # Unknown references are retained and rejected, never guessed.
+            data = {**data, 'nodes': [{**node, 'objectives': [{**objective,
+                'source_chunk_ids': [aliases.get(ref, ref) for ref in objective.get('source_chunk_ids', [])]}
+                for objective in node['objectives']]} for node in data['nodes']]}
+            candidate = LearningPlan.model_validate(data)
             if candidate.project_id != project_id or candidate.draft_revision != draft_revision or candidate.plan_version != plan_version:
                 raise ValueError("候选计划 project_id/draft_revision/plan_version 与请求不一致")
             return validate_learnability(candidate, profile, [item.model_dump() for item in catalog], policy, capability_checker=checker)
         except (ValidationError, ValueError) as exc:
-            raise ModelOutputValidationError(f"V3 Planner 输出校验失败：{exc}") from exc
+            detail = compact_parse_error(exc) if isinstance(exc, ValidationError) else str(exc)
+            for short, real in aliases.items():detail = detail.replace(real, short)
+            raise ModelOutputValidationError("V3 Planner 输出校验失败："+detail) from exc
 
     started = perf_counter()
     error_type = None

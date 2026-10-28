@@ -63,13 +63,56 @@
     document.body.setAttribute('aria-busy', String(value));
     document.querySelectorAll('[data-write],form button[type=submit],.project-link,.project-more,#view-tabs button').forEach(n => { n.disabled = value; });
     $('new-project').disabled = value; $('refresh-project').disabled = value;
+    watchRunningStatus();
     // Inputs remain editable, but their submission captures immutable identities.
   }
-  async function get(url) {
-    const response = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+  async function get(url, { signal } = {}) {
+    const response = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store', signal });
     let data; try { data = await response.json(); } catch { throw new Error('服务暂时没有返回可读结果。请刷新状态。'); }
     if (!response.ok) throw Object.assign(new Error(data?.error?.message || '读取失败，请稍后刷新。'), { status: response.status });
     return data;
+  }
+  let statusWatch = null;
+  function stopStatusWatch() {
+    if (!statusWatch) return;
+    clearTimeout(statusWatch.timer); statusWatch.controller?.abort(); statusWatch = null;
+  }
+  function watchRunningStatus() {
+    if (state.busy || !state.id || state.view?.page_state !== 'running') { stopStatusWatch(); return; }
+    if (statusWatch?.id === state.id) return;
+    stopStatusWatch();
+    const watch = { id: state.id, started: Date.now(), attempts: 0, errors: 0, timer: null, controller: null };
+    statusWatch = watch;
+    async function poll() {
+      if (statusWatch !== watch) return;
+      if (state.busy || state.id !== watch.id || state.view?.page_state !== 'running') { stopStatusWatch(); return; }
+      if (watch.attempts >= 60 || Date.now() - watch.started >= 600000) {
+        stopStatusWatch(); showMessage('自动查询已暂停。可以点击“刷新状态”读取结果，进度已保留。', 'warn'); return;
+      }
+      watch.attempts++; watch.controller = new AbortController();
+      const controller = watch.controller, sequence = ++state.loadSequence;
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      try {
+        const view = await get('/projects/' + encodeURIComponent(watch.id), { signal: controller.signal });
+        if (statusWatch !== watch || state.id !== watch.id || sequence !== state.loadSequence) return;
+        watch.errors = 0; state.view = view; render();
+        if (view.page_state !== 'running') {
+          const failed = Boolean(view.error_type) || ['error', 'budget_exhausted'].includes(view.page_state);
+          showMessage(failed ? '后台处理已结束，这一步未能完成。请查看当前提示，进度已保留。' : '后台处理已完成，已更新最新结果。', failed ? 'warn' : '');
+          refreshList().catch(() => {});
+        }
+      } catch (error) {
+        if (statusWatch !== watch) return;
+        if ([401, 403, 404].includes(error.status)) {
+          stopStatusWatch(); showMessage('当前无法读取此项目，请重新登录或刷新学习记录。', 'warn'); return;
+        }
+        if (++watch.errors === 3) showMessage('连接不稳定，正在继续查询已保存的状态；不会重复提交操作。', 'warn');
+      } finally {
+        clearTimeout(timeout); watch.controller = null;
+        if (statusWatch === watch) watch.timer = setTimeout(poll, Math.min(2000 + watch.attempts * 500, 10000));
+      }
+    }
+    watch.timer = setTimeout(poll, 1500);
   }
   function asProjects(data) { return list(Array.isArray(data) ? data : data?.projects); }
   async function refreshList() {
@@ -541,7 +584,7 @@
   function recoveryCard(view) {
     const stage = view.page_state; const headings = { running: '正在完成本次操作', error: '这一步需要恢复', paused: '暂停一下，进度已保留',
       budget_exhausted: '这一步的 AI 额度用完了', assessment_review: '这次没能可靠评分', completed: '这次学习已经完成' };
-    const defaults = { running: '处理结束后点击“刷新状态”查看结果。刷新只读，不会再次请求模型。', error: '重试会接着原来的进度和试卷继续，不会重复计数。', paused: '休息期间什么都不会自动发生。准备好了，再点继续。',
+    const defaults = { running: '正在查询后台处理状态，结束后会自动显示结果。也可点击“刷新状态”；查询只读，不会再次请求模型。', error: '重试会接着原来的进度和试卷继续，不会重复计数。', paused: '休息期间什么都不会自动发生。准备好了，再点继续。',
       budget_exhausted: '为了避免无限消耗，每一步的 AI 调用都有上限。你可以追加一次额度继续；已经追加过时，进度会保留，稍后再来。', assessment_review: '题目或评分出了问题，这不算你答错，也不会消耗闯关机会。', completed: '每一节的通过记录都已保存，可以随时回来复习。' };
     // A timed-out or failed model request is a service problem, not the learner's answer.
     const modelTrouble = stage === 'error' && (['ModelRequestFailedError', 'LogicalTaskExhausted'].includes(view.error_type) || view.error_code === 'model_task_exhausted');

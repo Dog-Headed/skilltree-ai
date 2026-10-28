@@ -26,6 +26,24 @@ def test_mixed_quiz_generation_uses_real_registered_evaluators_and_private_answe
     assert "answer_key" not in text and "rubric" not in text and "numeric_rules" not in text and "source_citations" not in text
 
 
+def test_prompt_explicitly_preserves_every_frozen_evidence_kind():
+    import json
+    quiz, _, node, policy, contexts = setup(('single_choice', 'numeric_scalar', 'text'))
+    messages, _ = assessment.quiz_generation_messages(project_id=quiz.project_id, node=node,
+        assessment_id=quiz.assessment_id, snapshot=quiz.snapshot, policy=policy, contexts=contexts)
+    data = json.loads(messages[1].content.split('\n', 1)[1])
+    assert {entry['objective_id']: set(entry['evidence_kinds']) for entry in data['required_coverage']} == {
+        objective.objective_id: set(objective.evidence_requirement) for objective in node.objectives if objective.required}
+    assert 'answer_key为null' in messages[0].content
+
+
+def test_missing_coverage_identifies_objective_and_evidence_to_repair():
+    quiz, _, node, policy, contexts = setup(('single_choice', 'numeric_scalar', 'text'))
+    bad = quiz.model_copy(update={'questions': quiz.questions[:-1]})
+    with pytest.raises(ValueError, match='objective_id=objective_2.*missing_evidence_kinds=.*text_excerpt'):
+        assessment.validate_quiz(bad, node=node, policy=policy, contexts=contexts)
+
+
 @pytest.mark.parametrize("defect", ["identity", "snapshot", "reference_answer", "score", "coverage", "citation", "evaluator", "duplicate", "numeric_for_explanation", "frozen_criterion_id"])
 def test_generation_business_errors_get_one_repair(defect):
     quiz, answers, node, policy, contexts = setup(("single_choice", "numeric_scalar", "text"))

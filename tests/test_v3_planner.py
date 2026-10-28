@@ -89,7 +89,8 @@ def test_one_node_plan_preserves_identity_and_exposes_only_teaching_data():
     assert planner.PLANNER_PROMPT_VERSION in text
     assert "8 到 12" not in text
     assert "用户自述基础" in text and "不输出或降低policy" in text
-    assert "chunk_1" in text and "scope_out" in text
+    assert '"chunk_id":"s1"' in text and "scope_out" in text
+    assert actual.nodes[0].objectives[0].source_chunk_ids == ['chunk_1']
     assert "learning_plan_schema" in text and "required_capability_ids" in text
 
 

@@ -75,6 +75,7 @@ def test_production_injection_uses_task_timeouts_and_keeps_strict_provider(monke
     from app.v3.evaluators import TextBatchScore
     from app.v3.diagnosis import DiagnosisDecision
     from app.v3.tutor import TutorReply
+    from app.v3.onboarding import LearningPreparation, StudyNotes
     import app.services.llm
     monkeypatch.setattr(app.services.llm, 'get_llm', lambda: ChatOpenAI(
         model='unit-test-model', api_key='unit-test-placeholder',
@@ -87,10 +88,13 @@ def test_production_injection_uses_task_timeouts_and_keeps_strict_provider(monke
     monkeypatch.setattr(ChatOpenAI, 'with_structured_output', bind)
     monkeypatch.setattr(ChatOpenAI, 'bind_tools', lambda self, *a, **kw: self)
     provider = asgi.create_app().application
-    for schema, seconds in [(TextBatchScore,180),(AssessmentQuiz,120),(DiagnosisDecision,120),(TutorReply,45),(LearningPlan,120)]:
+    for schema, seconds in [(TextBatchScore,180),(AssessmentQuiz,120),(DiagnosisDecision,120),(TutorReply,45),
+                            (LearningPlan,120),(LearningPreparation,120),(StudyNotes,120)]:
         bound = provider.with_structured_output(schema, method='json_mode')
         assert isinstance(bound, StructuredReply) and bound.schema_name == schema.__name__
         assert bound.runnable.model.root_client.timeout == seconds
         assert bound.runnable.model.root_client.max_retries == 0
         assert bound.runnable.model.extra_body == {'thinking_mode': False}
+        assert bound.runnable.model.streaming is (schema in {LearningPlan, LearningPreparation, StudyNotes})
     assert provider.bind_tools([]).root_client.timeout == 120
+    assert provider.bind_tools([]).streaming is False

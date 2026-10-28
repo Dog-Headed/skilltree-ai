@@ -114,3 +114,104 @@ def test_learning_tasks_get_server_selected_timeouts(monkeypatch, tmp_path):
     assert provider()['timeout'] == 180
     injected = GuidedFake()
     assert LearningService(paths, llm=injected)._provider('grade') is injected
+
+
+def test_planner_schema_and_catalog_only_offer_confirmed_project_capabilities():
+    import json
+    from app.v3 import planner
+    from app.v3.contracts import LearningPlan
+    from tests.test_v3_planner import profile, catalog
+    from app.v3.preparation import policy_template
+    from app.v3.planner import PlannerMaterial
+
+    for capabilities in [['text_rubric'], ['choice_exact', 'numeric_scalar']]:
+        p = profile(requested_capabilities=capabilities)
+        messages = planner.build_planner_messages(profile=p, project_id='project_1', draft_revision=3,
+            material_catalog=[PlannerMaterial.model_validate(catalog()[0])], policy=policy_template(p))
+        payload = json.loads(messages[1].content.split('\n', 1)[1])
+        allowed = payload['learning_plan_schema']['$defs']['LearningObjective']['properties']['required_capability_ids']['items']['enum']
+        assert allowed == capabilities == payload['allowed_objective_capability_ids']
+        assert {item['capability_id'] for item in payload['capabilities']} == set(capabilities)
+    # A project-specific model hint must never mutate the shared contract schema.
+    assert 'enum' not in LearningPlan.model_json_schema()['$defs']['LearningObjective']['properties']['required_capability_ids']['items']
+
+
+def test_full_multibranch_notes_and_long_repair_stay_inside_production_context_budget():
+    import json
+    from copy import deepcopy
+    from hashlib import sha256
+    from app.services.llm import RepairContext
+    from app.v3.contracts import SourceDocument, LearningProfile
+    from app.v3.materials import chunk_document
+    from app.v3.planner import PlannerMaterial, build_planner_messages
+    from app.v3.preparation import policy_template
+
+    pid = 'v3_' + 'a' * 32
+    section = '有理数包含正数、零和负数。等式两边同加或同减同一个数仍相等。计算后将解代回原方程检验。'
+    notes = '\n'.join('## 学习分支' + str(i) + '\n' + (section * 20)[:465] for i in range(12))
+    document = SourceDocument(project_id=pid, source_id='ai_notes_' + 'b' * 32, source_version=1,
+        title='AI整理 · 有理数与一元一次方程的完整初始学习路线', source_description='synthetic budget regression',
+        content=notes, content_hash=sha256(notes.encode()).hexdigest())
+    material = []
+    for chunk in chunk_document(document):
+        data = {**chunk.model_dump(), 'title': document.title, 'visibility': 'teaching'}
+        material.append(PlannerMaterial.model_validate({k: v for k, v in data.items() if k in PlannerMaterial.model_fields}))
+    p = LearningProfile(subject_label='数学', topic='有理数与方程', goal='从零系统学习有理数与一元一次方程',
+        bounded_goal='解释有理数、等式性质并多步求解和检验', scope_in=['完整学习分支' + str(i) for i in range(12)],
+        requested_capabilities=['choice_exact', 'numeric_scalar', 'text_rubric'], time_budget_minutes=1440)
+    rejected = {'nodes': [{'node_id': 'node_' + str(i), 'title': '合成节点' + str(i),
+        'description': 'long rejected candidate ' * 200, 'prerequisite_ids': []} for i in range(20)]}
+    messages = build_planner_messages(profile=p, project_id=pid, draft_revision=3,
+        material_catalog=material, policy=policy_template(p),
+        repair_context=RepairContext(previous_output=deepcopy(rejected), error_message='invalid synthetic objective'))
+    assert len(notes) > 5500 and len(material) == 12
+    assert sum(len(str(m.content)) for m in messages) <= 24000
+    assert 'previous_output_omitted' in messages[-1].content
+    supplied = json.loads(messages[1].content.split('\n', 1)[1])['teaching_material_catalog']
+    assert [chunk['content'] for chunk in supplied] == [chunk.content for chunk in material]
+    assert all('content_hash' not in chunk and 'project_id' not in chunk for chunk in supplied)
+
+
+def test_preparation_repair_receives_the_field_error_without_private_completion():
+    from langchain_core.exceptions import OutputParserException
+    from pydantic import ValidationError
+    from app.services.llm import ModelCallBudget
+    from app.v3.onboarding import generate_notes, StudyNotes
+
+    secret = 'PRIVATE_SYNTHETIC_NOTES_' * 400
+    try:
+        StudyNotes.model_validate({'content': secret})
+    except ValidationError as exc:
+        cause = exc
+
+    class Repair:
+        def __init__(self): self.messages = []
+        def with_structured_output(self, schema, **kwargs): return self
+        def invoke(self, messages):
+            self.messages.append(messages)
+            if len(self.messages) == 1:
+                raise OutputParserException('private raw completion: ' + secret) from cause
+            return StudyNotes(content='Synthetic valid course notes. ' * 10)
+
+    model = Repair()
+    budget = ModelCallBudget()
+    generate_notes(model, budget, {'profile': {'goal': 'synthetic'}})
+    error = model.messages[1][-1].content
+    assert 'content' in error and 'string_too_long' in error
+    assert 'PRIVATE_SYNTHETIC_NOTES_' not in error
+    assert budget.request_count == 2 and budget.output_repair_count == 1
+
+
+def test_short_source_references_restore_only_verified_ids_without_changing_content():
+    from copy import deepcopy
+    import pytest
+    from tests.test_v3_planner import FakeModel, generate, plan
+    from app.services.llm import ModelOutputValidationError
+    good = plan()
+    good['nodes'][0]['objectives'][0]['source_chunk_ids'] = ['s1']
+    assert generate(FakeModel(good)).nodes[0].objectives[0].source_chunk_ids == ['chunk_1']
+    bad = deepcopy(good)
+    bad['nodes'][0]['objectives'][0]['source_chunk_ids'] = ['s999']
+    model = FakeModel(bad, bad)
+    with pytest.raises(ModelOutputValidationError): generate(model)
+    assert len(model.messages) == 2

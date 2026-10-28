@@ -92,3 +92,66 @@ def test_unexecutable_choice_objective_criteria_are_rejected_before_plan_freeze(
     assert objective.criterion_ids == ['invented_criterion'] and model.calls == 1
     objective.criterion_ids = []
     assert StructuredReply(model, 'LearningPlan').invoke([]) is plan
+
+
+def test_production_notes_receive_the_same_course_instructions_as_local():
+    from app.services.llm import ModelCallBudget
+    from app.v3.onboarding import generate_notes, StudyNotes
+
+    class Capture:
+        def with_structured_output(self, schema, **kwargs):
+            assert schema is StudyNotes
+            self.include_raw = kwargs.get('include_raw', False)
+            return self
+
+        def invoke(self, messages):
+            self.messages = [(m.type, m.content) for m in messages]
+            result = StudyNotes(content='Synthetic notes for isolated contract testing. ' * 10)
+            return {'parsed': result, 'parsing_error': None} if self.include_raw else result
+
+    local, production = Capture(), Capture()
+    payload = {'profile': {'goal': 'synthetic broad route', 'time_budget_minutes': 1440}}
+    generate_notes(local, ModelCallBudget(), payload)
+    generate_notes(StrictProvider(production), ModelCallBudget(), payload)
+    assert local.messages == production.messages
+
+
+def test_production_does_not_add_a_separate_curriculum_prompt_to_shared_planning():
+    from langchain_core.messages import SystemMessage, HumanMessage
+
+    class Capture:
+        def invoke(self, messages):
+            self.messages = messages
+            return {'parsed': SimpleNamespace(nodes=[]), 'parsing_error': None}
+
+    messages = [SystemMessage(content='shared planning instructions'), HumanMessage(content='synthetic input')]
+    model = Capture()
+    StructuredReply(model, 'LearningPlan').invoke(messages)
+    assert model.messages == messages
+
+
+def test_auto_closed_partial_json_is_not_accepted_as_a_complete_business_result():
+    from langchain_core.messages import AIMessage
+    from langchain_core.output_parsers import JsonOutputParser
+    partial = '{"score":0.8'
+    assert JsonOutputParser().parse(partial) == {'score': 0.8}
+    parsed = RequiredScore(score=0.8)
+    model = Model({'parsed': parsed, 'raw': AIMessage(content=partial), 'parsing_error': None})
+    with pytest.raises(OutputParserException, match='json_error'):
+        StrictProvider(model).with_structured_output(RequiredScore, method='json_mode').invoke([])
+
+
+def test_output_cut_off_at_token_limit_is_rejected_even_if_its_prefix_parses():
+    from langchain_core.messages import AIMessage
+    model = Model({'parsed': RequiredScore(score=0.8),
+        'raw': AIMessage(content='{"score":0.8}', response_metadata={'finish_reason': 'length'}), 'parsing_error': None})
+    with pytest.raises(OutputParserException, match='cut off'):
+        StrictProvider(model).with_structured_output(RequiredScore, method='json_mode').invoke([])
+
+
+@pytest.mark.parametrize('content', ['{"score":0.8}', '```json\n{"score":0.8}\n```'])
+def test_complete_provider_json_remains_compatible(content):
+    from langchain_core.messages import AIMessage
+    parsed = RequiredScore(score=0.8)
+    model = Model({'parsed': parsed, 'raw': AIMessage(content=content), 'parsing_error': None})
+    assert StrictProvider(model).with_structured_output(RequiredScore, method='json_mode').invoke([]) is parsed

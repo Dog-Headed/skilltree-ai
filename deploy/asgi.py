@@ -146,19 +146,23 @@ def create_app():
         # Construct the SDK client with the timeout. Changing a Pydantic field
         # on an already-built model leaves its underlying HTTP client unchanged.
         clients = {}
-        def client(timeout):
-            if timeout not in clients:
-                clients[timeout] = ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
+        def client(timeout, streaming=False):
+            key = (timeout, streaming)
+            if key not in clients:
+                clients[key] = ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
                     base_url=model.openai_api_base, temperature=model.temperature,
-                    timeout=timeout, max_retries=0, extra_body=extra_body)
-            return clients[timeout]
+                    timeout=timeout, max_retries=0, extra_body=extra_body, streaming=streaming)
+            return clients[key]
         def structured_model(schema):
             name = getattr(schema, '__name__', '')
             kind = {'TextBatchScore': 'grade', 'AssessmentQuiz': 'quiz',
                     'DiagnosisDecision': 'diagnosis', 'TutorReply': 'tutor'}.get(name)
             timeout = TASK_TIMEOUTS.get(kind, 45) if kind else 120 if name in {
                 'LearningPlan', 'LearningPreparation', 'StudyNotes'} else seconds
-            return client(timeout)
+            # Aggregate the provider stream into one strictly checked result.
+            # Receiving chunks avoids retrying a still-generating preparation
+            # merely because its non-streaming HTTP response stayed silent.
+            return client(timeout, streaming=name in {'LearningPlan', 'LearningPreparation', 'StudyNotes'})
         # Core injection remains an actual model. Route at the structured schema
         # boundary so its task-specific transports and strict adapters both apply.
         return StrictProvider(client(seconds), structured_model=structured_model,

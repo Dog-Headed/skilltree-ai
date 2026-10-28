@@ -68,6 +68,28 @@ def upload(client,p,content='# 规则\n请按照资料逐条解释，不补充�
     return client.get('/projects/'+p['project_id']).json()
 
 
+def test_explicit_replan_reuses_unchanged_prepared_scope_and_full_notes(guided):
+    client, paths, model = guided
+    p, _ = create(client)
+    p = act(client, p, 'confirm_profile')
+    assert p['page_state'] == 'plan_review'
+    source = p['sources']
+    p = act(client, p, 'replan')
+    assert p['page_state'] == 'plan_review' and p['sources'] == source
+    assert model.call_counts == {'LearningPreparation': 1, 'StudyNotes': 1, 'LearningPlan': 2}
+    with V3Repository(paths) as repo:
+        assert repo.conn.execute('SELECT sum(reserved_requests) FROM model_operations').fetchone()[0] == 4
+
+
+def test_changed_planning_feedback_does_not_reuse_stale_preparation(guided):
+    client, _, model = guided
+    p, _ = create(client)
+    p = act(client, p, 'confirm_profile')
+    p = act(client, p, 'adjust_plan', feedback='明确调整学习范围，加入另一项实际需要的知识')
+    assert p['page_state'] == 'plan_review'
+    assert model.call_counts == {'LearningPreparation': 2, 'StudyNotes': 2, 'LearningPlan': 2}
+
+
 def test_goal_only_create_and_get_are_read_only_and_creation_is_idempotent(guided):
     client,paths,model=guided;p,payload=create(client)
     assert p['guided'] and p['profile']['bounded_goal'] is None and p['allowed_actions']

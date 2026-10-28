@@ -10,6 +10,13 @@ persists alongside quota records; old unassigned projects stay hidden until the
 owner confirms their account. This is Basic-auth account isolation, without
 self-service registration, password recovery, or a full account management UI.
 
+Course preparation and planning use the same application prompts as the local
+`app.py` entrypoint. Do not add production-only length, heading, node-count or
+scope overrides in the model adapter. Provider JSON parsing and frozen-contract
+checks remain strict; a project-specific planning schema lists only its confirmed
+capabilities. After a disconnected write, the UI can follow the active operation
+with bounded GET requests; it never automatically resends a model command.
+
 ## Runtime
 
 Ubuntu 24.04 / Python 3.12, existing `.venv`, one Uvicorn worker per service.

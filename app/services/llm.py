@@ -1,6 +1,7 @@
 """模型配置，以及单次逻辑调用共享的请求、网络重试和输出修复预算。"""
 
 import os
+import json
 from time import perf_counter
 from uuid import uuid4
 from dataclasses import dataclass
@@ -26,6 +27,24 @@ ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
 
 T = TypeVar("T")
+
+
+def compact_parse_error(error):
+    """Actionable schema diagnostics without raw completions or private inputs."""
+    current = error
+    for _ in range(8):
+        if current is None:
+            break
+        if hasattr(current, 'errors'):
+            issues = current.errors(include_input=False, include_url=False)
+            return json.dumps({'schema_errors': [
+                {'field': '.'.join(map(str, issue['loc'])), 'type': issue['type'], 'message': issue['msg'][:180]}
+                for issue in issues[:12]], 'instruction': 'Return the complete corrected JSON. Preserve all supplied identities and frozen values.'}, ensure_ascii=False)
+        if isinstance(current, json.JSONDecodeError):
+            return json.dumps({'json_error': current.msg, 'line': current.lineno, 'column': current.colno,
+                               'instruction': 'Return complete valid JSON with correctly escaped string values and no surrounding commentary.'})
+        current = current.__cause__
+    return 'Structured JSON did not match the supplied schema. Return one complete JSON object, preserving the supplied identities and frozen values.'
 
 
 class ModelBudgetExceededError(RuntimeError):

@@ -37,7 +37,8 @@ def _quiz_output_contract(project_id, node_id, assessment_id, snapshot, previous
         if mapped and all(o.criterion_ids for o in mapped):
             ids=tuple(dict.fromkeys(identity for o in mapped for identity in o.criterion_ids))
             criterion=create_model('RubricCriterion',__base__=RubricCriterion,criterion_id=(Literal[ids],...))
-            fields['rubric']=(list[criterion],Field(default_factory=list,max_length=20))
+            fields['rubric']=(list[criterion],Field(default_factory=list,max_length=min(20,len(ids)),
+                description='同一道题内每个冻结criterion_id只出现一次；该标准的多个检查点写在同一条description中，不拆成同ID的多条评分项。'))
     if policy is not None:
         fields['evaluator_id']=(Literal[tuple(dict.fromkeys(r.evaluator_id for r in policy.evaluators))],...)
         fields['evaluator_version']=(Literal[tuple(dict.fromkeys(r.evaluator_version for r in policy.evaluators))],...)
@@ -207,6 +208,8 @@ def quiz_generation_messages(*, project_id, node, assessment_id, snapshot, polic
         "每题明确有效答案、允许变体和来源。文字题私有answer_key非空，分项量规满分之和等于本题满分。"
         "如果题目涉及的node.objectives含有criterion_ids，逐字保留这些冻结标准身份作为rubric.criterion_id，不得重新命名或自行发明替代ID。"
         "每道文字题必须覆盖其每个对应冻结目标所需的全部criterion_ids；多目标题须使用已有目标到标准映射。"
+        "同一道题的rubric按criterion_id去重后设计，每个冻结ID只有一条评分项；一个标准含多个检查点时写在同一条description中，不重复ID或发明后缀ID。"
+        "只有一个冻结criterion_id时，文字题的rubric必须恰好一项，其max_score等于本题max_score；多项时各项满分之和等于本题满分。"
         "不要重复本卷或历史题。题目只引用对应目标绑定的真实chunk，严格保留身份和snapshot。"
         "重测优先使用绑定资料中尚未用过的例子；同一目标可改用纠错、比较两种解释、解释另一个已给例子等设问，不能照抄历史题模板。"
         "输出前逐题与previous_question_prompts对照，去掉标点和空白后仍相同的题干必须重写；只改question_id不算新题。"

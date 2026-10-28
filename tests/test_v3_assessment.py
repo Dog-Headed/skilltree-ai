@@ -89,6 +89,41 @@ def test_question_metadata_uses_only_frozen_objectives_criteria_evaluators_and_s
     assert all(key in error for key in ('objective_ids','criterion_id','chunk_id','evaluator_version'))
 
 
+def test_single_frozen_criterion_cannot_be_split_into_duplicate_rubric_rows():
+    from pydantic import ValidationError
+    quiz, _, node, policy, contexts=setup(('text',))
+    node=SkillNode.model_validate({**node.model_dump(),'objectives':[
+        {**objective.model_dump(),'criterion_ids':['r1']} for objective in node.objectives]})
+    good=quiz.model_dump();good['questions'][0]['rubric']=good['questions'][0]['rubric'][:1]
+    good['questions'][0]['rubric'][0]['max_score']=good['questions'][0]['max_score']
+    schema=assessment._quiz_output_contract(quiz.project_id,quiz.node_id,quiz.assessment_id,quiz.snapshot,None,
+        node=node,policy=policy,contexts=contexts)
+    assert schema.model_json_schema()['$defs']['AssessmentQuestion']['properties']['rubric']['maxItems']==1
+    assert schema.model_validate(good).questions[0].rubric[0].criterion_id=='r1'
+    bad=deepcopy(good);bad['questions'][0]['rubric']*=2
+    with pytest.raises(ValidationError) as caught:schema.model_validate(bad)
+    assert any(e['loc']==('questions',0,'rubric') and e['type']=='too_long' for e in caught.value.errors())
+    model=FakeModel(bad,good);budget=ModelCallBudget()
+    result=generate(model,quiz,node,policy,contexts,budget=budget)
+    assert len(result.questions[0].rubric)==1 and result.questions[0].max_score==quiz.questions[0].max_score
+    assert (budget.request_count,budget.output_repair_count)==(2,1)
+    assert '必须恰好一项' in model.calls[1][0].content
+
+
+def test_rubric_uniqueness_is_per_question_even_when_objectives_share_frozen_ids():
+    quiz, _, node, policy, contexts=setup(('text','text'))
+    node=SkillNode.model_validate({**node.model_dump(),'objectives':[
+        {**objective.model_dump(),'criterion_ids':['r1']} for objective in node.objectives]})
+    good=quiz.model_dump()
+    for q in good['questions']:
+        q['rubric']=q['rubric'][:1];q['rubric'][0]['max_score']=q['max_score']
+    schema=assessment._quiz_output_contract(quiz.project_id,quiz.node_id,quiz.assessment_id,quiz.snapshot,None,
+        node=node,policy=policy,contexts=contexts)
+    result=schema.model_validate(good)
+    assert len(result.questions)==2 and all(len(q.rubric)==1 for q in result.questions)
+    assert assessment.validate_quiz(result,node=node,policy=policy,contexts=contexts).model_dump()==result.model_dump()
+
+
 @pytest.mark.parametrize('field', ['previous_assessment_id','assessment_id','snapshot'])
 def test_identity_repair_identifies_changed_field_and_retains_frozen_values(field):
     quiz, _, node, policy, contexts=setup(('single_choice',))

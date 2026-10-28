@@ -49,6 +49,7 @@
     return node;
   }
   function button(text, callback, style = '') { return el('button', { type: 'button', class: 'btn ' + style, text, onclick: callback, 'data-write': 'true', disabled: state.busy }); }
+  function dismissButton() { return el('button', { type: 'button', class: 'btn', text: '取消', onclick: closeModal }); }
   function chip(text, kind = '') { return el('span', { class: 'chip ' + kind, text }); }
   function showMessage(message, kind = '') { $('message').textContent = message; $('message').className = 'message ' + kind; $('message').hidden = !message; }
   let busyTimer = null;
@@ -171,7 +172,7 @@
     }
   }
   function openModal(title, body) { closeMenu(); $('modal').classList.remove('source-drawer'); $('modal-title').textContent = title; $('modal-content').replaceChildren(body); if (!$('modal').open) $('modal').showModal(); }
-  function closeModal() { if (!state.busy) $('modal').close(); }
+  function closeModal() { $('modal').close(); }
   function field(label, input, hint = '', full = false) {
     const id = input.id || 'field-' + uuid(); input.id = id;
     return el('div', { class: 'field' + (full ? ' full' : '') }, el('label', { for: id, text: label }), input, hint ? el('small', { text: hint }) : null);
@@ -588,7 +589,9 @@
       budget_exhausted: '为了避免无限消耗，每一步的 AI 调用都有上限。你可以追加一次额度继续；已经追加过时，进度会保留，稍后再来。', assessment_review: '题目或评分出了问题，这不算你答错，也不会消耗闯关机会。', completed: '每一节的通过记录都已保存，可以随时回来复习。' };
     // A timed-out or failed model request is a service problem, not the learner's answer.
     const modelTrouble = stage === 'error' && (['ModelRequestFailedError', 'LogicalTaskExhausted'].includes(view.error_type) || view.error_code === 'model_task_exhausted');
-    const modelTroubleText = 'AI 响应太慢或网络不稳定，这一步没有按时完成。这不是你作答的问题。' + (allowed('replace_assessment') ? '可以申请换一份新的小测重新作答，' : '') + (allowed('return_to_teaching') ? '也可以先返回教学，' : '') + '进度都已保存。';
+    const modelTroubleText = (view.error_type === 'ModelOutputValidationError'
+      ? 'AI 生成的内容未通过格式或课程规则检查，当前结果没有生效。这不是你作答的问题。'
+      : 'AI 请求没有成功完成。这不是你作答的问题。') + (allowed('replace_assessment') ? '可以申请换一份新的小测重新作答，' : '') + (allowed('return_to_teaching') ? '也可以先返回教学，' : '') + '进度都已保存。';
     const card = el('section', { class: 'card status-card' }, el('div', { class: 'status-symbol' + (stage === 'completed' ? ' green' : ''), text: stage === 'completed' ? '✓' : stage === 'running' ? '◌' : '↳' }), el('h2', { text: modelTrouble ? 'AI 这一步没能完成' : headings[stage] || labels[stage] || '当前状态' }), el('p', { class: 'muted', text: modelTrouble ? modelTroubleText : view.notice || defaults[stage] || '' }));
     if (view.pause_reason === 'replacement_limit') card.append(el('p', { class: 'notice', text: '已达到系统原因连续换题上限，当前保持暂停。请保留记录，待题目与评价问题修复后再继续。' }));
     if (view.pause_reason === 'extension_ready') card.append(el('p', { class: 'notice green', text: '已追加 3 次闯关机会。点“返回教学”继续学习。' }));
@@ -736,16 +739,18 @@
   }
   function confirmAction(title, description, callback, destructive = false) {
     const content = el('div', {}, el('p', { class: destructive ? 'danger-note' : 'muted', text: description }));
-    content.append(el('div', { class: 'actions dialog-actions' }, button('取消', closeModal), button(destructive ? '确认删除' : '确认继续', callback, destructive ? 'danger' : 'primary'))); openModal(title, content);
+    content.append(el('div', { class: 'actions dialog-actions' }, dismissButton(), button(destructive ? '确认删除' : '确认继续', () => {
+      closeModal(); return callback();
+    }, destructive ? 'danger' : 'primary'))); openModal(title, content);
   }
   function textCommand(action, title, key, hint, assessmentId = null) {
     const text = textArea(key, '', { required: true, maxlength: key === 'feedback' ? 2000 : 4000, rows: 6, placeholder: hint });
-    const form = el('form', {}, field(title, text, hint), el('div', { class: 'actions dialog-actions' }, button('取消', closeModal), el('button', { type: 'submit', class: 'btn primary', text: '提交', disabled: state.busy })));
+    const form = el('form', {}, field(title, text, hint), el('div', { class: 'actions dialog-actions' }, dismissButton(), el('button', { type: 'submit', class: 'btn primary', text: '提交', disabled: state.busy })));
     form.addEventListener('submit', async event => { event.preventDefault(); if (!state.busy && form.reportValidity()) await command(action, { [key]: text.value.trim(), ...(assessmentId ? { assessment_id: assessmentId } : {}) }); }); openModal(title, form);
   }
   function renameProject(project) {
     const name = input('display_name', currentName(project), { required: true, maxlength: 80, placeholder: '给这段学习取个名字' });
-    const form = el('form', {}, field('学习记录名称', name, '只修改显示名称，原始目标与冻结标准保持不变。'), el('div', { class: 'actions dialog-actions' }, button('取消', closeModal), el('button', { type: 'submit', class: 'btn primary', text: '保存名称', disabled: state.busy })));
+    const form = el('form', {}, field('学习记录名称', name, '只修改显示名称，原始目标与冻结标准保持不变。'), el('div', { class: 'actions dialog-actions' }, dismissButton(), el('button', { type: 'submit', class: 'btn primary', text: '保存名称', disabled: state.busy })));
     form.addEventListener('submit', async event => {
       event.preventDefault(); if (!state.busy && form.reportValidity()) await write('/projects/' + encodeURIComponent(project.project_id), { display_name: name.value.trim() }, { method: 'PATCH', success: '学习记录已重命名。', after: result => { if (project.project_id !== state.id && result?.project_id) { /* The selected view is refreshed below. */ } } });
     }); openModal('重命名学习记录', form); name.select();
@@ -782,7 +787,6 @@
   $('refresh-project').addEventListener('click', async () => { if (!state.busy && state.id) try { await loadProject(state.id, { announce: true }); } catch (error) { showMessage(error.message, 'error'); } });
   $('mobile-menu').addEventListener('click', () => { const open = !$('sidebar').classList.contains('open'); $('sidebar').classList.toggle('open', open); $('sidebar-shade').hidden = !open; $('mobile-menu').setAttribute('aria-expanded', String(open)); });
   $('sidebar-shade').addEventListener('click', closeSidebar); $('modal-close').addEventListener('click', closeModal);
-  $('modal').addEventListener('cancel', event => { if (state.busy) event.preventDefault(); });
   $('capabilities-button').addEventListener('click', showCapabilities);
   document.addEventListener('click', event => { if (state.menu && !state.menu.contains(event.target) && !event.target.closest('.project-more')) closeMenu(); });
   document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeMenu(); closeSidebar(); } });

@@ -44,6 +44,40 @@ def test_missing_coverage_identifies_objective_and_evidence_to_repair():
         assessment.validate_quiz(bad, node=node, policy=policy, contexts=contexts)
 
 
+def test_numeric_generation_schema_lists_only_executable_units():
+    import json
+    from app.v3.evaluators import UNIT_RULES
+    quiz, _, node, policy, contexts = setup(('numeric_scalar',))
+    messages,_=assessment.quiz_generation_messages(project_id=quiz.project_id,node=node,
+        assessment_id=quiz.assessment_id,snapshot=quiz.snapshot,policy=policy,contexts=contexts)
+    payload=json.loads(messages[1].content.split('\n',1)[1])
+    rules=payload['schema']['$defs']['NumericRules']['properties']
+    assert set(rules['unit']['anyOf'][0]['enum'])==set(UNIT_RULES)
+    assert set(rules['allowed_units']['items']['enum'])==set(UNIT_RULES)
+    assert '元' not in payload['supported_numeric_units']
+    assert 'unit=null、allowed_units=[]' in messages[0].content
+
+
+@pytest.mark.parametrize('field', ['previous_assessment_id','assessment_id','snapshot'])
+def test_identity_repair_identifies_changed_field_and_retains_frozen_values(field):
+    quiz, _, node, policy, contexts=setup(('single_choice',))
+    valid=quiz.model_dump();bad=deepcopy(valid)
+    if field=='snapshot':bad[field]['policy_version']='old'
+    else:bad[field]='wrong_identity'
+    model=FakeModel(bad,valid)
+    assert generate(model,quiz,node,policy,contexts)==quiz
+    error=model.calls[1][-1].content
+    assert ('snapshot.policy_version' if field=='snapshot' else field) in error
+
+
+def test_unsupported_currency_unit_is_repaired_without_adding_conversion_support():
+    quiz, _, node, policy, contexts=setup(('numeric_scalar',))
+    bad=quiz.model_dump();bad['questions'][0]['numeric_rules'].update(unit='元',allowed_units=['元'])
+    model=FakeModel(bad,quiz.model_dump());budget=ModelCallBudget()
+    assert generate(model,quiz,node,policy,contexts,budget=budget)==quiz
+    assert budget.request_count==2 and budget.output_repair_count==1
+
+
 @pytest.mark.parametrize("defect", ["identity", "snapshot", "reference_answer", "score", "coverage", "citation", "evaluator", "duplicate", "numeric_for_explanation", "frozen_criterion_id"])
 def test_generation_business_errors_get_one_repair(defect):
     quiz, answers, node, policy, contexts = setup(("single_choice", "numeric_scalar", "text"))

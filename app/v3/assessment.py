@@ -19,6 +19,7 @@ from app.v3.contracts import (
 from app.v3.evaluators import (
     call_budget, data, encode, evaluate_choice_question, evaluate_numeric_scalar,
     evaluate_text_rubric, validate_numeric_rules, repair_data,
+    UNIT_RULES,
 )
 
 QUIZ_PROMPT_VERSION = "v3-day11-quiz-2"
@@ -145,10 +146,14 @@ def quiz_generation_messages(*, project_id, node, assessment_id, snapshot, polic
     """Pure prompt construction, also used by plan-freeze context preflight."""
     node, snapshot, policy = _standards(node, snapshot, policy)
     bound = _contexts(contexts, project_id=project_id, node=node, snapshot=snapshot)
+    schema = AssessmentQuiz.model_json_schema()
+    units = list(UNIT_RULES)
+    schema['$defs']['NumericRules']['properties']['unit']['anyOf'][0]['enum'] = units
+    schema['$defs']['NumericRules']['properties']['allowed_units']['items']['enum'] = units
     payload = {"project_id": project_id, "node": node.model_dump(), "assessment_id": assessment_id,
         "snapshot": snapshot.model_dump(), "policy": policy.model_dump(), "contexts": bound,
         "previous_assessment_id": previous_assessment_id, "previous_question_prompts": list(previous_question_prompts),
-        "schema": AssessmentQuiz.model_json_schema()}
+        "schema": schema, "supported_numeric_units": units}
     rules = {rule.objective_id: rule for rule in policy.objective_rules}
     payload['required_coverage'] = [{'objective_id': objective.objective_id,
         'min_items': rules[objective.objective_id].min_items,
@@ -169,7 +174,12 @@ def quiz_generation_messages(*, project_id, node, assessment_id, snapshot, polic
         "数值题的期望结果写入numeric_rules.expected，answer_key为null，不得把JSON数字放入answer_key。"
         "numeric_scalar每题只要求提交一个数值；目标涉及多个数值时分题，不得把多个答案塞进同一个输入框。"
         "先核算题干、全部选项和参考答案的一致性。题干新增的相等、同时成立等条件也必须被正确选项满足，不能只核对部分陈述。"
-        "NumericRules.abs_tolerance/rel_tolerance不得超过冻结policy.numeric_abs_tolerance/numeric_rel_tolerance；默认0要求精确结果，不能自行放宽。")),
+        "NumericRules.abs_tolerance/rel_tolerance不得超过冻结policy.numeric_abs_tolerance/numeric_rel_tolerance；默认0要求精确结果，不能自行放宽。"
+        "numeric_rules的unit和allowed_units仅能使用supported_numeric_units；非空unit必须在allowed_units内，且这些单位必须属于同一量纲。"
+        "元、股、手、倍等不在单位表中的数量，题干说明计量单位并明确只填数值，numeric_rules使用unit=null、allowed_units=[]；不要自创转换规则。"
+        "百分数必须说明填写百分数还是小数，并使题面、expected和unit一致；有保留小数位要求时先按题面规则计算expected，不放宽冻结容差。"
+        "project_id、node_id、assessment_id、previous_assessment_id必须分别复制给定project_id、node.node_id、assessment_id、previous_assessment_id，null也原样保留。"
+        "换题时本次assessment_id与previous_assessment_id不同，不能抄历史卷身份；snapshot的每个字段及清单项必须与给定snapshot完全一致。")),
         HumanMessage(content="出题数据：\n" + encode(payload))]
     if sum(len(str(message.content)) for message in messages) > SERVER_LIMITS.max_context_characters:
         raise ContextBudgetExceeded("Assessment generation context exceeds server limit")
@@ -197,8 +207,13 @@ def generate_quiz(*, project_id, node, assessment_id, snapshot, policy, contexts
     def validate(raw):
         try:
             quiz = AssessmentQuiz.model_validate(data(raw))
-            if (quiz.project_id, quiz.node_id, quiz.assessment_id, quiz.snapshot, quiz.previous_assessment_id) != (project_id, node.node_id, assessment_id, snapshot, previous_assessment_id):
-                raise ValueError("Quiz identity or frozen versions changed")
+            for field, expected in (('project_id',project_id),('node_id',node.node_id),
+                    ('assessment_id',assessment_id),('previous_assessment_id',previous_assessment_id)):
+                if getattr(quiz,field) != expected:
+                    raise ValueError(f"Quiz identity changed: {field}; copy the supplied identity exactly, including null. Do not use a historical assessment identity.")
+            for field, expected in snapshot.model_dump().items():
+                if quiz.snapshot.model_dump()[field] != expected:
+                    raise ValueError(f"Quiz frozen versions changed: snapshot.{field}; copy this field and its manifest entries exactly from the supplied snapshot.")
             return validate_quiz(quiz, node=node, policy=policy, contexts=bound, previous_question_prompts=previous_question_prompts)
         except (ValidationError, ValueError) as exc:
             raise ModelOutputValidationError(f"Assessment业务校验失败：{exc}") from exc

@@ -64,3 +64,20 @@ def test_disconnected_write_follows_readonly_status_until_terminal_or_navigation
     assert result.returncode == 0, result.stdout + '\n' + result.stderr
     report = json.loads((evidence / 'result.json').read_text(encoding='utf-8'))
     assert report['passed'] and report['cases'] == ['failed', 'completed', 'navigation']
+
+
+@pytest.mark.parametrize('width', [1440, 390])
+def test_replacement_modal_dismisses_without_cancelling_or_replaying_request(goal_server, tmp_path, width):
+    _, _, url = goal_server
+    node = os.environ.get('SKILLTREE_TEST_NODE') or shutil.which('node')
+    if not node:pytest.skip('Node/Playwright required')
+    env=dict(os.environ)
+    env['NODE_PATH']=str(Path(node).resolve().parent.parent/'node_modules')
+    if subprocess.run([node,'-e',"require.resolve('playwright')"],env=env,capture_output=True).returncode:
+        pytest.skip('Playwright required')
+    evidence=tmp_path/str(width);evidence.mkdir()
+    result=subprocess.run([node,str(Path(__file__).parent/'support/replacement_modal_frontend.cjs'),url,str(width),str(evidence)],
+        env=env,capture_output=True,text=True,encoding='utf-8',timeout=90)
+    assert result.returncode==0,result.stdout+'\n'+result.stderr
+    report=json.loads((evidence/'result.json').read_text())
+    assert report['passed'] and report['writes']==1 and not report['errors']

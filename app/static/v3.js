@@ -709,7 +709,7 @@
     storage.write('active-job', initial.id);
     const started = Date.now(); let job = initial;
     while (['queued', 'running'].includes(job.state)) {
-      $('busy-text').textContent = job.state === 'queued' ? `正在排队 · 前面还有 ${Math.max(0, job.position - 1)} 个等待任务` : '正在处理你的学习任务，进度会自动保存…';
+      $('busy-text').textContent = job.state === 'queued' ? `正在排队 · 等待位置第 ${job.position} 位` : '正在处理你的学习任务，进度会自动保存…';
       if (Date.now() - started > 1200000) throw new Error('任务仍在后台处理，稍后刷新页面可以继续查询。');
       await new Promise(resolve => setTimeout(resolve, 1500));
       const response = await get('/jobs/' + encodeURIComponent(job.id)); job = response.job;

@@ -68,10 +68,14 @@
     // Inputs remain editable, but their submission captures immutable identities.
   }
   async function get(url, { signal } = {}) {
-    const response = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store', signal });
-    let data; try { data = await response.json(); } catch { throw new Error('服务暂时没有返回可读结果。请刷新状态。'); }
-    if (!response.ok) throw Object.assign(new Error(data?.error?.message || '读取失败，请稍后刷新。'), { status: response.status });
-    return data;
+    const controller = signal ? null : new AbortController();
+    const timeout = controller ? setTimeout(() => controller.abort(), 15000) : null;
+    try {
+      const response = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store', signal: signal || controller.signal });
+      let data; try { data = await response.json(); } catch { throw new Error('服务暂时没有返回可读结果。请刷新状态。'); }
+      if (!response.ok) throw Object.assign(new Error(data?.error?.message || '读取失败，请稍后刷新。'), { status: response.status });
+      return data;
+    } finally { if (timeout) clearTimeout(timeout); }
   }
   let statusWatch = null;
   function stopStatusWatch() {
@@ -697,11 +701,15 @@
   }
   async function write(url, body, { method = 'POST', busyText, success = '', after = null } = {}) {
     if (state.busy) return; closeMenu(); busy(true, busyText); showMessage('');
+    // A silent client connection does not cancel or disprove the server's work.
+    // Stop waiting for this response, then use the existing read-only recovery.
+    const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 60000);
     const projectId = state.id; const pendingIdentity = state.view?.pending_input_id; const previousView = state.view; let result, confirmed = false;
     state.pendingWrite = { url, body, method };
     try {
-      const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) });
+      const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body), signal: controller.signal });
       try { result = await response.json(); } catch { throw new Error('本次响应未能确认'); }
+      clearTimeout(timeout);
       if (!response.ok) {
         if (response.status === 409) {
           if (projectId) await loadProject(projectId); else await refreshList();
@@ -731,6 +739,7 @@
         showMessage(confirmed ? '操作结果已返回，但列表未能刷新。已先读取项目状态，请核对后继续。' : '没有收到完整响应，已先查询最新状态。请核对记录与当前步骤；本页没有自动重复提交。', 'warn');
       } catch { showMessage('连接暂时中断。当前草稿已保留，恢复连接后请先刷新状态，核对是否已完成；本页没有自动重复提交。', 'error'); }
     } finally {
+      clearTimeout(timeout);
       state.pendingWrite = null; busy(false); renderList();
       // Never carry submitted answers into a later assessment identity.
       if (pendingIdentity && state.view?.pending_input_id !== pendingIdentity && state.view?.page_state !== 'quiz') document.querySelectorAll('#quiz-form input,#quiz-form textarea').forEach(n => { n.disabled = true; });

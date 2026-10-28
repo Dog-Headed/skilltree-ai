@@ -141,7 +141,8 @@ const path = require('node:path');
         assert.ok((await api('/projects/' + b.pid)).sources.length > 0);
       } else {
         assert.match(await page.locator('#message').innerText(), /最新状态/);
-        await clicks('关闭弹窗');
+        // Read-first recovery closes the upload dialog after refreshing state.
+        await page.getByRole('dialog').waitFor({ state: 'hidden' });
       }
       await selectAndOpenMenu(a.view.profile.topic);
     }

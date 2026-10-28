@@ -15,7 +15,7 @@ Environment=PYTHONUTF8=1
 EnvironmentFile=/etc/skilltree/runtime.env
 Environment=SKILLTREE_DATA_ROOT=data/evaluation-v3
 Environment=SKILLTREE_QUOTA_DB=data/evaluation-quota.sqlite
-ExecStart=/home/admin/skilltree-ai/.venv/bin/python -m uvicorn deploy.asgi:create_app --factory --host 127.0.0.1 --port 8767 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --timeout-keep-alive 10 --timeout-graceful-shutdown 180 --limit-concurrency 24 --no-access-log
+ExecStart=/home/admin/skilltree-ai/.venv/bin/python -m uvicorn deploy.asgi:create_app --factory --host 127.0.0.1 --port 8767 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --timeout-keep-alive 10 --timeout-graceful-shutdown 180 --limit-concurrency 64 --no-access-log
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=200

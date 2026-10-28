@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import os
 import threading
 import time
 import webbrowser
@@ -18,7 +19,15 @@ def load_application():
     """Use the same product as day12_server; never initialize the V2 runtime."""
     from app.v3.learning_api import create_learning_app
 
-    return create_learning_app()
+    options={}
+    if os.getenv('SKILLTREE_LOCAL_RUNTIME')=='production':
+        from deploy.provider import create_runtime_model
+        options['llm']=create_runtime_model()
+    mode=os.getenv('SKILLTREE_QUIZ_GENERATION','legacy')
+    if mode!='legacy':options['quiz_generation_mode']=mode
+    preparation_mode=os.getenv('SKILLTREE_PREPARATION_GENERATION','legacy')
+    if preparation_mode!='legacy':options['preparation_generation_mode']=preparation_mode
+    return create_learning_app(**options)
 
 
 def open_browser_when_ready(server) -> None:

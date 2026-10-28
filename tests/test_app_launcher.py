@@ -9,6 +9,14 @@ from fastapi.testclient import TestClient
 from tests.day11_support import build_frozen_project
 
 
+@pytest.fixture(autouse=True)
+def explicit_launcher_profile(monkeypatch):
+    # Private workstation settings must not change the default-launcher tests.
+    monkeypatch.delenv('SKILLTREE_LOCAL_RUNTIME',raising=False)
+    monkeypatch.delenv('SKILLTREE_QUIZ_GENERATION',raising=False)
+    monkeypatch.delenv('SKILLTREE_PREPARATION_GENERATION',raising=False)
+
+
 def launcher():
     path=Path(__file__).resolve().parents[1]/'app.py'
     spec=importlib.util.spec_from_file_location('skilltree_desktop_launcher',path)
@@ -57,6 +65,18 @@ def test_main_passes_v3_application_to_server_and_keeps_ready_browser_behavior(m
     assert 'SkillTree V3' in capsys.readouterr().out
 
 
+def test_explicit_local_experiment_uses_shared_runtime_and_content_contract(monkeypatch):
+    from app.v3 import learning_api
+    from deploy import provider
+    model=object();product=object();make=Mock(return_value=product)
+    monkeypatch.setattr(provider,'create_runtime_model',lambda:model)
+    monkeypatch.setattr(learning_api,'create_learning_app',make)
+    monkeypatch.setenv('SKILLTREE_LOCAL_RUNTIME','production')
+    monkeypatch.setenv('SKILLTREE_QUIZ_GENERATION','content-v1')
+    assert launcher().load_application() is product
+    make.assert_called_once_with(llm=model,quiz_generation_mode='content-v1')
+
+
 def test_incompatible_v3_store_stops_without_falling_back_to_old_server(monkeypatch,capsys):
     import uvicorn
     module=launcher();make_server=Mock()
@@ -66,3 +86,11 @@ def test_incompatible_v3_store_stops_without_falling_back_to_old_server(monkeypa
     error=capsys.readouterr().err
     assert 'V3' in error and 'PRIVATE_INTERNAL_PATH' not in error
     make_server.assert_not_called()
+
+
+def test_local_preparation_opt_in_is_forwarded_without_changing_default(monkeypatch):
+    from app.v3 import learning_api
+    make=Mock(return_value=object());monkeypatch.setattr(learning_api,'create_learning_app',make)
+    monkeypatch.setenv('SKILLTREE_PREPARATION_GENERATION','content-v1')
+    launcher().load_application()
+    make.assert_called_once_with(preparation_generation_mode='content-v1')

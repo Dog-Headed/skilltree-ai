@@ -65,6 +65,9 @@ class _ReservedModel:
 
 
 class PreparationService:
+    quiz_generation_mode='legacy'
+    preparation_generation_mode='legacy'
+
     @staticmethod
     def _creation_token(project_id):
         return 'creation_'+sha256(project_id.encode()).hexdigest()[:32]
@@ -76,9 +79,15 @@ class PreparationService:
         return (project['operation_id'] is None and project['retry_token'] is None
                 and project['lifecycle']=='profile_review' and not project['candidate_plan'])
 
-    def __init__(self,paths=V3Paths(),*,llm=None):
+    def __init__(self,paths=V3Paths(),*,llm=None,quiz_generation_mode='legacy',preparation_generation_mode='legacy'):
         self.paths=paths
         self.llm=llm
+        from .quiz_content import GENERATION_MODES
+        if quiz_generation_mode not in GENERATION_MODES:raise ValueError('Unknown quiz generation contract')
+        self.quiz_generation_mode=quiz_generation_mode
+        from .preparation_content import GENERATION_MODES as PREPARATION_MODES
+        if preparation_generation_mode not in PREPARATION_MODES:raise ValueError('Unknown preparation generation contract')
+        self.preparation_generation_mode=preparation_generation_mode
         # Fake artifacts are never a live-service runtime or an evaluator grant.
         with V3Repository(paths) as repo:
             marker=repo.conn.execute("SELECT value FROM runtime_metadata WHERE key='demo_only'").fetchone()
@@ -213,7 +222,7 @@ class PreparationService:
             if event['action']=='confirm_plan':
                 with V3Repository(self.paths) as repo:
                     project=repo.get_project(project_id)
-                    resolve_choices(repo,project_id,project['candidate_plan'],event.get('private_references'))
+                    resolve_choices(repo,project_id,project['candidate_plan'],event.get('private_references'),quiz_generation_mode=self.quiz_generation_mode)
             if event['action'] in ('update_profile','adjust_scope'):
                 proposed=LearningProfile.model_validate(event['profile'])
                 if proposed.profile_version!=view['profile']['profile_version'] or proposed.prior_knowledge.assessed_evidence:
@@ -358,7 +367,8 @@ class PreparationService:
             provider=getattr(self,'llm',None)
             with V3Repository(self.paths) as repo:guided=bool(onboarding.metadata(repo,pid))
             if guided and not onboarding.prepare(self.paths,pid,state['preparation_event'],
-                    llm=provider if provider is not None else planner.get_llm):return {}
+                    llm=provider if provider is not None else planner.get_llm,
+                    generation_mode=self.preparation_generation_mode):return {}
             with V3Repository(self.paths) as repo:
                 p=repo.get_project(pid);profile=LearningProfile.model_validate(p['profile'])
                 if p['profile_confirmation_hash']!=profile_hash(profile):raise ConflictError('Profile not confirmed')
@@ -379,7 +389,6 @@ class PreparationService:
             provider=getattr(self,'llm',None)
             model=None if guided else _ReservedModel(provider if provider is not None else planner.get_llm(),self.paths,pid,operation_id,feedback)
             if guided:
-                from .model_tasks import run_model_task
                 from langchain_core.messages import HumanMessage
                 # Adjustment remains untrusted preference; use the same durable
                 # HTTP budget/cache as scope and generated notes.
@@ -393,7 +402,7 @@ class PreparationService:
                                     return bound.invoke(messages)
                             return Bound()
                     return planner.generate_plan(profile,pid,revision,material_catalog,policy,llm=Adjusted(),budget=budget)
-                proposal=run_model_task(self.paths,pid,operation_id,'guided_plan:'+state['preparation_event']['request_id'],
+                proposal=onboarding.run_preparation_task(self.paths,pid,operation_id,'guided_plan:'+state['preparation_event']['request_id'],
                     {'profile':profile.model_dump(),'catalog':material_catalog,'policy':policy.model_dump(),'revision':revision,'feedback':feedback},
                     LearningPlan,generate,llm=provider if provider is not None else planner.get_llm)
             else:proposal=planner.generate_plan(profile,pid,revision,material_catalog,policy,llm=model)
@@ -435,8 +444,9 @@ class PreparationService:
                 planner.validate_learnability(p['candidate_plan'],p['profile'],onboarding.teaching_catalog(repo,pid) if onboarding.metadata(repo,pid) else MaterialService(repo).catalog(pid),policy)
                 # Old accepted commands retain their pre-extension semantics.
                 # New submissions validate explicit choices before journaling.
-                links=resolve_choices(repo,pid,p['candidate_plan'],event['private_references']) if 'private_references' in event else []
-                repo.freeze_plan(pid,policy,expected_revision=event['draft_revision'],pending_input_id=event['pending_input_id'],material_links=links)
+                links=resolve_choices(repo,pid,p['candidate_plan'],event['private_references'],quiz_generation_mode=self.quiz_generation_mode) if 'private_references' in event else []
+                repo.freeze_plan(pid,policy,expected_revision=event['draft_revision'],pending_input_id=event['pending_input_id'],material_links=links,
+                    quiz_generation_mode=self.quiz_generation_mode)
             return {}
 
         def route(state):

@@ -60,9 +60,13 @@ def fingerprint(value): return sha256(encode(value).encode()).hexdigest()
 
 
 class LearningService:
-    def __init__(self, paths=V3Paths(), *, llm=None):
+    quiz_generation_mode='legacy'
+
+    def __init__(self, paths=V3Paths(), *, llm=None, quiz_generation_mode='legacy'):
         validate_learning_storage(paths)
-        self.paths, self.llm = paths, llm
+        from .quiz_content import GENERATION_MODES
+        if quiz_generation_mode not in GENERATION_MODES:raise ValueError('Unknown quiz generation contract')
+        self.paths, self.llm, self.quiz_generation_mode = paths, llm, quiz_generation_mode
         with LearningRepository(paths) as repo:
             if repo.conn.execute("SELECT 1 FROM runtime_metadata WHERE key='demo_only'").fetchone():
                 raise ValueError('Fake preparation stores are not live learning stores')
@@ -411,7 +415,8 @@ class LearningService:
             data={'assessment_id':row['id'],'snapshot':snapshot.model_dump(),'node':node.model_dump(),'policy':policy.model_dump(),'previous':previous}
             quiz=self._task(pid,'quiz:'+row['id'],data,AssessmentQuiz,
                 lambda model,budget:assessment.generate_quiz(project_id=pid,node=node,assessment_id=row['id'],snapshot=snapshot,
-                    policy=policy,contexts=contexts,previous_assessment_id=row['previous_assessment_id'],previous_question_prompts=previous,llm=model,budget=budget))
+                    policy=policy,contexts=contexts,previous_assessment_id=row['previous_assessment_id'],previous_question_prompts=previous,llm=model,budget=budget,
+                    generation_mode=self.quiz_generation_mode))
             assessment.validate_quiz(quiz,node=node,policy=policy,contexts=contexts,previous_question_prompts=previous)
             with LearningRepository(self.paths) as repo: repo.save_quiz(pid,quiz)
             return {}

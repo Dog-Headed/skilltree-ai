@@ -2,6 +2,9 @@
  * All untrusted material is rendered with text nodes; no HTML is interpreted. */
 'use strict';
 (() => {
+  let authSession = null;
+  window.addEventListener('storage', event => { if (event.key === 'skilltree.auth.changed') location.reload(); });
+  window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
   const $ = (id) => document.getElementById(id);
   const state = { projects: [], legacyProjects: [], tab: 'current', id: null, view: null,
     busy: false, loading: false, capabilities: [], packs: [], selectedPack: null, menu: null,
@@ -72,6 +75,7 @@
     const timeout = controller ? setTimeout(() => controller.abort(), 15000) : null;
     try {
       const response = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store', signal: signal || controller.signal });
+      if (response.status === 401) { location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search + location.hash)); throw Object.assign(new Error('请重新登录。'), { status: 401 }); }
       let data; try { data = await response.json(); } catch { throw new Error('服务暂时没有返回可读结果。请刷新状态。'); }
       if (!response.ok) throw Object.assign(new Error(data?.error?.message || '读取失败，请稍后刷新。'), { status: response.status });
       return data;
@@ -243,6 +247,7 @@
     const priorValue = typeof p.prior_knowledge === 'string' ? p.prior_knowledge : list(p.prior_knowledge?.self_reported).join('\n');
     const prior = textArea('prior', priorValue, { maxlength: 4000, rows: 2, placeholder: '可以写“零基础”“不确定”，或简单说说已经会什么。' });
     const grid = el('div', { class: 'form-grid' }, field('你想学会什么？', goal, '日语、Python、心理学……写下想长期探索的方向，或一个具体目标。', true), field('已有基础', prior, '可不填；让这棵树从适合你的地方开始。', true));
+    window.SkillTreeControls?.seedMeter(goal);
     const total = input('time_budget_minutes', p.time_budget_minutes || 1440, { type: 'number', min: 1, max: 10080, required: true });
     const session = input('session_minutes', p.session_minutes || 30, { type: 'number', min: 1, max: 480, required: true });
     const rhythm = el('summary');
@@ -573,6 +578,7 @@
         const answer = type === 'numeric_scalar' ? input(q.question_id, saved[q.question_id] || '', { type: 'text', inputmode: 'text', class: 'answer-numeric', placeholder: '例如：2、1.5 cm 或 3e-2', maxlength: 4000, required: true, disabled: !allowed('submit_answer'), 'aria-label': '第 ' + (index + 1) + ' 题数值答案' })
           : textArea(q.question_id, saved[q.question_id] || '', { required: true, maxlength: 8000, rows: 5, placeholder: '写下你的答案与理由…', disabled: !allowed('submit_answer'), 'aria-label': '第 ' + (index + 1) + ' 题文字答案' });
         controls.push(answer); fieldset.append(el('label', { class: 'answer-label', for: answer.id = 'answer-' + index, text: type === 'numeric_scalar' ? '你的数值答案' : '你的答案与步骤' }), answer);
+        if (type === 'numeric_scalar') window.SkillTreeControls?.numericEcho(answer);
       }
       answers[q.question_id] = () => type === 'multiple_choice' ? controls.filter(c => c.checked).map(c => c.value) : type === 'single_choice' ? controls.find(c => c.checked)?.value || '' : controls[0].value;
       for (const control of controls) control.addEventListener('input', () => storage.write(key, Object.fromEntries(Object.entries(answers).map(([id, read]) => [id, read()]))));
@@ -584,7 +590,7 @@
       const missing = Object.values(payload).map((v, i) => (Array.isArray(v) ? !v.length : !v.trim()) ? i + 1 : 0).filter(Boolean);
       if (missing.length) { showMessage(`还有第 ${missing.join('、')} 题没有作答，完成后再提交。`, 'warn'); document.getElementById('question-' + (missing[0] - 1))?.scrollIntoView({ block: 'center' }); return; }
       await command('submit_answer', { assessment_id: quiz.assessment_id, answers: payload }, { after: () => storage.remove(key) });
-    }); card.append(form); return card;
+    }); card.append(form); window.SkillTreeControls?.choiceKeys(form); return card;
   }
   function recoveryCard(view) {
     const stage = view.page_state; const headings = { running: '正在完成本次操作', error: '这一步需要恢复', paused: '暂停一下，进度已保留',
@@ -699,17 +705,54 @@
     if (['submit_answer', 'annotate_dispute', 'replace_assessment'].includes(action)) body.assessment_id = identity.assessment_id;
     return write(base + '/resume', body, { ...options, busyText: action === 'submit_answer' ? '正在评分、核查证据并诊断…' : action === 'replan' || action === 'confirm_profile' || action === 'adjust_plan' ? '正在核对范围与资料，准备学习计划…' : '正在完成这一步…' });
   }
+  async function followJob(initial) {
+    storage.write('active-job', initial.id);
+    const started = Date.now(); let job = initial;
+    while (['queued', 'running'].includes(job.state)) {
+      $('busy-text').textContent = job.state === 'queued' ? `正在排队 · 前面还有 ${Math.max(0, job.position - 1)} 个等待任务` : '正在处理你的学习任务，进度会自动保存…';
+      if (Date.now() - started > 1200000) throw new Error('任务仍在后台处理，稍后刷新页面可以继续查询。');
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await get('/jobs/' + encodeURIComponent(job.id)); job = response.job;
+    }
+    storage.remove('active-job');
+    if (job.state === 'interrupted') throw Object.assign(new Error('服务更新时任务中断，进度已保留，请核对当前步骤后使用恢复操作。'), { interrupted: true });
+    return job;
+  }
+  async function restoreJob() {
+    try {
+      const saved = storage.read('active-job');
+      let job;
+      if (saved) {
+        try { job = (await get('/jobs/' + encodeURIComponent(saved))).job; }
+        catch (error) { if (error.status === 404) storage.remove('active-job'); else throw error; }
+      }
+      if (!job) job = (await get('/jobs/active')).job;
+      if (!job) return;
+      busy(true, '正在查询上次任务…');
+      const completed = await followJob(job);
+      if (completed.project_id) await loadProject(completed.project_id);
+      await refreshList(); render();
+      showMessage(completed.status_code < 400 ? '上次任务已处理，已读取保存的结果。' : '上次任务未完成，请查看当前步骤和恢复提示。', completed.status_code < 400 ? '' : 'warn');
+    } catch (error) { showMessage(error.message || '任务状态暂时无法查询，请稍后刷新。', 'warn'); }
+    finally { busy(false); }
+  }
   async function write(url, body, { method = 'POST', busyText, success = '', after = null } = {}) {
     if (state.busy) return; closeMenu(); busy(true, busyText); showMessage('');
+    const sprout = window.SkillTreeControls?.grow(window.SkillTreeControls.pressed());
     // A silent client connection does not cancel or disprove the server's work.
     // Stop waiting for this response, then use the existing read-only recovery.
     const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 60000);
     const projectId = state.id; const pendingIdentity = state.view?.pending_input_id; const previousView = state.view; let result, confirmed = false;
     state.pendingWrite = { url, body, method };
     try {
-      const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body), signal: controller.signal });
+      let response = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(authSession?.csrf_token ? { 'X-CSRF-Token': authSession.csrf_token } : {}) }, body: JSON.stringify(body), signal: controller.signal });
       try { result = await response.json(); } catch { throw new Error('本次响应未能确认'); }
       clearTimeout(timeout);
+      if (response.status === 401) { location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search + location.hash)); return; }
+      if (response.status === 202 && result?.job) {
+        const completed = await followJob(result.job);
+        result = completed.result; response = { status: completed.status_code, ok: completed.status_code < 400 };
+      }
       if (!response.ok) {
         if (response.status === 409) {
           if (projectId) await loadProject(projectId); else await refreshList();
@@ -740,6 +783,7 @@
       } catch { showMessage('连接暂时中断。当前草稿已保留，恢复连接后请先刷新状态，核对是否已完成；本页没有自动重复提交。', 'error'); }
     } finally {
       clearTimeout(timeout);
+      if (confirmed) sprout?.done(); else sprout?.fail();
       state.pendingWrite = null; busy(false); renderList();
       // Never carry submitted answers into a later assessment identity.
       if (pendingIdentity && state.view?.pending_input_id !== pendingIdentity && state.view?.page_state !== 'quiz') document.querySelectorAll('#quiz-form input,#quiz-form textarea').forEach(n => { n.disabled = true; });
@@ -808,10 +852,21 @@
   async function initialize() {
     try {
       const session = await get('/session');
+      authSession = session;
       if (session?.account) {
         accountStoragePrefix = encodeURIComponent(session.account) + '.';
         const account = el('span', { class: 'chip', text: '当前账号：' + session.account, id: 'current-account' });
         $('new-project').before(account);
+        if (session.logout) {
+          const logout = el('button', { class: 'btn subtle', type: 'button', text: '退出登录', onclick: async () => {
+            const response = await fetch('/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': authSession.csrf_token }, body: '{}' });
+            if (response.ok || response.status === 401) {
+              try { const prefix = 'skilltree.v3.' + accountStoragePrefix; for (const key of Object.keys(localStorage)) if (key.startsWith(prefix)) localStorage.removeItem(key); localStorage.setItem('skilltree.auth.changed', String(Date.now())); } catch { /* Storage may be disabled. */ }
+              location.replace('/login');
+            } else showMessage('退出未完成，请刷新页面再试。', 'warn');
+          } });
+          account.after(logout);
+        }
       }
     } catch { /* Standalone local V3 has no authenticated gateway. */ }
     const initialRoute = location.hash;
@@ -828,6 +883,7 @@
     }
     render();
     if (initialRoute) { history.replaceState(null, '', initialRoute); await garden.readRoute(); }
+    if (authSession?.csrf_token) await restoreJob();
   }
   garden = window.SkillTreeGarden({el, button, chip, list, nodesFor, currentName, state, allowed, command,
     selectProject, projectMenu, tutorCard, quizCard, recoveryCard, objectiveFeedback, budgetCard,

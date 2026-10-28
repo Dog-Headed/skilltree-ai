@@ -1,8 +1,20 @@
 """Keep strict schemas while giving the model concise, actionable repair errors."""
 import json
+import os
+import re
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import SystemMessage
 from app.services.llm import compact_parse_error
+
+
+class _DuplicateContentField(ValueError):
+    def __init__(self,key):
+        self.key=key if re.fullmatch(r'[A-Za-z0-9_.]{1,80}',key) else 'invalid_field_name'
+        super().__init__('Content JSON field requires one unique value')
+
+    def errors(self,**kwargs):
+        return [{'loc':(self.key,),'type':'duplicate_field',
+                 'msg':'Each declared field requires one unique value. Return it exactly once.'}]
 
 
 class StructuredReply:
@@ -47,8 +59,16 @@ class StructuredReply:
             elif text.startswith('```\n') and text.endswith('\n```'):
                 text = text[4:-4]
             try:
-                json.loads(text)
+                def unique_members(pairs):
+                    value={}
+                    for key,item in pairs:
+                        if key in value:raise _DuplicateContentField(key)
+                        value[key]=item
+                    return value
+                json.loads(text,object_pairs_hook=unique_members if self.schema_name in {'QuizContent','StudyNotesContent'} else None)
             except json.JSONDecodeError as exc:
+                raise OutputParserException(compact_parse_error(exc)) from exc
+            except ValueError as exc:
                 raise OutputParserException(compact_parse_error(exc)) from exc
         error = result.get('parsing_error')
         if error is not None:
@@ -94,3 +114,40 @@ class StrictProvider:
     def bind_tools(self, *args, **kwargs):
         model = self._tools_model() if self._tools_model else self.model
         return model.bind_tools(*args, **kwargs)
+
+
+def create_runtime_model():
+    from langchain_openai import ChatOpenAI
+    from app.services.llm import get_llm, TASK_TIMEOUTS
+    model = get_llm()
+    seconds = float(os.environ.get('SKILLTREE_MODEL_TIMEOUT', '150'))
+    if not 45 <= seconds <= 180:
+        raise ValueError('Deployment model timeout must be 45..180 seconds')
+    thinking = os.environ.get('SKILLTREE_THINKING_MODE', 'auto').lower()
+    if thinking not in {'auto', 'true', 'false'}:
+        raise ValueError('Thinking mode must be auto, true, or false')
+    extra_body = None if thinking == 'auto' else {'thinking_mode': thinking == 'true'}
+    # Construct the SDK client with the timeout. Changing a Pydantic field
+    # on an already-built model leaves its underlying HTTP client unchanged.
+    clients = {}
+    def client(timeout, streaming=False):
+        key = (timeout, streaming)
+        if key not in clients:
+            clients[key] = ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
+                base_url=model.openai_api_base, temperature=model.temperature,
+                timeout=timeout, max_retries=0, extra_body=extra_body, streaming=streaming)
+        return clients[key]
+    def structured_model(schema):
+        name = getattr(schema, '__name__', '')
+        kind = {'TextBatchScore': 'grade', 'AssessmentQuiz': 'quiz', 'QuizContent': 'quiz',
+                'DiagnosisDecision': 'diagnosis', 'TutorReply': 'tutor'}.get(name)
+        timeout = TASK_TIMEOUTS.get(kind, 45) if kind else 120 if name in {
+            'LearningPlan', 'LearningPreparation', 'StudyNotes', 'StudyNotesContent'} else seconds
+        # Aggregate the provider stream into one strictly checked result.
+        # Receiving chunks avoids retrying a still-generating preparation
+        # merely because its non-streaming HTTP response stayed silent.
+        return client(timeout, streaming=name in {'LearningPlan', 'LearningPreparation', 'StudyNotes', 'StudyNotesContent'})
+    # Core injection remains an actual model. Route at the structured schema
+    # boundary so its task-specific transports and strict adapters both apply.
+    return StrictProvider(client(seconds), structured_model=structured_model,
+                          tools_model=lambda: client(TASK_TIMEOUTS['diagnosis']))

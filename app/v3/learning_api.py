@@ -49,10 +49,11 @@ class LegacyWriteError(Exception):
     pass
 
 
-def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None, legacy_checkpoint_path=None):
+def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None, legacy_checkpoint_path=None, quiz_generation_mode='legacy', preparation_generation_mode='legacy'):
     """No automatic business/schema migration or legacy checkpoint execution."""
     from .legacy import LegacyHistory
-    learning=LearningService(paths,llm=llm);preparation=PreparationService(paths,llm=llm)
+    learning=LearningService(paths,llm=llm,quiz_generation_mode=quiz_generation_mode)
+    preparation=PreparationService(paths,llm=llm,quiz_generation_mode=quiz_generation_mode,preparation_generation_mode=preparation_generation_mode)
     legacy=LegacyHistory(legacy_business_path or PROJECT_ROOT/'data'/'learning.sqlite',
                          legacy_checkpoint_path or PROJECT_ROOT/'data'/'checkpoints.sqlite')
     app=FastAPI(title='SkillTree V3',version='3.0.0-day12')
@@ -113,6 +114,9 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
     @app.get('/',include_in_schema=False)
     def home():return FileResponse(STATIC/'v3.html')
 
+    @app.get('/login',include_in_schema=False)
+    def login_page():return FileResponse(STATIC/'login.html')
+
     @app.get('/session')
     def local_session():
         # Production's authenticated gateway supplies the actual account.
@@ -120,7 +124,7 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
 
     @app.get('/assets/{filename}',include_in_schema=False)
     def asset(filename:str):
-        if filename not in {'v3.js','v3.css','garden.js','garden.css','botanical.js','botanical.css','fonts.css'}:raise KeyError(filename)
+        if filename not in {'v3.js','v3.css','garden.js','garden.css','botanical.js','botanical.css','fonts.css','controls.css','controls.js','login.html','login.css','login.js'}:raise KeyError(filename)
         return FileResponse(STATIC/filename)
 
     @app.get('/assets/fonts/{filename}',include_in_schema=False)
@@ -132,9 +136,10 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
         return FileResponse(path)
 
     @app.get('/projects')
-    def projects():
+    def projects(request:Request):
+        allowed_ids=getattr(request.state,'allowed_project_ids',None)
         with LearningRepository(paths) as repo:
-            ids=[p['id'] for p in repo.list_projects() if not project_management.metadata(repo,p['id']).get('deleted_at')]
+            ids=[p['id'] for p in repo.list_projects() if (allowed_ids is None or p['id'] in allowed_ids) and not project_management.metadata(repo,p['id']).get('deleted_at')]
         result=[]
         for pid in reversed(ids):
             try:view=read(pid)

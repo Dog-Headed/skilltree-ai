@@ -372,6 +372,9 @@ window.SkillTreeGarden = function (ctx) {
       const form=el('form',{class:'composer'},q,el('button',{type:'submit',class:'btn',text:actionLabels.ask,disabled:state.busy}));
       form.addEventListener('submit',async event=>{event.preventDefault();if(!state.busy&&form.reportValidity())await command('ask',{question:q.value.trim()},{busyText:'正在想怎么讲清楚…',after:()=>storage.remove(key)});});
       card.append(form);
+      window.SkillTreeControls?.quickAsks(q,{anchor:form});
+      window.SkillTreeControls?.autoGrow(q);
+      window.SkillTreeControls?.enterToSend(form,q);
     }
     const row=el('div',{class:'actions lesson-actions'});
     for(const action of ['return_to_current','start_quiz','return_to_teaching'])if(allowed(action))row.append(button(actionLabels[action],()=>command(action,{},action==='start_quiz'?{busyText:'正在为这一节出题…'}:{}),action==='start_quiz'?'primary':''));

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#edf0ea">
+  <meta name="description" content="登录 SkillTree AI，继续照料你的学习树。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2022%2026%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M11%2025%20C11%2018%2010%2013%2011%206%22%20fill%3D%22none%22%20stroke%3D%22%23716652%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M11%2012%20C%2015%2011%2018%207%2018%202%20C%2013%202%2011%206%2011%2012Z%22%20fill%3D%22%2339765e%22%2F%3E%3Cpath%20d%3D%22M11%2016%20C%207%2015.5%204%2012.5%204%208.5%20C%208%208.5%2010.5%2011.5%2011%2016Z%22%20fill%3D%22%23a7c5b1%22%20stroke%3D%22%2339765e%22%20stroke-width%3D%221.2%22%2F%3E%3C%2Fsvg%3E">
+  <title>登录 · SkillTree</title>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/botanical.css">
+  <link rel="stylesheet" href="/assets/controls.css">
+  <link rel="stylesheet" href="/assets/login.css">
+  <script src="/assets/controls.js" defer></script>
+  <script src="/assets/login.js" defer></script>
+</head>
+<body class="login-page" data-subject="general">
+  <main class="login">
+    <section class="login-plate" aria-hidden="true">
+      <a class="login-brand" href="/" tabindex="-1">
+        <svg viewBox="0 0 22 26"><path d="M11 25 C11 18 10 13 11 6" fill="none" stroke="var(--stem)" stroke-width="2" stroke-linecap="round"/><path d="M11 12 C 15 11 18 7 18 2 C 13 2 11 6 11 12Z" fill="var(--leaf-deep)"/><path d="M11 16 C 7 15.5 4 12.5 4 8.5 C 8 8.5 10.5 11.5 11 16Z" fill="var(--leaf-soft)" stroke="var(--leaf)" stroke-width="1.2"/></svg>
+        SkillTree
+      </a>
+      <svg class="login-tree" viewBox="0 0 400 440">
+        <path class="ground" d="M10 382 C 110 376 190 388 290 380 S 370 378 390 382"/>
+        <path class="soil" d="M10 382 C 110 376 190 388 290 380 S 370 378 390 382 L390 440 L10 440Z"/>
+        <g class="future">
+          <path pathLength="1" d="M160 182 C 156 150 152 130 150 110"/>
+          <path pathLength="1" d="M246 176 C 248 146 249 124 250 104"/>
+          <path pathLength="1" d="M150 110 C 168 88 186 72 200 60"/>
+          <path pathLength="1" d="M250 104 C 232 86 214 72 200 60"/>
+          <path pathLength="1" d="M202 150 C 202 122 201 92 200 60"/>
+        </g>
+        <path class="trunk" pathLength="1" d="M200 384 C 198 340 203 300 200 250"/>
+        <path class="branch b1" pathLength="1" d="M200 304 C 176 290 150 272 128 238"/>
+        <path class="branch b2" pathLength="1" d="M200 294 C 228 280 256 264 280 232"/>
+        <path class="branch b3" pathLength="1" d="M200 266 C 186 240 170 216 160 182"/>
+        <path class="branch b4" pathLength="1" d="M200 262 C 216 236 232 212 246 176"/>
+        <path class="branch b5" pathLength="1" d="M200 252 C 200 222 201 190 202 150"/>
+        <path class="root" d="M200 382 q-8 12 -22 22 M200 382 q2 16 4 30 M200 382 q10 8 24 16"/>
+        <g class="leaf l1" transform="translate(128 238) rotate(-38)"><path d="M0 0 C 12 -4 18 -18 15 -34 C 2 -29 -4 -15 0 0Z"/><path class="vein" d="M0 0 L 11 -26"/></g>
+        <g class="leaf l2" transform="translate(280 232) rotate(36)"><path d="M0 0 C 12 -4 18 -18 15 -34 C 2 -29 -4 -15 0 0Z"/><path class="vein" d="M0 0 L 11 -26"/></g>
+        <g class="leaf l3 current" transform="translate(160 182) rotate(-16)"><circle class="ring" cx="6" cy="-15" r="22"/><path d="M0 0 C 10 -4 15 -15 13 -28 C 2 -24 -3 -12 0 0Z"/></g>
+        <g class="bud b-open" transform="translate(246 176)"><circle class="halo" cx="0" cy="-8" r="15"/><path d="M0 0 C 6 -3 7 -12 0 -19 C -7 -12 -6 -3 0 0Z"/></g>
+        <g class="bud b-locked" transform="translate(202 150)"><path d="M0 0 C 4 -2 5 -9 0 -14 C -5 -9 -4 -2 0 0Z"/></g>
+        <g class="bud b-locked" transform="translate(150 110)"><path d="M0 0 C 4 -2 5 -9 0 -14 C -5 -9 -4 -2 0 0Z"/></g>
+        <g class="bud b-locked" transform="translate(250 104)"><path d="M0 0 C 4 -2 5 -9 0 -14 C -5 -9 -4 -2 0 0Z"/></g>
+        <g class="bud b-locked" transform="translate(200 60)"><path d="M0 0 C 4 -2 5 -9 0 -14 C -5 -9 -4 -2 0 0Z"/></g>
+        <g class="leaf welcome w1" transform="translate(246 176) rotate(24)"><path d="M0 0 C 12 -4 18 -18 15 -34 C 2 -29 -4 -15 0 0Z"/></g>
+        <g class="leaf welcome w2" transform="translate(202 150) rotate(-6)"><path d="M0 0 C 10 -4 15 -15 13 -28 C 2 -24 -3 -12 0 0Z"/></g>
+      </svg>
+      <p class="plate-caption">每一次好奇，都有生长的方向。</p>
+    </section>
+
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="login-eyebrow">SKILLTREE · 我的花园</div>
+      <h1 id="login-title">欢迎回来</h1>
+      <p class="login-lead">登录后继续照料你的学习树，进度都在这里等你。</p>
+
+      <div id="signed-in" class="login-state" hidden>
+        <p>你已登录为 <b id="signed-account"></b>。</p>
+        <div class="login-actions"><a id="enter-garden" class="btn primary" href="/">进入我的花园</a><button id="switch-account" class="btn subtle" type="button">换个账号</button></div>
+      </div>
+      <div id="local-mode" class="login-state" hidden>
+        <p>这台服务器以本地单人模式运行，不需要登录。</p>
+        <div class="login-actions"><a class="btn primary" href="/">直接进入</a></div>
+      </div>
+
+      <form id="login-form" class="login-form" action="/auth/login" method="post">
+        <div id="login-alert" class="login-alert" role="alert" hidden></div>
+        <div class="field">
+          <label for="account">邮箱</label>
+          <input id="account" name="account" type="email" autocomplete="username" required maxlength="254" spellcheck="false" autocapitalize="off" aria-describedby="account-hint">
+          <small id="account-hint">邮箱仅作登录名，不发送验证码。</small>
+          <label class="login-remember"><input id="legacy-login" type="checkbox"><span>使用原有的 goutouren / judge / test 账号</span></label>
+        </div>
+        <div class="field">
+          <label for="password">密码</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="256" aria-describedby="caps-hint">
+          <small id="caps-hint" class="caps-hint" hidden>大写锁定已开启</small>
+        </div>
+        <label class="login-remember"><input id="remember" name="remember" type="checkbox" value="1" checked><span>在这台设备上保持登录 30 天</span></label>
+        <button id="login-submit" class="btn primary login-submit" type="submit">进入我的花园</button>
+      </form>
+
+      <div class="login-foot">
+        <p>公测账号由管理员开通，请使用开通时的邮箱与密码。这里不验证邮箱归属，忘记密码请联系管理员。</p>
+        <p>在自己电脑上本地运行时不需要登录，直接打开 <code>http://127.0.0.1:8765</code> 即可。</p>
+      </div>
+    </section>
+
+    <button id="theme-toggle" class="login-theme" type="button" aria-label="切换深色外观">☾</button>
+  </main>
+</body>
+</html>

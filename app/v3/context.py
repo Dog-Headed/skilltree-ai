@@ -57,7 +57,7 @@ class ContextBuilder:
         """Trusted evaluator entry; private references stay internal."""
         return self._build(project_id, node_id, objective_id, purpose="grading", query=query)
 
-    def validate_candidate_bindings(self, project_id, extra_links, *, policy):
+    def validate_candidate_bindings(self, project_id, extra_links, *, policy, quiz_generation_mode='legacy'):
         """Read-only preflight using the same complete context as frozen learning.
 
         Do this before accepting a confirmation, and again inside freeze's
@@ -102,7 +102,7 @@ class ContextBuilder:
                         assessment_contexts[objective.objective_id] = context
             quiz_generation_messages(project_id=project_id, node=node,
                 assessment_id='assessment_' + '0' * 32, snapshot=snapshot,
-                policy=policy, contexts=assessment_contexts)
+                policy=policy, contexts=assessment_contexts,generation_mode=quiz_generation_mode)
 
     def _build(self, project_id, node_id, objective_id, *, purpose, query, records=None):
         project = self.repository.get_project(project_id)

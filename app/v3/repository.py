@@ -255,7 +255,7 @@ class V3Repository:
             (project_id, chunk_id, int(include_private))).fetchone()
         return json.loads(row[0]) if row else None
 
-    def freeze_plan(self, project_id, policy, *, expected_revision, pending_input_id, material_links=()):
+    def freeze_plan(self, project_id, policy, *, expected_revision, pending_input_id, material_links=(), quiz_generation_mode='legacy'):
         """Persist one confirmed snapshot. Day 9 exposes no teaching/completion runner."""
         from .contracts import LearningProfile, LearningPlan, FrozenSnapshot, SourceDocument, SourceChunk, NodeMaterialLink, validate_material_link
         from .capabilities import check_capabilities, validate_policy, get_capability
@@ -318,7 +318,7 @@ class V3Repository:
                     raise ValueError("One frozen plan cannot mix versions of the same source")
                 selected[document.source_id] = source
             from .context import ContextBuilder
-            ContextBuilder(self).validate_candidate_bindings(project_id, links, policy=policy)
+            ContextBuilder(self).validate_candidate_bindings(project_id, links, policy=policy,quiz_generation_mode=quiz_generation_mode)
             snapshot = FrozenSnapshot(profile_version=profile.profile_version, plan_version=plan.plan_version,
                                       policy_id=policy.policy_id, policy_version=policy.policy_version,
                                       source_manifest=[{k:d[k] for k in ("source_id","source_version","content_hash")} for d in selected.values()],

@@ -47,7 +47,7 @@ def public_references(repo, project_id):
             for i, d in enumerate(_latest(repo, project_id))]
 
 
-def resolve_choices(repo, project_id, plan, choices):
+def resolve_choices(repo, project_id, plan, choices, *, quiz_generation_mode='legacy'):
     """Validate before journaling; resolve again inside the frozen write path."""
     documents = {reference_id(d): d for d in _latest(repo, project_id)}
     parsed = [PrivateReferenceChoice.model_validate(item) for item in (choices or [])]
@@ -73,5 +73,5 @@ def resolve_choices(repo, project_id, plan, choices):
                             'objective_id': objective['objective_id'], 'chunk_id': chunk['chunk_id'], 'purpose': purpose})
     from .context import ContextBuilder
     policy = json.loads(repo.get_project(project_id)['candidate_policy_json'])
-    ContextBuilder(repo).validate_candidate_bindings(project_id, links, policy=policy)
+    ContextBuilder(repo).validate_candidate_bindings(project_id, links, policy=policy,quiz_generation_mode=quiz_generation_mode)
     return links

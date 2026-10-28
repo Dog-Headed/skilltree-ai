@@ -6,27 +6,40 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import hmac
+from http.cookies import SimpleCookie
+from urllib.parse import quote
 from uuid import UUID
 
 from app.v3.learning_api import create_learning_app
 from app.v3.storage import V3Paths
 from .ownership import Ownership
-from .provider import StrictProvider
+from .provider import StrictProvider, create_runtime_model
+from .auth import AuthStore, csrf_token
+from .jobs import AdmissionError, JobStore, JobRunner
 
 
 class EvaluationGateway:
-    def __init__(self, application, paths, quota_path):
+    def __init__(self, application, paths, quota_path, *, auth_store=None, queued=False,
+                 origin='https://skilltree.goutouren.work', cookie_secure=True, queue_capacity=10):
         self.application = application
         self.paths = paths
         self.quota_path = Path(quota_path).resolve()
         self.ownership = Ownership(self.quota_path)
         self.active_writes = 0
+        self.auth = auth_store
+        self.origin = origin.rstrip('/')
+        self.cookie_secure = cookie_secure
+        self.cookie_name = '__Host-skilltree_session' if cookie_secure else 'skilltree_session'
+        self.auth_slots = asyncio.Semaphore(2)
+        self.jobs = JobStore(self.quota_path, capacity=queue_capacity) if queued else None
+        self.runner = JobRunner(self.jobs, application, self.origin) if queued else None
 
-    async def reply(self, send, status, value):
+    async def reply(self, send, status, value, extra_headers=()):
         body = json.dumps(value, ensure_ascii=False).encode()
         await send({'type': 'http.response.start', 'status': status, 'headers': [
             (b'content-type', b'application/json; charset=utf-8'),
-            (b'cache-control', b'no-store'), (b'x-content-type-options', b'nosniff')]})
+            (b'cache-control', b'no-store'), (b'x-content-type-options', b'nosniff'), *extra_headers]})
         await send({'type': 'http.response.body', 'body': body})
 
     def reserve(self, user):
@@ -42,7 +55,138 @@ class EvaluationGateway:
             conn.execute('INSERT INTO usage VALUES (?,?,1) ON CONFLICT(day,account) DO UPDATE SET used=used+1', (day, user))
         return True
 
+    async def body(self, receive, maximum=262144):
+        body = b''
+        while True:
+            message = await receive()
+            if message['type'] == 'http.disconnect':
+                raise AdmissionError('disconnected', '连接已断开，请先刷新状态。', 400)
+            body += message.get('body', b'')
+            if len(body) > maximum:
+                raise AdmissionError('request_too_large', '请求超过大小限制。', 413)
+            if not message.get('more_body'):
+                return body
+
+    def cookie(self, token='', remember=False):
+        value = f'{self.cookie_name}={token}; Path=/; HttpOnly; SameSite=Lax'
+        if self.cookie_secure:
+            value += '; Secure'
+        if remember or not token:
+            value += '; Max-Age=' + ('2592000' if token else '0')
+        return value.encode()
+
+    async def authenticated(self, scope, receive, send):
+        path, method, headers = scope['path'], scope['method'], dict(scope['headers'])
+        try:
+            cookies = SimpleCookie(); cookies.load(headers.get(b'cookie', b'').decode('latin1'))
+            token = cookies[self.cookie_name].value if self.cookie_name in cookies else ''
+        except Exception:
+            token = ''
+        account = await asyncio.to_thread(self.auth.session, token)
+        if method in ('POST', 'PATCH', 'DELETE'):
+            origin = headers.get(b'origin', b'').decode('latin1')
+            cross_site = headers.get(b'sec-fetch-site') == b'cross-site'
+            if cross_site or (origin and origin.rstrip('/') != self.origin):
+                await self.reply(send, 403, {'error': {'code': 'invalid_origin', 'message': '请从当前网站提交。'}})
+                return None, token
+        if path == '/auth/login' and method == 'POST':
+            if headers.get(b'x-skilltree-login') != b'1' or headers.get(b'content-type', b'').split(b';')[0].strip() != b'application/json':
+                await self.reply(send, 403, {'error': {'code': 'invalid_origin', 'message': '请使用登录页面。'}})
+                return None, token
+            try:
+                value = json.loads(await self.body(receive, 4096))
+                if not isinstance(value, dict) or not isinstance(value.get('remember', False), bool):
+                    raise ValueError()
+                async with self.auth_slots:
+                    result = await asyncio.to_thread(self.auth.login, value.get('account'), value.get('password'),
+                                                     str((scope.get('client') or ('unknown',))[0]), value.get('remember', False))
+                if result['status'] == 200:
+                    if token:
+                        await asyncio.to_thread(self.auth.logout, token)
+                    await self.reply(send, 200, {'account': result['account'], 'csrf_token': csrf_token(result['token'])},
+                                     [(b'set-cookie', self.cookie(result['token'], value.get('remember', False)))])
+                else:
+                    status = result['status']; retry = result.get('retry_after', 0)
+                    await self.reply(send, status, {'error': {'code': 'rate_limited' if status == 429 else 'invalid_credentials',
+                                      'message': '尝试过于频繁，请稍后再试。' if status == 429 else '邮箱或密码不正确。', 'retry_after': retry}},
+                                     [(b'retry-after', str(retry).encode())] if retry else [])
+            except (ValueError, TypeError, AdmissionError):
+                await self.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请检查登录信息。'}})
+            return None, token
+        if not account:
+            if method in ('GET', 'HEAD') and (path == '/' or path == '/login' or path.startswith('/assets/') or path == '/healthz'):
+                if path == '/':
+                    await self.reply(send, 303, {}, [(b'location', ('/login?next=' + quote('/', safe='')).encode())])
+                else:
+                    return '', token
+            else:
+                await self.reply(send, 401, {'error': {'code': 'invalid_account', 'message': '请先登录。'}})
+            return None, token
+        if method in ('POST', 'PATCH', 'DELETE'):
+            actual = headers.get(b'x-csrf-token', b'')
+            if not hmac.compare_digest(actual, csrf_token(token).encode()):
+                await self.reply(send, 403, {'error': {'code': 'csrf_failed', 'message': '登录状态已更新，请刷新页面后再操作。'}})
+                return None, token
+            if path == '/auth/logout' and method == 'POST':
+                await asyncio.to_thread(self.auth.logout, token)
+                await self.reply(send, 200, {'signed_out': True}, [(b'set-cookie', self.cookie())])
+                return None, token
+            if headers.get(b'content-type', b'').split(b';')[0].strip() != b'application/json':
+                await self.reply(send, 415, {'error': {'code': 'json_required', 'message': '请使用当前页面提交。'}})
+                return None, token
+        return account, token
+
+    async def queued_write(self, scope, receive, send, user, project):
+        try:
+            raw = await self.body(receive)
+            payload = json.loads(raw)
+            if not isinstance(payload, dict):
+                raise ValueError()
+            path, method = scope['path'], scope['method']
+            slow = method == 'POST' and project and (path.endswith(('/begin', '/retry')) or
+                   (path.endswith('/resume') and payload.get('action') not in {'rest', 'update_profile', 'adjust_scope', 'confirm_plan', 'choose_exploration'}))
+            if self.runner.stopping:
+                raise AdmissionError('restarting', '服务正在更新，请稍后重试；本次未扣额度。', 503)
+            if slow:
+                job_id = await asyncio.to_thread(self.jobs.admit, user, project, method, path, payload)
+                job = await asyncio.to_thread(self.jobs.public, job_id, user)
+                return await self.reply(send, 202, {'job': job}, [(b'location', ('/jobs/' + job_id).encode())])
+            if self.active_writes >= 8:
+                raise AdmissionError('busy', '操作较多，请稍后重试。')
+            self.active_writes += 1
+            try:
+                pid = None
+                if path == '/projects' and method == 'POST':
+                    try:
+                        pid = 'v3_' + UUID(payload['request_id']).hex
+                    except (ValueError, TypeError, KeyError, AttributeError):
+                        raise AdmissionError('invalid_input', '请求身份无效。', 422) from None
+                await asyncio.to_thread(self.jobs.reserve_fast, user, project, pid)
+                delivered = False
+                async def replay():
+                    nonlocal delivered
+                    if not delivered:
+                        delivered = True
+                        return {'type': 'http.request', 'body': raw, 'more_body': False}
+                    return await receive()
+                return await self.application(scope, replay, send)
+            finally:
+                self.active_writes -= 1
+        except AdmissionError as exc:
+            return await self.reply(send, exc.status, {'error': {'code': exc.code, 'message': exc.message}})
+        except (ValueError, TypeError):
+            return await self.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请检查请求内容。'}})
+
     async def __call__(self, scope, receive, send):
+        if scope['type'] == 'lifespan' and self.runner:
+            async def lifecycle():
+                message = await receive()
+                if message['type'] == 'lifespan.startup':
+                    await self.runner.start()
+                elif message['type'] == 'lifespan.shutdown':
+                    await self.runner.stop()
+                return message
+            return await self.application(scope, lifecycle, send)
         if scope['type'] != 'http':
             return await self.application(scope, receive, send)
         path, method = scope['path'], scope['method']
@@ -50,10 +194,20 @@ class EvaluationGateway:
         # Nginx replaces this header after successful HTTP authentication. Both
         # application ports bind only to loopback; they are never public.
         user = headers.get(b'x-evaluation-user', b'local').decode('ascii', errors='ignore')
-        if not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', user):
+        token = ''
+        if self.auth:
+            user, token = await self.authenticated(scope, receive, send)
+            if user is None:
+                return
+        if not self.auth and not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', user):
             return await self.reply(send, 401, {'error': {'code': 'invalid_account', 'message': '请重新登录。'}})
         if path == '/session' and method == 'GET':
-            return await self.reply(send, 200, {'account': user})
+            return await self.reply(send, 200, {'account': user, **({'csrf_token': csrf_token(token), 'logout': True} if self.auth else {})})
+        if self.jobs and path.startswith('/jobs') and method == 'GET':
+            job = await asyncio.to_thread(self.jobs.active, user) if path == '/jobs/active' else await asyncio.to_thread(self.jobs.public, path.removeprefix('/jobs/'), user)
+            if job is None and path != '/jobs/active':
+                return await self.reply(send, 404, {'error': {'code': 'not_found', 'message': '任务不存在。'}})
+            return await self.reply(send, 200, {'job': job})
         if path == '/healthz' and method == 'GET':
             try:
                 with sqlite3.connect(self.paths.learning.as_uri() + '?mode=ro', uri=True) as conn:
@@ -63,7 +217,7 @@ class EvaluationGateway:
                 return await self.reply(send, 200, {'status': 'ok', 'version': os.environ.get('SKILLTREE_COMMIT', 'unknown')})
             except Exception:
                 return await self.reply(send, 503, {'status': 'unhealthy'})
-        allowed = path == '/' or path == '/capabilities' or path.startswith('/assets/') or path == '/projects' or path.startswith('/projects/') or path == '/material-packs' or path.startswith('/material-packs/')
+        allowed = path in {'/', '/login', '/capabilities'} or path.startswith('/assets/') or path == '/projects' or path.startswith('/projects/') or path == '/material-packs' or path.startswith('/material-packs/')
         if not allowed or method not in {'GET', 'HEAD', 'POST', 'PATCH'}:
             return await self.reply(send, 403, {'error': {'code': 'evaluation_restricted', 'message': '评审环境不开放此操作。'}})
         length = headers.get(b'content-length', b'0')
@@ -76,6 +230,7 @@ class EvaluationGateway:
             owned = await asyncio.to_thread(self.ownership.owned, user)
             if not owned:
                 return await self.reply(send, 200, [])
+            scope.setdefault('state', {})['allowed_project_ids'] = owned
             chunks = []
             status = 500
             async def capture(message):
@@ -90,6 +245,8 @@ class EvaluationGateway:
                 value = [p for p in value if p.get('project_id') in owned]
             return await self.reply(send, status, value)
         if method in {'POST', 'PATCH'}:
+            if self.jobs:
+                return await self.queued_write(scope, receive, send, user, match[1] if match else None)
             if self.active_writes >= 2:
                 return await self.reply(send, 429, {'error': {'code': 'busy', 'message': '服务正在处理其他学习操作，请稍后重试。'}})
             self.active_writes += 1
@@ -132,41 +289,11 @@ def create_app():
     paths = V3Paths(Path(os.environ.get('SKILLTREE_DATA_ROOT', 'data/v3')))
     # Intern-S2 may reason for up to 120 seconds before returning non-streaming
     # JSON. Configure transport here; retain business budgets and deep thinking.
-    def production_model():
-        from langchain_openai import ChatOpenAI
-        from app.services.llm import get_llm, TASK_TIMEOUTS
-        model = get_llm()
-        seconds = float(os.environ.get('SKILLTREE_MODEL_TIMEOUT', '150'))
-        if not 45 <= seconds <= 180:
-            raise ValueError('Deployment model timeout must be 45..180 seconds')
-        thinking = os.environ.get('SKILLTREE_THINKING_MODE', 'auto').lower()
-        if thinking not in {'auto', 'true', 'false'}:
-            raise ValueError('Thinking mode must be auto, true, or false')
-        extra_body = None if thinking == 'auto' else {'thinking_mode': thinking == 'true'}
-        # Construct the SDK client with the timeout. Changing a Pydantic field
-        # on an already-built model leaves its underlying HTTP client unchanged.
-        clients = {}
-        def client(timeout, streaming=False):
-            key = (timeout, streaming)
-            if key not in clients:
-                clients[key] = ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
-                    base_url=model.openai_api_base, temperature=model.temperature,
-                    timeout=timeout, max_retries=0, extra_body=extra_body, streaming=streaming)
-            return clients[key]
-        def structured_model(schema):
-            name = getattr(schema, '__name__', '')
-            kind = {'TextBatchScore': 'grade', 'AssessmentQuiz': 'quiz',
-                    'DiagnosisDecision': 'diagnosis', 'TutorReply': 'tutor'}.get(name)
-            timeout = TASK_TIMEOUTS.get(kind, 45) if kind else 120 if name in {
-                'LearningPlan', 'LearningPreparation', 'StudyNotes'} else seconds
-            # Aggregate the provider stream into one strictly checked result.
-            # Receiving chunks avoids retrying a still-generating preparation
-            # merely because its non-streaming HTTP response stayed silent.
-            return client(timeout, streaming=name in {'LearningPlan', 'LearningPreparation', 'StudyNotes'})
-        # Core injection remains an actual model. Route at the structured schema
-        # boundary so its task-specific transports and strict adapters both apply.
-        return StrictProvider(client(seconds), structured_model=structured_model,
-                              tools_model=lambda: client(TASK_TIMEOUTS['diagnosis']))
     # LearningService expects an actual model instance; its own provider method
     # already supplies lazy access to durable model tasks.
-    return EvaluationGateway(create_learning_app(paths, llm=production_model()), paths, os.environ.get('SKILLTREE_QUOTA_DB', 'data/deployment-quota.sqlite'))
+    return EvaluationGateway(create_learning_app(paths, llm=create_runtime_model(),
+        quiz_generation_mode=os.getenv('SKILLTREE_QUIZ_GENERATION', 'legacy'),
+        preparation_generation_mode=os.getenv('SKILLTREE_PREPARATION_GENERATION', 'legacy')), paths,
+        os.environ.get('SKILLTREE_QUOTA_DB', 'data/deployment-quota.sqlite'),
+        auth_store=AuthStore(os.getenv('SKILLTREE_AUTH_DB', 'data/auth.sqlite')), queued=True,
+        origin=os.getenv('SKILLTREE_PUBLIC_ORIGIN', 'https://skilltree.goutouren.work'))

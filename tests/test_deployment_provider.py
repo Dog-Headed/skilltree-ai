@@ -59,6 +59,15 @@ def test_invalid_json_reports_location_without_guessing_or_repairing_values():
     assert 'column' in message and 'PRIVATE_REFERENCE' not in message
 
 
+def test_quiz_content_rejects_duplicate_object_keys_before_accepting_parsed_data():
+    from types import SimpleNamespace
+    from deploy.provider import StructuredReply
+    raw=SimpleNamespace(content='{"q1":{"prompt":"first"},"q1":{"prompt":"replacement"}}',response_metadata={})
+    model=SimpleNamespace(invoke=lambda messages:{'raw':raw,'parsed':object(),'parsing_error':None})
+    with pytest.raises(OutputParserException,match='unique value'):
+        StructuredReply(model,'QuizContent').invoke([])
+
+
 def test_missing_parsed_output_remains_an_error():
     bound = StrictProvider(Model({'parsed': None, 'parsing_error': None})).with_structured_output(RequiredScore, method='json_mode')
     with pytest.raises(OutputParserException):

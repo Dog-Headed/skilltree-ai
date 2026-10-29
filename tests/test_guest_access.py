@@ -136,3 +136,15 @@ def test_guest_registration_cannot_fall_back_to_another_account_after_upgrade(tm
     assert next(r for r in results if r['status'] == 409)['code'] == 'guest_session_changed'
     with auth.connect() as conn:
         assert conn.execute('SELECT COUNT(*) FROM auth_accounts').fetchone()[0] == 1
+
+
+def test_login_cleanup_keeps_the_guests_full_hour_limit(tmp_path, monkeypatch):
+    from deploy import auth as auth_module
+    store = AuthStore(tmp_path/'auth.sqlite')
+    monkeypatch.setattr(auth_module.time, 'time', lambda: 10000)
+    assert all(store.create_guest('shared-ip') for _ in range(60))
+    monkeypatch.setattr(auth_module.time, 'time', lambda: 11000)
+    assert store.login('missing@example.test', 'bad-password', 'shared-ip')['status'] == 401
+    assert store.create_guest('shared-ip') is None
+    monkeypatch.setattr(auth_module.time, 'time', lambda: 13601)
+    assert store.create_guest('shared-ip')

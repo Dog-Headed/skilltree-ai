@@ -216,7 +216,7 @@ class AuthStore:
         actors = ('account:' + sha256(normalized.encode()).hexdigest(), 'ip:' + sha256(ip.encode()).hexdigest())
         with self.connect() as conn:
             conn.execute('BEGIN IMMEDIATE')
-            conn.execute('DELETE FROM auth_attempts WHERE at<?', (at-900,))
+            conn.execute("DELETE FROM auth_attempts WHERE at<? AND (actor LIKE 'account:%' OR actor LIKE 'ip:%')", (at-900,))
             for actor, limit in zip(actors, (8, 30)):
                 rows = conn.execute('SELECT at FROM auth_attempts WHERE actor=? ORDER BY at', (actor,)).fetchall()
                 if len(rows) >= limit:

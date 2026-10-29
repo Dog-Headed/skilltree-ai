@@ -86,9 +86,11 @@
         <button id="login-submit" class="btn primary login-submit" type="submit">进入我的花园</button>
       </form>
       <button id="auth-mode" class="btn subtle" type="button">没有账号？用邮箱注册</button>
+      <a id="skip-login" class="btn subtle" href="/">先不登录，直接开始学习</a>
 
       <div class="login-foot">
-        <p>邮箱只作登录名，无需验证码。公测名额有限，忘记密码请联系管理员。</p>
+        <p id="guest-hint" hidden>你现在是访客。注册后，现在的学习树和进度都会保留在新账号里；登录已有账号，也会把它们一起带过去。</p>
+        <p>邮箱只作登录名，无需验证码。忘记密码请联系管理员。</p>
       </div>
     </section>
 

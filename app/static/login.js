@@ -1,5 +1,5 @@
 /* Sign-in page. The only server contract it relies on:
-     GET  /session     → 200 {account} when signed in; 401 when not; 404 on the local single-user server
+     GET  /session     → 200 {account, guest} when signed in or visiting as a guest; 401 when not; 404 on the local single-user server
      POST /auth/login  {account, password, remember} → 200 {account}, sets an HttpOnly session cookie
                        401 {error:{code:'invalid_credentials'}} · 429 {error:{code:'rate_limited', retry_after}}
    A preview may supply window.SkillTreeAuthTransport with the same two methods. */
@@ -104,9 +104,11 @@
   async function checkSession() {
     let result;
     try { result = await transport.session(); } catch { return; }
-    if (result.status === 404 || (result.status === 200 && result.data?.account === null)) { $('local-mode').hidden = false; form.hidden = true; $('auth-mode').hidden = true; return; }
+    if (result.status === 404 || (result.status === 200 && result.data?.account === null)) { $('local-mode').hidden = false; form.hidden = true; $('auth-mode').hidden = true; $('skip-login').hidden = true; return; }
+    // A guest is already using the site; this page only offers to save that progress.
+    if (result.status === 200 && result.data?.guest) { $('guest-hint').hidden = false; $('skip-login').textContent = '先不登录，回到我的花园'; return; }
     if (result.status === 200 && result.data?.account) {
-      $('signed-account').textContent = result.data.login || result.data.account; $('enter-garden').href = next; $('signed-in').hidden = false; form.hidden = true; $('auth-mode').hidden = true;
+      $('signed-account').textContent = result.data.login || result.data.account; $('enter-garden').href = next; $('signed-in').hidden = false; form.hidden = true; $('auth-mode').hidden = true; $('skip-login').hidden = true;
     }
   }
 
@@ -116,7 +118,9 @@
   if (controls) controls.passwordToggle(confirm);
   for (const field of [account, password, confirm]) field.addEventListener('input', () => mark(field, false));
   form.addEventListener('submit', signIn);
-  $('switch-account').addEventListener('click', () => { $('signed-in').hidden = true; form.hidden = false; $('auth-mode').hidden = false; setMode(false); form.reset(); account.focus(); });
+  $('switch-account').addEventListener('click', () => { $('signed-in').hidden = true; form.hidden = false; $('auth-mode').hidden = false; $('skip-login').hidden = false; setMode(false); form.reset(); account.focus(); });
+  if (new URLSearchParams(location.search).get('mode') === 'register') setMode(true);
+  $('skip-login').href = next;
   checkSession();
   if (!form.hidden) account.focus({ preventScroll: true });
 })();

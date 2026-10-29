@@ -225,7 +225,7 @@ window.SkillTreeGarden = function (ctx) {
       if (directSteps.has(action)) { command(action); return; }
       // Steps that need the learner's input (choices, answers) open the place where they are given.
       if (screen !== 'learn') navigate('learn');
-      const target = action === 'submit_answer' ? document.querySelector('#quiz-form fieldset') : [...document.querySelectorAll('#content .btn.primary')].find(b => b.textContent === actionLabels[action]);
+      const target = action === 'submit_answer' ? document.querySelector('#quiz-form fieldset') : document.querySelector(`#content [data-action="${action}"]`);
       target?.scrollIntoView({block:'center', behavior:'smooth'});
       if (target?.matches('button')) target.focus({preventScroll:true});
     }}));
@@ -295,15 +295,14 @@ window.SkillTreeGarden = function (ctx) {
     const more=el('button',{type:'button',class:'project-more','aria-label':'管理 '+currentName(p),text:'⋯',onclick:e=>projectMenu(p,e.currentTarget)});
     return el('article',{class:'garden-project'+(featured?' featured':''),'data-subject':subject(p)},open,more);
   }
-  function home(welcome) {
-    welcome.classList.add('garden-home');
-    const heading=welcome.querySelector('.page-heading'),create=welcome.querySelector('#create-card'),presets=welcome.querySelector('.preset-row');
+  function home() {
     const leaves=state.projects.reduce((sum,p)=>sum+list(p.completed_node_ids).length,0);
-    if (heading) heading.replaceChildren(el('div',{},el('div',{class:'eyebrow',text:'SKILLTREE · A GARDEN OF KNOWLEDGE'}),el('h1',{text:'我的花园'}),el('p',{text:state.projects.length?`你在这里养着 ${state.projects.length} 棵树，已经长出 ${leaves} 片叶子。今天想照料哪一棵，或者种下新的？`:'把好奇种下，让知识慢慢生长。你想种下第一棵什么树？'})));
+    const heading=el('div',{class:'page-heading'},el('div',{},el('div',{class:'eyebrow',text:'SKILLTREE · A GARDEN OF KNOWLEDGE'}),el('h1',{text:'我的花园'}),el('p',{text:state.projects.length?`你在这里养着 ${state.projects.length} 棵树，已经长出 ${leaves} 片叶子。今天想照料哪一棵，或者种下新的？`:'把好奇种下，让知识慢慢生长。你想种下第一棵什么树？'})));
     // Planting comes first; the example presets sit right under the goal box.
-    if (create) { create.classList.add('garden-hero'); heading.after(create); }
-    if (presets) { const caption=el('p',{class:'preset-caption',text:'不知道从哪开始？试试一个示例：'}); (create||heading).after(caption,presets); }
-    if (!state.projects.length) return welcome;
+    const create=ctx.createCard();create.classList.add('garden-hero');
+    const presets=ctx.presetRow();
+    const root=el('div',{class:'garden-home'},heading,create,presets?[el('p',{class:'preset-caption',text:'不知道从哪开始？试试一个示例：'}),presets]:null);
+    if (!state.projects.length) return root;
     const last=storage.read('selection')?.id;
     const featured=state.projects.find(p=>p.project_id===last&&p.page_state!=='completed')||state.projects.find(p=>p.page_state!=='completed'&&nodesFor(p).length);
     const cards=el('div',{class:'garden-projects'});
@@ -311,8 +310,8 @@ window.SkillTreeGarden = function (ctx) {
     const section=el('section',{class:'garden-beds','aria-label':'我的学习树'});
     if (featured) section.append(plot(featured,true));
     if (cards.childElementCount) section.append(el('div',{class:'garden-section-title'},el('h2',{text:featured?'花园里的其他树':'正在生长'})),cards);
-    welcome.append(section);
-    return welcome;
+    root.append(section);
+    return root;
   }
   function lesson(view) {
     if (screen==='tree') return tree(view);
@@ -321,12 +320,11 @@ window.SkillTreeGarden = function (ctx) {
     const head=el('header',{class:'garden-heading'},el('div',{class:'eyebrow',text:stage==='quiz'?'小测 · 让知识落地':'学习台 · 每次向前一小步'}),el('h1',{text:stage==='completed'?'你的花园，又长大了一点':node?.title || currentName(view)}));
     const main=el('div',{class:'desk-main'});
     if(['running','error','paused','budget_exhausted','assessment_review','completed'].includes(stage)) main.append(recoveryCard(view));
-    if(stage==='completed') main.append(graph(view,{interactive:false}));
+    if(stage==='completed') main.append(graph(view,{interactive:false}),summary(view));
     if(stage==='quiz') {
       const quiz=quizCard(view); quiz.classList.add('quiz-sheet');
       const progress=el('nav',{class:'quiz-progress','aria-label':'作答进度'});
       quiz.querySelectorAll('fieldset').forEach((q,i)=>{
-        q.id='question-'+i;
         const mark=el('button',{type:'button',text:String(i+1).padStart(2,'0'),'aria-label':`转到第 ${i+1} 题`,onclick:()=>q.scrollIntoView({block:'center'})});
         const update=()=>{const done=[...q.querySelectorAll('input,textarea')].some(n=>n.type==='checkbox'||n.type==='radio'?n.checked:!!n.value.trim());mark.classList.toggle('answered',done);mark.setAttribute('aria-label',`第 ${i+1} 题，${done?'已作答':'待作答'}`);};
         q.addEventListener('input',update);update();progress.append(mark);
@@ -340,8 +338,8 @@ window.SkillTreeGarden = function (ctx) {
       main.append(desk(view,node));
     }
     const extra=el('div',{class:'actions desk-extra'});
-    if(stage==='quiz' && allowed('return_to_teaching'))extra.append(button('先返回教学',()=>command('return_to_teaching')));
-    if(['learning','exploring','quiz'].includes(stage) && allowed('rest'))extra.append(button(actionLabels.rest,()=>command('rest'),'subtle'));
+    if(stage==='quiz' && allowed('return_to_teaching'))extra.append(button('先返回教学',()=>command('return_to_teaching'),'','return_to_teaching'));
+    if(['learning','exploring','quiz'].includes(stage) && allowed('rest'))extra.append(button(actionLabels.rest,()=>command('rest'),'subtle','rest'));
     if(view.feedback && stage!=='completed')extra.append(button('查看上次小测结果',()=>navigate('result'),'subtle'));
     if(extra.childElementCount)main.append(extra);
     const rail=el('aside',{class:'desk-rail','aria-label':'本节学习目标与进度'},el('button',{type:'button',class:'mini-tree',onclick:()=>navigate('tree')},graph(view,{mini:true,interactive:false}),el('span',{text:'← 返回生长图谱'})));
@@ -377,8 +375,24 @@ window.SkillTreeGarden = function (ctx) {
       window.SkillTreeControls?.enterToSend(form,q);
     }
     const row=el('div',{class:'actions lesson-actions'});
-    for(const action of ['return_to_current','start_quiz','return_to_teaching'])if(allowed(action))row.append(button(actionLabels[action],()=>command(action,{},action==='start_quiz'?{busyText:'正在为这一节出题…'}:{}),action==='start_quiz'?'primary':''));
+    for(const action of ['return_to_current','start_quiz','return_to_teaching'])if(allowed(action))row.append(button(actionLabels[action],()=>command(action,{},action==='start_quiz'?{busyText:'正在为这一节出题…'}:{}),action==='start_quiz'?'primary':'',action));
     if(row.childElementCount)card.append(row);
+    return card;
+  }
+  // What this tree grew, from saved completion records only.
+  function summary(view) {
+    const nodes=nodesFor(view),done=new Set(list(view.completed_node_ids)),finished=new Map(list(view.progress).map(r=>[r.node_id,r.completed_at]));
+    const grown=nodes.filter(n=>done.has(idOf(n)));
+    const goals=grown.reduce((s,n)=>s+list(n.objectives).length,0),minutes=grown.reduce((s,n)=>s+(Number(n.estimated_minutes)||0),0);
+    const day=value=>{const d=new Date(value);return Number.isNaN(d.getTime())?'':`${d.getMonth()+1} 月 ${d.getDate()} 日长成`;};
+    const stat=(value,label)=>el('div',{class:'summary-stat'},el('strong',{text:String(value)}),el('span',{text:label}));
+    const card=el('section',{class:'card learning-summary'},el('div',{class:'card-header'},el('h2',{text:'学习小结'}),chip(`${grown.length} / ${nodes.length} 节已长成`,'green')),
+      el('div',{class:'summary-stats'},stat(grown.length,'节已完成'),stat(goals,'个目标已达标'),stat(minutes,'分钟计划学习量')));
+    const rows=el('ol',{class:'summary-list'});
+    nodes.forEach((n,i)=>rows.append(el('li',{class:done.has(idOf(n))?'done':''},el('span',{class:'summary-index',text:String(i+1).padStart(2,'0')}),
+      el('div',{},el('strong',{text:n.title}),el('ul',{},list(n.objectives).map(o=>el('li',{text:o.observable_outcome||o.objective_id})))),
+      el('small',{text:done.has(idOf(n))?day(finished.get(idOf(n)))||'已长成':'尚未完成'}))));
+    card.append(rows,el('div',{class:'actions'},button('回到生长图谱',()=>navigate('tree')),button('再种一棵树',()=>ctx.newProject(),'primary')));
     return card;
   }
   function chances(view) {
@@ -415,17 +429,10 @@ window.SkillTreeGarden = function (ctx) {
     const go=button(view.page_state==='completed'?'查看学习小结':!reliable?'查看重新测验选项':view.mode==='review'?'回顾前置知识':view.mode==='remediate'?'开始针对性补弱':'继续学习',()=>navigate('learn'),'primary');
     return el('div',{class:'result-view'+(passed?' passed':'')},el('header',{class:'garden-heading'},el('div',{class:'eyebrow',text:'一次小测，一点生长'}),el('h1',{text:title}),el('p',{text:subtitle})),el('div',{class:'result-layout'},el('div',{class:'result-plant'},graph(view,{interactive:false})),el('div',{},card,el('div',{class:'actions'},go,button('回到生长图谱',()=>navigate('tree'))))));
   }
-  function prepare(view, root) {
+  function prepare(view) {
     if(screen==='tree' && nodesFor(view).length)return tree(view);
-    root.classList.add('preparation-view');
-    const eyebrow=root.querySelector('.eyebrow');if(eyebrow)eyebrow.textContent='播种 · 为这一次学习准备好土壤';
-    const plan=root.querySelector('.plan-list');
-    if(nodesFor(view).length && plan) {
-      const preview=el('div',{class:'route-preview'},el('div',{class:'route-graph'},el('p',{class:'route-hint',text:view.frozen?'这条路线已经确认。点任意一片芽，查看这一节要学会什么。':'所有小节都还是芽苞。点任意一片，查看这一节要学会什么；不满意可以“调整计划”。'}),el('div',{class:'graph-scroll'},graph(view))),specimen(view));
-      const list_=el('details',{class:'section-details route-list'},el('summary',{text:`按列表查看全部 ${nodesFor(view).length} 个小节`}));
-      plan.before(preview);plan.before(list_);list_.append(plan);
-    }
-    return root;
+    const routePreview=v=>el('div',{class:'route-preview'},el('div',{class:'route-graph'},el('p',{class:'route-hint',text:v.frozen?'这条路线已经确认。点任意一片芽，查看这一节要学会什么。':'所有小节都还是芽苞。点任意一片，查看这一节要学会什么；不满意可以“调整计划”。'}),el('div',{class:'graph-scroll'},graph(v))),specimen(v));
+    return ctx.prepareView(view,{eyebrow:'播种 · 为这一次学习准备好土壤',routePreview,className:'preparation-view'});
   }
   function afterWrite(body, view, previous) {
     clearTimeout(growthTimer);
@@ -436,11 +443,12 @@ window.SkillTreeGarden = function (ctx) {
     else if(!routing)screen='learn';
   }
   function init() {
-    const theme=storage.read('theme','light');
-    document.documentElement.dataset.theme=theme==='dark'?'dark':'light';
-    const toggle=document.getElementById('theme-toggle');
-    const label=()=>{toggle.textContent=document.documentElement.dataset.theme==='dark'?'☀':'☾';toggle.setAttribute('aria-label',document.documentElement.dataset.theme==='dark'?'切换浅色外观':'切换深色外观');};label();
-    toggle.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=next;storage.write('theme',next);label();});
+    // Follow the system appearance until the learner picks one with the toggle.
+    const system=matchMedia('(prefers-color-scheme: dark)'),toggle=document.getElementById('theme-toggle');
+    const apply=()=>{const choice=storage.read('theme',null),dark=choice==='dark'||choice!=='light'&&system.matches;
+      document.documentElement.dataset.theme=dark?'dark':'light';toggle.textContent=dark?'☀':'☾';toggle.setAttribute('aria-label',dark?'切换浅色外观':'切换深色外观');};
+    apply();system.addEventListener('change',apply);
+    toggle.addEventListener('click',()=>{storage.write('theme',document.documentElement.dataset.theme==='dark'?'light':'dark');apply();});
     document.getElementById('garden-home').addEventListener('click',()=>ctx.newProject());
     document.getElementById('records-toggle').addEventListener('click',()=>{const side=document.getElementById('sidebar');side.classList.add('open');document.getElementById('sidebar-shade').hidden=false;document.getElementById('mobile-menu').setAttribute('aria-expanded','true');});
     window.addEventListener('hashchange',readRoute);

@@ -86,7 +86,10 @@ def wait_job(client, headers, job_id):
 def test_authentication_csrf_logout_and_opaque_sessions(beta):
     client, gateway, auth, *_ = beta
     assert client.get('/session', headers={'X-Evaluation-User': 'preview1@example.test'}).status_code == 401
-    assert client.get('/', follow_redirects=False).status_code == 303
+    # The garden opens for a visitor with a guest session instead of a sign-in redirect.
+    home = client.get('/', follow_redirects=False)
+    assert home.status_code == 200 and '__Host-skilltree_session=' in home.headers['set-cookie']
+    client.cookies.clear()
     assert client.post('/auth/login', json={}).status_code == 403
     headers = signin(client)
     assert client.get('/session', headers=headers).json()['account'] == 'preview1@example.test'

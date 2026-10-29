@@ -2,6 +2,8 @@
 
 Email is a username, never proof of mailbox ownership. Legacy logins keep their
 canonical project owner, so importing passwords does not reassign any course.
+A visitor first receives a password-less guest identity; registering attaches an
+email and password to that same canonical account, so its courses stay put.
 """
 from contextlib import contextmanager
 from hashlib import pbkdf2_hmac, sha256
@@ -12,6 +14,9 @@ import re
 import secrets
 import sqlite3
 import time
+
+
+GUEST_SECONDS = 31536000
 
 
 def normalize_login(value):
@@ -68,6 +73,7 @@ class AuthStore:
               CREATE TABLE IF NOT EXISTS auth_registrations(account TEXT PRIMARY KEY,ip_hash TEXT NOT NULL,created REAL NOT NULL);
               CREATE TABLE IF NOT EXISTS auth_register_attempts(ip_hash TEXT NOT NULL,at REAL NOT NULL);
               CREATE INDEX IF NOT EXISTS auth_register_ip_time ON auth_register_attempts(ip_hash,at);
+              CREATE TABLE IF NOT EXISTS auth_guests(account TEXT PRIMARY KEY,ip_hash TEXT NOT NULL,created REAL NOT NULL);
             ''')
         # Same KDF cost for nonexistent accounts; do not cache a plaintext secret.
         self.dummy_hash = password_hash(secrets.token_urlsafe(24))
@@ -126,12 +132,34 @@ class AuthStore:
             conn.execute('UPDATE auth_accounts SET login=? WHERE account=?', (email, account))
         return email
 
+    def create_guest(self, ip):
+        """A password-less identity for a first visit; at most 60 per IP and hour."""
+        at = time.time()
+        ip_hash = sha256(ip.encode()).hexdigest()
+        account, token = 'guest_' + secrets.token_hex(11), secrets.token_urlsafe(32)
+        with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            conn.execute('DELETE FROM auth_attempts WHERE actor LIKE ? AND at<?', ('guest:%', at-3600))
+            actor = 'guest:' + ip_hash
+            if conn.execute('SELECT COUNT(*) FROM auth_attempts WHERE actor=? AND at>=?', (actor, at-3600)).fetchone()[0] >= 60:
+                return None
+            conn.execute('INSERT INTO auth_attempts VALUES (?,?)', (actor, at))
+            # '!' is not a valid hash, so a guest can never sign in with a password.
+            conn.execute('INSERT INTO auth_accounts(login,account,password_hash) VALUES (?,?,?)', (account, account, '!'))
+            conn.execute('INSERT INTO auth_guests VALUES (?,?,?)', (account, ip_hash, at))
+            conn.execute('INSERT INTO auth_sessions VALUES (?,?,?,?)', (sha256(token.encode()).hexdigest(), account, at+GUEST_SECONDS, at))
+        return {'account': account, 'token': token}
+
+    def is_guest(self, account):
+        with self.connect() as conn:
+            return conn.execute('SELECT 1 FROM auth_guests WHERE account=?', (account,)).fetchone() is not None
+
     def login_name(self, account):
         with self.connect() as conn:
             row = conn.execute('SELECT login FROM auth_accounts WHERE account=?', (account,)).fetchone()
         return row['login'] if row else account
 
-    def register(self, login, password, ip, remember=False):
+    def register(self, login, password, ip, remember=False, guest=None):
         try:
             login = normalize_login(login)
         except ValueError:
@@ -140,7 +168,9 @@ class AuthStore:
             return {'status': 422, 'code': 'invalid_input'}
         at = time.time()
         ip_hash = sha256(ip.encode()).hexdigest()
-        limit = max(0, int(os.getenv('SKILLTREE_REGISTRATION_LIMIT', '10')))
+        # No cap unless an administrator sets one; guests may always keep learning.
+        limit = os.getenv('SKILLTREE_REGISTRATION_LIMIT', '').strip()
+        limit = max(0, int(limit)) if limit else None
         with self.connect() as conn:
             conn.execute('BEGIN IMMEDIATE')
             conn.execute('DELETE FROM auth_register_attempts WHERE at<?', (at-3600,))
@@ -150,7 +180,7 @@ class AuthStore:
             conn.execute('INSERT INTO auth_register_attempts VALUES (?,?)', (ip_hash, at))
             if conn.execute('SELECT 1 FROM auth_accounts WHERE login=? OR account=?', (login, login)).fetchone():
                 return {'status': 409, 'code': 'email_taken'}
-            if conn.execute('SELECT COUNT(*) FROM auth_registrations r JOIN auth_accounts a ON a.account=r.account WHERE a.disabled=0').fetchone()[0] >= limit:
+            if limit is not None and conn.execute('SELECT COUNT(*) FROM auth_registrations r JOIN auth_accounts a ON a.account=r.account WHERE a.disabled=0').fetchone()[0] >= limit:
                 return {'status': 403, 'code': 'registration_closed'}
         # Expensive hashing occurs outside the SQLite write transaction.
         encoded, token = password_hash(password), secrets.token_urlsafe(32)
@@ -159,13 +189,23 @@ class AuthStore:
             # Recheck after the KDF so parallel registrations cannot exceed capacity.
             if conn.execute('SELECT 1 FROM auth_accounts WHERE login=? OR account=?', (login, login)).fetchone():
                 return {'status': 409, 'code': 'email_taken'}
-            if conn.execute('SELECT COUNT(*) FROM auth_registrations r JOIN auth_accounts a ON a.account=r.account WHERE a.disabled=0').fetchone()[0] >= limit:
+            if limit is not None and conn.execute('SELECT COUNT(*) FROM auth_registrations r JOIN auth_accounts a ON a.account=r.account WHERE a.disabled=0').fetchone()[0] >= limit:
                 return {'status': 403, 'code': 'registration_closed'}
-            conn.execute('INSERT INTO auth_accounts(login,account,password_hash) VALUES (?,?,?)', (login, login, encoded))
-            conn.execute('INSERT INTO auth_registrations VALUES (?,?,?)', (login, ip_hash, at))
+            upgrade = guest and conn.execute('SELECT 1 FROM auth_guests WHERE account=?', (guest,)).fetchone()
+            if guest and not upgrade:
+                return {'status': 409, 'code': 'guest_session_changed'}
+            account = guest if upgrade else login
+            if upgrade:
+                # Same canonical account: courses, quota and jobs need no transfer.
+                conn.execute('UPDATE auth_accounts SET login=?,password_hash=? WHERE account=?', (login, encoded, guest))
+                conn.execute('DELETE FROM auth_guests WHERE account=?', (guest,))
+                conn.execute('DELETE FROM auth_sessions WHERE account=?', (guest,))
+            else:
+                conn.execute('INSERT INTO auth_accounts(login,account,password_hash) VALUES (?,?,?)', (login, login, encoded))
+            conn.execute('INSERT INTO auth_registrations VALUES (?,?,?)', (account, ip_hash, at))
             conn.execute('INSERT INTO auth_sessions VALUES (?,?,?,?)',
-                         (sha256(token.encode()).hexdigest(), login, at+(2592000 if remember else 43200), at))
-        return {'status': 201, 'account': login, 'token': token}
+                         (sha256(token.encode()).hexdigest(), account, at+(2592000 if remember else 43200), at))
+        return {'status': 201, 'account': account, 'token': token}
 
     def login(self, login, password, ip, remember=False):
         at = time.time()

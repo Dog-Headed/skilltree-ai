@@ -135,3 +135,14 @@ def test_all_assets_exist_and_no_inline_or_remote_scripts(tmp_path):
     assert '<script src="/assets/v3.js" defer>' in page.text
     for asset in ('v3.js','v3.css'):assert client.get('/assets/'+asset).status_code==200
     assert client.get('/assets/unknown.js').status_code==404
+    # Every script and stylesheet a page links is served; pages and other files are not assets.
+    import re
+    from app.v3.learning_api import STATIC
+    for name in ('v3.html','login.html'):
+        for asset in re.findall(r'(?:src|href)="/assets/([^"/]+)"',(STATIC/name).read_text(encoding='utf-8')):
+            response=client.get('/assets/'+asset);assert response.status_code==200 and response.headers['cache-control']=='no-store',asset
+    for blocked in ('login.html','index.html','v3.html','..%2Fapp.py','%2E%2E%2Fv3.js'):assert client.get('/assets/'+blocked).status_code==404,blocked
+    # Font subsets are cached by the browser; a missing font is not.
+    font=client.get('/assets/fonts/design-000.woff2')
+    assert font.status_code==200 and font.headers['cache-control']=='public, max-age=604800'
+    assert client.get('/assets/fonts/design-999.woff2').headers['cache-control']=='no-store'

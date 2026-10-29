@@ -15,13 +15,14 @@ from app.v3.learning_api import create_learning_app
 from app.v3.storage import V3Paths
 from .ownership import Ownership
 from .provider import StrictProvider, create_runtime_model
-from .auth import AuthStore, csrf_token
+from .auth import GUEST_SECONDS, AuthStore, csrf_token
 from .jobs import AdmissionError, JobStore, JobRunner
 
 
 class EvaluationGateway:
     def __init__(self, application, paths, quota_path, *, auth_store=None, queued=False,
-                 origin='https://skilltree.goutouren.work', cookie_secure=True, queue_capacity=10, cookie_name=None):
+                 origin='https://skilltree.goutouren.work', cookie_secure=True, queue_capacity=10, cookie_name=None,
+                 guest_access=True):
         self.application = application
         self.paths = paths
         self.quota_path = Path(quota_path).resolve()
@@ -32,6 +33,8 @@ class EvaluationGateway:
         self.cookie_secure = cookie_secure
         self.cookie_name = cookie_name or ('__Host-skilltree_session' if cookie_secure else 'skilltree_session')
         self.auth_slots = asyncio.Semaphore(2)
+        # A first visit to the garden gets a guest identity instead of a sign-in wall.
+        self.guest_access = guest_access
         self.jobs = JobStore(self.quota_path, capacity=queue_capacity) if queued else None
         self.runner = JobRunner(self.jobs, application, self.origin) if queued else None
 
@@ -50,7 +53,7 @@ class EvaluationGateway:
             conn.execute('BEGIN IMMEDIATE')
             total = conn.execute('SELECT COALESCE(SUM(used),0) FROM usage WHERE day=?', (day,)).fetchone()[0]
             row = conn.execute('SELECT used FROM usage WHERE day=? AND account=?', (day, user)).fetchone()
-            if total >= int(os.environ.get('SKILLTREE_DAILY_WRITES', '120')) or (row and row[0] >= int(os.environ.get('SKILLTREE_ACCOUNT_DAILY_WRITES', '40'))):
+            if total >= int(os.environ.get('SKILLTREE_DAILY_WRITES', '3000')) or (row and row[0] >= int(os.environ.get('SKILLTREE_ACCOUNT_DAILY_WRITES', '300'))):
                 return False
             conn.execute('INSERT INTO usage VALUES (?,?,1) ON CONFLICT(day,account) DO UPDATE SET used=used+1', (day, user))
         return True
@@ -67,12 +70,12 @@ class EvaluationGateway:
             if not message.get('more_body'):
                 return body
 
-    def cookie(self, token='', remember=False):
+    def cookie(self, token='', remember=False, max_age=2592000):
         value = f'{self.cookie_name}={token}; Path=/; HttpOnly; SameSite=Lax'
         if self.cookie_secure:
             value += '; Secure'
         if remember or not token:
-            value += '; Max-Age=' + ('2592000' if token else '0')
+            value += '; Max-Age=' + (str(max_age) if token else '0')
         return value.encode()
 
     async def authenticated(self, scope, receive, send):
@@ -100,11 +103,24 @@ class EvaluationGateway:
                 registering = path == '/auth/register'
                 if registering and value.get('password') != value.get('confirm_password'):
                     raise ValueError()
+                guest = account if account and await asyncio.to_thread(self.auth.is_guest, account) else None
+                if guest and not registering and self.jobs and await asyncio.to_thread(self.jobs.active, guest):
+                    await self.reply(send, 409, {'error': {'code': 'account_busy', 'message': '你有一个学习任务还在处理，等它完成后再登录。'}})
+                    return None, token
+                ip = str((scope.get('client') or ('unknown',))[0])
                 async with self.auth_slots:
-                    operation = self.auth.register if registering else self.auth.login
-                    result = await asyncio.to_thread(operation, value.get('account'), value.get('password'),
-                                                     str((scope.get('client') or ('unknown',))[0]), value.get('remember', False))
+                    if registering:
+                        result = await asyncio.to_thread(self.auth.register, value.get('account'), value.get('password'), ip, value.get('remember', False), guest)
+                    else:
+                        result = await asyncio.to_thread(self.auth.login, value.get('account'), value.get('password'), ip, value.get('remember', False))
                 if result['status'] in (200, 201):
+                    # Signing in from a guest session brings the guest's courses along.
+                    if guest and result['account'] != guest:
+                        adopted = await asyncio.to_thread(self.ownership.adopt, guest, result['account'])
+                        if not adopted:
+                            await asyncio.to_thread(self.auth.logout, result['token'])
+                            await self.reply(send, 409, {'error': {'code': 'account_busy', 'message': '学习任务还在处理，原课程和访客登录已保留，请完成后再登录。'}})
+                            return None, token
                     if token:
                         await asyncio.to_thread(self.auth.logout, token)
                     await self.reply(send, result['status'], {'account': result['account'], 'csrf_token': csrf_token(result['token'])},
@@ -114,6 +130,7 @@ class EvaluationGateway:
                     code = result.get('code', 'rate_limited' if status == 429 else 'invalid_credentials')
                     message = {'rate_limited': '尝试过于频繁，请稍后再试。', 'email_taken': '该邮箱已注册，请直接登录。',
                                'registration_closed': '本轮公测注册名额已满，请稍后再来。',
+                               'guest_session_changed': '当前访客状态已变化，请刷新页面后重新登录。',
                                'invalid_input': '请填写有效邮箱和至少 10 位密码。'}.get(code, '邮箱或密码不正确。')
                     await self.reply(send, status, {'error': {'code': code,
                                       'message': message, 'retry_after': retry}},
@@ -121,6 +138,11 @@ class EvaluationGateway:
             except (ValueError, TypeError, AdmissionError):
                 await self.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请检查登录信息。'}})
             return None, token
+        if not account and self.guest_access and method == 'GET' and path == '/':
+            guest = await asyncio.to_thread(self.auth.create_guest, str((scope.get('client') or ('unknown',))[0]))
+            if guest:
+                scope['skilltree_set_cookie'] = self.cookie(guest['token'], True, GUEST_SECONDS)
+                return guest['account'], guest['token']
         if not account:
             if method in ('GET', 'HEAD') and (path == '/' or path == '/login' or path.startswith('/assets/') or path == '/healthz'):
                 if path == '/':
@@ -207,10 +229,17 @@ class EvaluationGateway:
             user, token = await self.authenticated(scope, receive, send)
             if user is None:
                 return
+            if scope.get('skilltree_set_cookie'):
+                original_send, cookie = send, scope['skilltree_set_cookie']
+                async def send(message):
+                    if message['type'] == 'http.response.start':
+                        message = {**message, 'headers': [*message.get('headers', []), (b'set-cookie', cookie)]}
+                    await original_send(message)
         if not self.auth and not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', user):
             return await self.reply(send, 401, {'error': {'code': 'invalid_account', 'message': '请重新登录。'}})
         if path == '/session' and method == 'GET':
-            return await self.reply(send, 200, {'account': user, **({'login': await asyncio.to_thread(self.auth.login_name, user), 'csrf_token': csrf_token(token), 'logout': True} if self.auth else {})})
+            guest = bool(self.auth and await asyncio.to_thread(self.auth.is_guest, user))
+            return await self.reply(send, 200, {'account': user, **({'login': await asyncio.to_thread(self.auth.login_name, user), 'csrf_token': csrf_token(token), 'guest': guest, 'logout': not guest} if self.auth else {})})
         if self.jobs and path.startswith('/jobs') and method == 'GET':
             job = await asyncio.to_thread(self.jobs.active, user) if path == '/jobs/active' else await asyncio.to_thread(self.jobs.public, path.removeprefix('/jobs/'), user)
             if job is None and path != '/jobs/active':

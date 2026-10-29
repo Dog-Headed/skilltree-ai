@@ -25,3 +25,20 @@ class Ownership:
                 return row[0] == account
             conn.execute('INSERT INTO project_owners(project_id,account) VALUES (?,?)', (project_id, account))
         return True
+
+    def adopt(self, source, target):
+        """Move a guest's courses to the account it signed in to.
+
+        Refused while the guest still has a queued or running AI job, which must
+        finish under the identity that submitted it.
+        """
+        if source == target or not self.database.is_file():
+            return True
+        with sqlite3.connect(self.database, timeout=5) as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            if conn.execute("SELECT 1 FROM sqlite_master WHERE name='deployment_jobs'").fetchone() and conn.execute(
+                    "SELECT 1 FROM deployment_jobs WHERE account=? AND state IN ('queued','running')", (source,)).fetchone():
+                return False
+            if conn.execute("SELECT 1 FROM sqlite_master WHERE name='project_owners'").fetchone():
+                conn.execute('UPDATE project_owners SET account=? WHERE account=?', (target, source))
+        return True

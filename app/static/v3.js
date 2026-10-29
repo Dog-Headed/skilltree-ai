@@ -51,7 +51,8 @@
     for (const child of children.flat(Infinity)) if (child !== null && child !== undefined && child !== false) node.append(child instanceof Node ? child : document.createTextNode(String(child)));
     return node;
   }
-  function button(text, callback, style = '') { return el('button', { type: 'button', class: 'btn ' + style, text, onclick: callback, 'data-write': 'true', disabled: state.busy }); }
+  // `action` marks a button that performs a backend action, so other views can find it without matching its label.
+  function button(text, callback, style = '', action = null) { return el('button', { type: 'button', class: 'btn ' + style, text, onclick: callback, 'data-write': 'true', 'data-action': action, disabled: state.busy }); }
   function dismissButton() { return el('button', { type: 'button', class: 'btn', text: '取消', onclick: closeModal }); }
   function chip(text, kind = '') { return el('span', { class: 'chip ' + kind, text }); }
   function showMessage(message, kind = '') { $('message').textContent = message; $('message').className = 'message ' + kind; $('message').hidden = !message; }
@@ -59,10 +60,11 @@
   function busy(value, text = null) {
     // Long AI steps show how long they have been waiting instead of a bare spinner.
     if (value && !state.busy) { const started = Date.now(); $('busy-elapsed').textContent = ''; clearInterval(busyTimer); busyTimer = setInterval(() => { const s = Math.round((Date.now() - started) / 1000); $('busy-elapsed').textContent = s >= 3 ? `已等待 ${s} 秒` : ''; }, 1000); }
-    if (!value) { clearInterval(busyTimer); busyTimer = null; $('busy-elapsed').textContent = ''; }
+    if (!value) { clearInterval(busyTimer); busyTimer = null; $('busy-elapsed').textContent = ''; state.grading = false; }
     state.busy = value; $('busy-notice').hidden = !value;
     if (text) $('busy-text').textContent = text;
-    const grading = value && $('busy-text').textContent.includes('评分');
+    // Only a submitted quiz shows the full grading screen; write() sets the flag for it.
+    const grading = value && state.grading;
     $('grading-state').hidden = !grading; $('content').hidden = grading;
     document.body.setAttribute('aria-busy', String(value));
     document.querySelectorAll('[data-write],form button[type=submit],.project-link,.project-more,#view-tabs button').forEach(n => { n.disabled = value; });
@@ -290,29 +292,63 @@
     });
     return form;
   }
-  function welcome() {
-    const root = el('div'); root.append(el('div', { class: 'page-heading' }, el('div', {}, el('div', { class: 'eyebrow', text: 'YOUR NEXT LEARNING STEP' }), el('h1', { text: '从一个想学会的目标开始' }), el('p', { text: '确认范围，绑定资料，把大目标拆成有依据的小步骤。学到哪里，回来就能继续。' })), chip('通用文字学习', 'green')));
-    if (isLegacy()) {
-      root.append(el('div', { class: 'legacy-badge', text: '这里展示 V2 原有业务记录。历史只读，不恢复旧 Checkpoint，也不修改原来的学习数据。' }), el('div', { class: 'card' }, el('h2', { text: '从左侧选择一条历史记录' }), el('p', { class: 'muted', text: '可以查看已有计划、讲解和结果。新的学习请在 V3 中创建。' }))); return root;
-    }
+  // Building blocks for the garden home; the garden view decides their order.
+  function createCard() { return el('section', { class: 'card card-accent', id: 'create-card' }, el('h2', { text: '种下一棵新的树' }), profileForm()); }
+  function presetRow() {
+    if (!state.packs.length) return null;
     const presets = el('div', { class: 'preset-row' });
     for (const pack of state.packs) presets.append(el('button', { class: 'preset-button', type: 'button', 'data-write': 'true', disabled: state.busy, onclick: async () => {
       try { const data = await get('/material-packs/' + encodeURIComponent(pack.subject)); state.selectedPack = pack.subject; $('create-card').replaceChildren(el('h2', { text: '种下一棵新的树' }), profileForm(data.profile, { pack: pack.subject })); showMessage('已填入示例档案，可继续编辑。资料需创建后另行导入。'); }
       catch (error) { showMessage(error.message, 'error'); }
     } }, el('span', { text: pack.title || pack.subject }), el('small', { text: '使用示例档案与资料' })));
-    if (state.packs.length) root.append(presets);
-    root.append(el('section', { class: 'card card-accent', id: 'create-card' }, el('h2', { text: '种下一棵新的树' }), profileForm())); return root;
+    return presets;
   }
-  function heading(view) {
-    const profile = view.profile || {}; const root = el('div', { class: 'page-heading' }, el('div', {}, el('div', { class: 'eyebrow', text: (profile.subject_label || 'LEARNING') + ' / ' + (view.version === 'v2' || isLegacy() ? 'V2 HISTORY' : 'V3 LEARNING') }),
-      el('h1', { text: currentName(view) }), el('p', { text: profile.bounded_goal || profile.goal || view.goal || '' })),
-      el('div', { class: 'heading-tags' }, chip(labels[view.page_state] || '学习记录', view.page_state === 'completed' ? 'green' : view.page_state === 'error' ? 'red' : 'cyan'),
-        chip(profile.learning_mode === 'exploration' ? '当前仅讲解' : view.learning_basis === 'ai_generated' ? 'AI 整理内容' : view.learning_basis === 'provided_material' ? '依据资料学习' : '学习与练习', profile.learning_mode === 'exploration' || isLegacy() ? 'amber' : '')));
+  function heading(view, eyebrow = null) {
+    const profile = view.profile || {};
+    const subject = eyebrow || (profile.subject_label && profile.subject_label !== 'AI待整理' ? profile.subject_label : '新的学习');
+    // Only what the learner can act on: where the lessons come from, or that something needs attention.
+    const basis = profile.learning_mode === 'exploration' ? ['只讲解，不考试', 'amber'] : ({ general_knowledge: ['AI 整理的讲义', ''], provided_material: ['依据你的资料', ''], requires_material: ['需要你的资料', 'amber'] })[view.learning_basis];
+    const status = view.page_state === 'error' ? ['需要处理', 'red'] : view.page_state === 'running' ? ['正在处理', 'cyan'] : null;
+    const tags = el('div', { class: 'heading-tags' }, status ? chip(...status) : null, basis ? chip(...basis) : null);
+    const root = el('div', { class: 'page-heading' }, el('div', {}, el('div', { class: 'eyebrow', text: subject }),
+      el('h1', { text: currentName(view) }), el('p', { text: profile.bounded_goal || profile.goal || view.goal || '' })), tags.childElementCount ? tags : null);
     return root;
   }
   function flow(view) {
-    const stage = view.page_state; const index = stage === 'profile_review' ? 0 : stage === 'materials_required' ? 1 : stage === 'plan_review' ? 2 : ['quiz','completed','assessment_review'].includes(stage) ? 4 : ['learning', 'exploring'].includes(stage) ? 3 : -1;
-    return el('div', { class: 'flow-steps', 'aria-label': '学习流程' }, ['起点', '资料', '路线', '学习', '小测'].map((s, i) => el('span', { class: 'flow-step' + (index === i ? ' active' : '') }, el('span', { class: 'step-dot', text: i + 1 }), s)));
+    const stage = view.page_state, ready = allowed('begin') || allowed('begin_learning') || view.frozen;
+    const index = ready ? 3 : stage === 'plan_review' || view.plan ? 2 : stage === 'materials_required' ? 1 : 0;
+    return el('ol', { class: 'flow-steps', 'aria-label': '课程准备进度' }, ['写下起点', '补充资料（可选）', '确认路线'].map((s, i) => el('li', { class: 'flow-step' + (index === i ? ' active' : index > i ? ' done' : ''), 'aria-current': index === i ? 'step' : null }, el('span', { class: 'step-dot', text: index > i ? '✓' : i + 1 }), s)));
+  }
+  const quizKinds = { choice_exact: '选择题', numeric_scalar: '填数值的计算题', text_rubric: '用文字写出思路的题' };
+  const clip = (text, size) => text.length > size ? text.slice(0, size - 1) + '…' : text;
+  const fromZero = (text) => !text || /^(零基础|0\s*基础|没有基础|没基础|没学过|无|暂无|不确定|不知道)[。.!！]?$/.test(text.trim());
+  // The profile as one plain sentence; the field table stays available under “查看详细设置”.
+  function startSentence(view) {
+    const p = view.profile || {}, prior = list(p.prior_knowledge?.self_reported).join('；').trim();
+    const topic = p.topic && p.subject_label !== 'AI待整理' && p.topic !== p.goal ? p.topic : '';
+    let target = String(topic || p.bounded_goal || p.goal || '').trim().replace(/[。.]$/, ''), verb = '学习';
+    // “我想学会用 Excel 记账” reads as “学会「用 Excel 记账」”, not as a quoted wish.
+    const wish = /^(?:我)?(?:想要|想|希望|打算|准备|要)?\s*(?:从零(?:开始)?)?\s*(学会|学习|学|了解|掌握|入门)?\s*/.exec(target);
+    if (wish[0] && target.length - wish[0].length >= 2) { target = target.slice(wish[0].length); if (wish[1] === '学会' || wish[1] === '掌握') verb = wish[1]; }
+    const root = el('div', { class: 'start-sentence' }, el('p', { class: 'start-lead' }, (fromZero(prior) ? '你将从零开始，' : '你的起点是「' + clip(prior, 40) + '」，这次') + verb, el('strong', { text: '「' + target + '」' }), '。'));
+    const same = (s) => String(s || '').trim().replace(/[。.]$/, '');
+    const details = [], scope = list(p.scope_in).filter(s => ![p.goal, p.bounded_goal, target].map(same).includes(same(s)));
+    if (scope.length) details.push('会讲到：' + scope.join('、') + '。');
+    else if (p.bounded_goal && ![p.goal, target].map(same).includes(same(p.bounded_goal))) details.push('AI 建议的范围：' + same(p.bounded_goal) + '。');
+    const total = Number(p.time_budget_minutes), session = Number(p.session_minutes);
+    if (total && session) {
+      const times = Math.ceil(total / session), span = total >= 60 ? Math.round(total / 6) / 10 + ' 小时' : total + ' 分钟';
+      details.push(times <= 12 ? `大约分 ${times} 次学完，每次 ${session} 分钟。` : `每次 ${session} 分钟，按自己的节奏分多次学完，总共约 ${span}。`);
+    }
+    if (p.learning_mode === 'exploration') details.push('这门课只讲解和讨论，不考试。');
+    else {
+      const kinds = [...new Set(list(p.requested_capabilities).map(c => quizKinds[c]).filter(Boolean))];
+      details.push('每学完一小节有一次小测' + (kinds.length ? '，题目包括' + kinds.join('、') : '') + '，达标后解锁下一节。');
+    }
+    root.append(el('p', { class: 'start-detail', text: details.join('') }));
+    if (list(p.scope_out).length) root.append(el('p', { class: 'start-out', text: '这次不涉及：' + p.scope_out.join('、') + '。' }));
+    root.append(el('details', { class: 'section-details start-settings' }, el('summary', { text: '查看详细设置' }), profileSummary(view)));
+    return root;
   }
   function profileSummary(view) {
     const p = view.profile || {}; const dl = el('dl', { class: 'profile-summary' });
@@ -368,8 +404,9 @@
     }
     return card;
   }
-  function prepareView(view) {
-    const root = el('div', {}, heading(view), flow(view));
+  // `routePreview` lets the garden draw the route above the plain node list, which then folds away.
+  function prepareView(view, { eyebrow = null, routePreview = null, className = '' } = {}) {
+    const root = el('div', { class: className || null }, heading(view, eyebrow), flow(view));
     if (view.notice) root.append(el('p', { class: 'notice', text: view.notice }));
     if (view.requires_replan) root.append(el('div', { class: 'notice', text: '资料或目标已经变化，这条路线需要重新规划后才能确认。' }));
     if (view.preparation_notice) root.append(el('p', { class: 'notice blue', text: view.preparation_notice }));
@@ -377,14 +414,17 @@
     if (cap && cap.status !== 'supported') root.append(el('div', { class: 'notice blue' },
       el('strong', { text: ({ needs_material: '还需要一份学习资料', exploration_only: '这门课目前只能自由探索', unsupported: '有一部分内容暂时还不能练习和评分' })[cap.status] || '学习条件检查' }),
       ...list(cap.reasons).map(s => el('p', { text: s }))));
-    const profileCard = el('section', { class: 'card' }, el('h2', { text: view.guided ? '你的学习起点' : '学习档案' }), profileSummary(view));
+    const profileCard = el('section', { class: 'card start-card' }, el('h2', { text: '你的学习起点' }), startSentence(view));
     const controls = el('div', { class: 'actions' });
     for (const action of ['update_profile', 'adjust_scope']) if (allowed(action)) controls.append(button(actionLabels[action], () => openModal(actionLabels[action], profileForm(view.profile, { editing: true, action, guided: view.guided }))));
-    if (allowed('confirm_profile')) controls.append(button(view.guided ? 'AI 整理学习计划' : '生成学习计划', () => command('confirm_profile'), 'primary'));
+    if (allowed('confirm_profile')) controls.append(button(view.guided ? 'AI 整理学习计划' : '生成学习计划', () => command('confirm_profile'), 'primary', 'confirm_profile'));
     if (controls.childElementCount) profileCard.append(controls);
     root.append(profileCard, sourceCard(view));
     if (view.plan || ['plan_review', 'learning', 'exploring'].includes(view.page_state) || allowed('begin')) {
-      const plan = el('section', { class: 'card' }, el('div', { class: 'card-header' }, el('h2', { text: view.frozen ? '已确认的生长路线' : '预览生长路线' }), view.frozen ? chip('路线已确认', 'green') : chip('待确认', 'amber')), renderPlan(view));
+      const plan = el('section', { class: 'card' }, el('div', { class: 'card-header' }, el('h2', { text: view.frozen ? '已确认的生长路线' : '预览生长路线' }), view.frozen ? chip('路线已确认', 'green') : chip('待确认', 'amber')));
+      const preview = routePreview && nodesFor(view).length ? routePreview(view) : null;
+      if (preview) plan.append(preview, el('details', { class: 'section-details route-list' }, el('summary', { text: `按列表查看全部 ${nodesFor(view).length} 个小节` }), renderPlan(view)));
+      else plan.append(renderPlan(view));
       if (!view.frozen) plan.append(el('p', { class: 'muted-line', text: '确认后，这条路线和对应资料会固定下来；之后上传的新资料不会改变本课的评分标准。' }));
       const referenceChoices = [];
       if (!view.frozen && list(view.private_references).length) {
@@ -412,12 +452,12 @@
       if (allowed('confirm_plan')) row.append(button(actionLabels.confirm_plan, () => {
         try { return command('confirm_plan', { private_references: referenceChoices.map(read => read()) }); }
         catch (error) { showMessage(error.message, 'warn'); }
-      }, 'primary'));
+      }, 'primary', 'confirm_plan'));
       plan.append(row); root.append(plan);
     }
     const row = el('div', { class: 'actions' });
-    for (const action of ['replan', 'begin', 'begin_learning']) if (allowed(action)) row.append(button(actionLabels[action], () => action === 'choose_exploration' ? confirmAction('进入探索模式', '探索模式只提供文字讨论，不产生正式通过或依赖解锁。', () => command(action)) : command(action), action.startsWith('begin') || (action === 'replan' && (view.requires_replan || !allowed('confirm_plan'))) ? 'primary' : ''));
-    if (allowed('rest')) row.append(button('休息，保留当前进度', () => command('rest'), 'subtle'));
+    for (const action of ['replan', 'begin', 'begin_learning']) if (allowed(action)) row.append(button(actionLabels[action], () => action === 'choose_exploration' ? confirmAction('进入探索模式', '探索模式只提供文字讨论，不产生正式通过或依赖解锁。', () => command(action)) : command(action), action.startsWith('begin') || (action === 'replan' && (view.requires_replan || !allowed('confirm_plan'))) ? 'primary' : '', action));
+    if (allowed('rest')) row.append(button('休息，保留当前进度', () => command('rest'), 'subtle', 'rest'));
     if (row.childElementCount) root.append(row);
     return root;
   }
@@ -554,7 +594,7 @@
       card.append(form);
     }
     const row = el('div', { class: 'actions' });
-    for (const action of ['return_to_current', 'start_quiz', 'return_to_teaching']) if (allowed(action)) row.append(button(actionLabels[action], () => command(action), action === 'start_quiz' ? 'primary' : ''));
+    for (const action of ['return_to_current', 'start_quiz', 'return_to_teaching']) if (allowed(action)) row.append(button(actionLabels[action], () => command(action), action === 'start_quiz' ? 'primary' : '', action));
     if (row.childElementCount) card.append(row);
     return card;
   }
@@ -565,7 +605,7 @@
       el('p', { class: 'muted-line', text: '请独立作答。数值题写数值和单位，解题思路写在文字题里。' }));
     const answers = {};
     list(quiz.questions).forEach((q, index) => {
-      const type = q.question_type || q.type; const fieldset = el('fieldset', { class: 'question' }, el('legend', { text: `第 ${index + 1} 题` }),
+      const type = q.question_type || q.type; const fieldset = el('fieldset', { class: 'question', id: 'question-' + index }, el('legend', { text: `第 ${index + 1} 题` }),
         el('div', { class: 'question-type' }, el('span', { text: ({ single_choice: '单选题', multiple_choice: '多选题 · 全对得分', numeric_scalar: '数值题', text: '文字 / 步骤题' })[type] || '文字题' }), el('span', { text: q.max_score + ' 分' })), markdown(q.prompt));
       const controls = [];
       if (type === 'single_choice' || type === 'multiple_choice') {
@@ -592,6 +632,22 @@
       await command('submit_answer', { assessment_id: quiz.assessment_id, answers: payload }, { after: () => storage.remove(key) });
     }); card.append(form); window.SkillTreeControls?.choiceKeys(form); return card;
   }
+  // Small plant illustrations for states that interrupt learning. Markup is constant, never learner data.
+  const stateArtwork = {
+    paused: '<path class="ill-stem" d="M60 86 C60 72 58 62 61 50"/><path class="ill-leaf" d="M61 58 C67 58 73 54 75 47 C68 47 63 51 61 58Z"/><path class="ill-leaf" d="M60 66 C54 66 48 62 46 55 C53 55 58 59 60 66Z"/><path class="ill-leaf-fill" d="M61 50 C57 46 58 40 61 36 C64 40 65 46 61 50Z"/><path class="ill-accent" d="M95 16 A11 11 0 1 0 104 32 A8.5 8.5 0 1 1 95 16Z"/><text class="ill-z" x="77" y="36">z</text><text class="ill-z small" x="85" y="27">z</text>',
+    error: '<path class="ill-stem" d="M58 86 C58 74 58 66 62 60 C66 55 72 56 74 60"/><path class="ill-leaf" d="M74 60 C80 62 84 68 83 74 C77 72 74 66 74 60Z"/><path class="ill-leaf" d="M58 72 C52 71 47 67 45 61 C52 61 56 65 58 72Z"/><path class="ill-leaf-fill" d="M80 85 C84 80 90 79 96 81 C91 85 85 86 80 85Z"/><path class="ill-stake" d="M40 86 V48"/><path class="ill-line" d="M40 58 C46 58 52 62 57 66"/>',
+    budget_exhausted: '<path class="ill-can" d="M34 54 H62 V78 A4 4 0 0 1 58 82 H38 A4 4 0 0 1 34 78Z"/><path class="ill-line" d="M38 54 C38 42 58 42 58 54"/><path class="ill-line" d="M62 60 L80 47"/><path class="ill-line" d="M78 44 L85 42 L83 49"/><path class="ill-drop" d="M88 54 C91 58 92 60 92 62 A4 4 0 0 1 84 62 C84 60 85 58 88 54Z"/><path class="ill-stem" d="M98 86 C98 80 98 76 99 71"/><path class="ill-leaf" d="M99 76 C103 76 106 73 107 68 C102 68 100 72 99 76Z"/>',
+    assessment_review: '<path class="ill-stem" d="M50 86 C50 74 49 64 51 54"/><path class="ill-leaf" d="M51 62 C59 61 66 55 68 46 C59 46 53 53 51 62Z"/><path class="ill-leaf" d="M50 70 C43 69 37 64 35 57 C43 57 48 63 50 70Z"/><circle class="ill-glass" cx="82" cy="42" r="13"/><path class="ill-line thick" d="M91 51 L102 62"/><text class="ill-q" x="82" y="47" text-anchor="middle">?</text>',
+    completed: '<path class="ill-stem" d="M60 86 C60 70 59 58 60 40"/><path class="ill-stem thin" d="M60 62 C66 58 72 56 78 50"/><path class="ill-stem thin" d="M60 54 C54 50 48 48 42 42"/><path class="ill-leaf-fill" d="M78 50 C84 50 89 45 90 39 C84 39 79 44 78 50Z"/><path class="ill-leaf-fill" d="M42 42 C36 42 31 37 30 31 C36 31 41 36 42 42Z"/><path class="ill-leaf-fill" d="M60 40 C55 36 55 29 60 24 C65 29 65 36 60 40Z"/><path class="ill-leaf" d="M60 72 C66 72 71 68 73 62 C67 62 62 66 60 72Z"/><circle class="ill-bloom" cx="60" cy="20" r="4"/>',
+  };
+  function stateArt(stage) {
+    const wrap = el('div', { class: 'status-art', 'aria-hidden': 'true' });
+    const running = stage === 'running' && document.querySelector('#grading-state .seed');
+    if (running) { wrap.append(running.cloneNode(true)); return wrap; }
+    const doc = new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><path class="ill-ground" d="M14 86 Q60 81 106 86"/>' + (stateArtwork[stage] || stateArtwork.error) + '</svg>', 'image/svg+xml');
+    wrap.append(document.importNode(doc.documentElement, true));
+    return wrap;
+  }
   function recoveryCard(view) {
     const stage = view.page_state; const headings = { running: '正在完成本次操作', error: '这一步需要恢复', paused: '暂停一下，进度已保留',
       budget_exhausted: '这一步的 AI 额度用完了', assessment_review: '这次没能可靠评分', completed: '这次学习已经完成' };
@@ -602,12 +658,12 @@
     const modelTroubleText = (view.error_type === 'ModelOutputValidationError'
       ? 'AI 生成的内容未通过格式或课程规则检查，当前结果没有生效。这不是你作答的问题。'
       : 'AI 请求没有成功完成。这不是你作答的问题。') + (allowed('replace_assessment') ? '可以申请换一份新的小测重新作答，' : '') + (allowed('return_to_teaching') ? '也可以先返回教学，' : '') + '进度都已保存。';
-    const card = el('section', { class: 'card status-card' }, el('div', { class: 'status-symbol' + (stage === 'completed' ? ' green' : ''), text: stage === 'completed' ? '✓' : stage === 'running' ? '◌' : '↳' }), el('h2', { text: modelTrouble ? 'AI 这一步没能完成' : headings[stage] || labels[stage] || '当前状态' }), el('p', { class: 'muted', text: modelTrouble ? modelTroubleText : view.notice || defaults[stage] || '' }));
+    const card = el('section', { class: 'card status-card st-' + stage }, stateArt(stage), el('h2', { text: modelTrouble ? 'AI 这一步没能完成' : headings[stage] || labels[stage] || '当前状态' }), el('p', { class: 'muted', text: modelTrouble ? modelTroubleText : view.notice || defaults[stage] || '' }));
     if (view.pause_reason === 'replacement_limit') card.append(el('p', { class: 'notice', text: '已达到系统原因连续换题上限，当前保持暂停。请保留记录，待题目与评价问题修复后再继续。' }));
     if (view.pause_reason === 'extension_ready') card.append(el('p', { class: 'notice green', text: '已追加 3 次闯关机会。点“返回教学”继续学习。' }));
     if (view.error_type) card.append(view.recovery_required
       ? el('p', { class: 'muted-line', text: '检测到上次执行中断，可以从已保存的结果恢复。' })
-      : el('details', { class: 'muted-line' }, el('summary', { text: '查看错误标识' }), el('code', { text: view.error_type })));
+      : el('details', { class: 'muted-line' }, el('summary', { text: '技术信息（反馈问题时可以附上）' }), el('code', { text: view.error_type })));
     const row = el('div', { class: 'actions' });
     for (const action of ['retry', 'continue_with_new_budget', 'retry_3', 'return_to_teaching', 'replace_assessment', 'view_feedback', 'annotate_dispute', 'rest']) {
       if (!allowed(action)) continue;
@@ -619,7 +675,7 @@
         else if (action === 'annotate_dispute') textCommand(action, '补充本轮评价说明', 'annotation', '说明你认为需要复核的地方。补充只留档，不改写正式评分，也不当作新的作答。', view.assessment_id);
         else if (action === 'view_feedback') { document.getElementById('evaluation-feedback')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         else command(action);
-      }, ['retry', 'return_to_teaching', 'continue_with_new_budget'].includes(action) ? 'primary' : ''));
+      }, ['retry', 'return_to_teaching', 'continue_with_new_budget'].includes(action) ? 'primary' : '', action));
     }
     if (row.childElementCount) card.append(row);
     return card;
@@ -634,8 +690,8 @@
     if (['learning', 'exploring'].includes(stage)) main.append(tutorCard(view));
     if (stage === 'completed' && view.tutor) main.append(el('details', { class: 'card' }, el('summary', { text: '查看最近讲解' }), markdown(view.tutor.text || view.tutor)));
     if (['learning', 'exploring', 'quiz'].includes(stage) && allowed('rest')) {
-      const row = el('div', { class: 'actions' }); if (stage === 'quiz' && allowed('return_to_teaching')) row.append(button('先返回教学', () => command('return_to_teaching')));
-      row.append(button('休息，保留当前进度', () => command('rest'), 'subtle')); main.append(row);
+      const row = el('div', { class: 'actions' }); if (stage === 'quiz' && allowed('return_to_teaching')) row.append(button('先返回教学', () => command('return_to_teaching'), '', 'return_to_teaching'));
+      row.append(button('休息，保留当前进度', () => command('rest'), 'subtle', 'rest')); main.append(row);
     }
     const aside = el('aside', { class: 'learning-aside', 'aria-label': '学习路径与额度' });
     if (nodesFor(view).length) aside.append(el('section', { class: 'card' }, el('h2', { text: '学习路径' }), renderPlan(view, true)));
@@ -681,10 +737,10 @@
     garden.shell();
     $('refresh-project').hidden = !state.id;
     let content;
-    if (!state.view) content = garden.home(welcome());
+    if (!state.view) content = garden.home();
     else if (isLegacy() || state.view.version === 'v2' || state.view.page_state === 'legacy_readonly') content = legacyView(state.view);
     else if (!state.view.learning_runtime_ready || allowed('begin') || allowed('begin_learning')) {
-      content = garden.prepare(state.view, prepareView(state.view));
+      content = garden.prepare(state.view);
       if (['error', 'running', 'budget_exhausted'].includes(state.view.page_state)) content.prepend(recoveryCard(state.view));
     } else content = garden.lesson(state.view);
     $('content').replaceChildren(content); busy(state.busy);
@@ -703,7 +759,7 @@
     }
     const body = { request_id: uuid(), pending_input_id: identity.pending_input_id, draft_revision: identity.draft_revision, action, ...payload };
     if (['submit_answer', 'annotate_dispute', 'replace_assessment'].includes(action)) body.assessment_id = identity.assessment_id;
-    return write(base + '/resume', body, { ...options, busyText: action === 'submit_answer' ? '正在评分、核查证据并诊断…' : action === 'replan' || action === 'confirm_profile' || action === 'adjust_plan' ? '正在核对范围与资料，准备学习计划…' : '正在完成这一步…' });
+    return write(base + '/resume', body, { ...options, grading: action === 'submit_answer', busyText: action === 'submit_answer' ? '正在评分、核查证据并诊断…' : action === 'replan' || action === 'confirm_profile' || action === 'adjust_plan' ? '正在核对范围与资料，准备学习计划…' : '正在完成这一步…' });
   }
   async function followJob(initial) {
     storage.write('active-job', initial.id);
@@ -736,8 +792,8 @@
     } catch (error) { showMessage(error.message || '任务状态暂时无法查询，请稍后刷新。', 'warn'); }
     finally { busy(false); }
   }
-  async function write(url, body, { method = 'POST', busyText, success = '', after = null } = {}) {
-    if (state.busy) return; closeMenu(); busy(true, busyText); showMessage('');
+  async function write(url, body, { method = 'POST', busyText, success = '', after = null, grading = false } = {}) {
+    if (state.busy) return; closeMenu(); state.grading = grading; busy(true, busyText); showMessage('');
     const sprout = window.SkillTreeControls?.grow(window.SkillTreeControls.pressed());
     // A silent client connection does not cancel or disprove the server's work.
     // Stop waiting for this response, then use the existing read-only recovery.
@@ -855,14 +911,21 @@
       authSession = session;
       if (session?.account) {
         accountStoragePrefix = encodeURIComponent(session.account) + '.';
-        const account = el('span', { class: 'chip', text: '当前账号：' + (session.login || session.account), id: 'current-account' });
-        $('new-project').before(account);
+        const here = encodeURIComponent(location.pathname + location.search + location.hash);
+        if (session.guest) {
+          // Visitors learn right away; signing up is offered, never required.
+          $('new-project').before(el('div', { class: 'guest-note', id: 'current-account' }, el('strong', { text: '访客模式' }),
+            el('span', { text: '学习记录保存在这台设备上。注册后可以换设备继续，课程会原样保留。' }),
+            el('a', { class: 'btn subtle', href: '/login?mode=register&next=' + here, text: '注册，保存进度' })));
+          $('theme-toggle').before(el('a', { class: 'btn subtle account-link', href: '/login?next=' + here, text: '登录 / 注册' }));
+        } else $('new-project').before(el('span', { class: 'chip', text: '当前账号：' + (session.login || session.account), id: 'current-account' }));
+        const account = $('current-account');
         if (session.logout) {
           const logout = el('button', { class: 'btn subtle', type: 'button', text: '退出登录', onclick: async () => {
             const response = await fetch('/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': authSession.csrf_token }, body: '{}' });
             if (response.ok || response.status === 401) {
               try { const prefix = 'skilltree.v3.' + accountStoragePrefix; for (const key of Object.keys(localStorage)) if (key.startsWith(prefix)) localStorage.removeItem(key); localStorage.setItem('skilltree.auth.changed', String(Date.now())); } catch { /* Storage may be disabled. */ }
-              location.replace('/login');
+              location.replace('/');
             } else showMessage('退出未完成，请刷新页面再试。', 'warn');
           } });
           account.after(logout);
@@ -887,7 +950,7 @@
   }
   garden = window.SkillTreeGarden({el, button, chip, list, nodesFor, currentName, state, allowed, command,
     selectProject, projectMenu, tutorCard, quizCard, recoveryCard, objectiveFeedback, budgetCard,
-    sourceCard, renderPlan, storage, labels, actionLabels, render, newProject, markdown, citationButtons, textCommand, uuid});
+    sourceCard, renderPlan, prepareView, createCard, presetRow, storage, labels, actionLabels, render, newProject, markdown, citationButtons, textCommand, uuid});
   garden.init();
   initialize();
 })();

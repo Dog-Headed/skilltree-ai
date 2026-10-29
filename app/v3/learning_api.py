@@ -5,6 +5,7 @@ import base64
 import binascii
 import json
 import logging
+import re
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
@@ -77,7 +78,10 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
         if request.method in {'POST','PATCH','DELETE'} and origin and origin!=str(request.base_url).rstrip('/'):
             return JSONResponse(status_code=403,content={'error':{'code':'invalid_origin','message':'请从当前学习页面提交操作。'}})
         response=await call_next(request)
-        response.headers.update({'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer',
+        # Font subsets never carry learner data and change only with a release;
+        # every other response stays uncached so state is always read fresh.
+        cache='public, max-age=604800' if request.url.path.startswith('/assets/fonts/') and response.status_code==200 else 'no-store'
+        response.headers.update({'Cache-Control':cache,'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer',
             'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"})
         return response
 
@@ -124,12 +128,14 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
 
     @app.get('/assets/{filename}',include_in_schema=False)
     def asset(filename:str):
-        if filename not in {'v3.js','v3.css','garden.js','garden.css','botanical.js','botanical.css','fonts.css','controls.css','controls.js','login.html','login.css','login.js'}:raise KeyError(filename)
-        return FileResponse(STATIC/filename)
+        # Any top-level script or stylesheet in static/; pages and other files are never assets.
+        if not re.fullmatch(r'[a-z0-9][a-z0-9-]*\.(?:js|css)',filename):raise KeyError(filename)
+        path=STATIC/filename
+        if not path.is_file():raise KeyError(filename)
+        return FileResponse(path)
 
     @app.get('/assets/fonts/{filename}',include_in_schema=False)
     def font(filename:str):
-        import re
         if not re.fullmatch(r'design-[0-9]{3}\.(?:woff2|ttf)',filename):raise KeyError(filename)
         path=STATIC/'fonts'/filename
         if not path.is_file():raise KeyError(filename)

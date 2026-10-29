@@ -27,7 +27,7 @@ def reserve_quota(conn, account):
     conn.execute('CREATE TABLE IF NOT EXISTS usage(day TEXT,account TEXT,used INTEGER NOT NULL,PRIMARY KEY(day,account))')
     total = conn.execute('SELECT COALESCE(SUM(used),0) FROM usage WHERE day=?', (day,)).fetchone()[0]
     row = conn.execute('SELECT used FROM usage WHERE day=? AND account=?', (day, account)).fetchone()
-    if total >= int(os.getenv('SKILLTREE_DAILY_WRITES', '120')) or (row and row[0] >= int(os.getenv('SKILLTREE_ACCOUNT_DAILY_WRITES', '40'))):
+    if total >= int(os.getenv('SKILLTREE_DAILY_WRITES', '3000')) or (row and row[0] >= int(os.getenv('SKILLTREE_ACCOUNT_DAILY_WRITES', '300'))):
         raise AdmissionError('daily_limit', '今日体验操作额度已用完，请联系管理员。')
     conn.execute('INSERT INTO usage VALUES (?,?,1) ON CONFLICT(day,account) DO UPDATE SET used=used+1', (day, account))
 

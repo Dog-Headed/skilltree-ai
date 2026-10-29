@@ -2,6 +2,17 @@
 
 ## Identity and sessions
 
+A first visit to `/` without a session creates a password-less **guest** identity
+(`guest_` plus 22 hex characters) and a one-year HttpOnly session cookie, then
+serves the garden. Guests use the site with the same limits as registered users.
+At most 60 guests are created per IP and hour; over that, the visitor is sent to
+`/login`. Registering from a guest session attaches the email and password to the
+same canonical account, so courses, quota and jobs stay in place and the guest
+token is revoked. Signing in to an existing account from a guest session moves
+the guest's courses to that account (refused with 409 while a guest AI job is
+queued or running). `EvaluationGateway(..., guest_access=False)` restores the
+previous sign-in redirect. Guests have no password and cannot sign in by name.
+
 New accounts use a normalized lowercase email username and password. No email,
 SMS, verification code or mailbox verification is involved. The login page offers
 email/password registration with password confirmation (10 to 256 characters),
@@ -20,8 +31,9 @@ been removed. Administrators can bind an email to an existing canonical owner
 with `bind-email ACCOUNT EMAIL`; this preserves password hashes, sessions and
 course ownership. Never infer ownership from a matching email supplied at signup.
 
-Self-registration defaults to ten accounts (`SKILLTREE_REGISTRATION_LIMIT=10`);
-administrator-created, imported and disabled identities do not consume these slots. The
+Self-registration is unlimited by default. Setting `SKILLTREE_REGISTRATION_LIMIT`
+caps it; administrator-created, imported and disabled identities do not consume
+these slots. The
 capacity check is repeated atomically after hashing, so parallel registrations
 cannot oversubscribe. Each IP gets at most ten registration attempts/hour.
 Duplicate emails (case-insensitive) are refused and never replace an account.
@@ -43,8 +55,8 @@ These choices follow the [OWASP session guidance](https://cheatsheetseries.owasp
 [CSRF guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
 and [password storage guidance](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 
-GET /session returns canonical account, display login and csrf_token after
-authentication. POST /auth/login accepts account, password, remember.
+GET /session returns canonical account, display login, csrf_token and `guest`
+after authentication (`logout` is false for guests). POST /auth/login accepts account, password, remember.
 POST /auth/register additionally requires confirm_password, uses the same
 JSON/origin protections and returns 201 plus the cookie. POST /auth/logout revokes it.
 Eight failed attempts per identity or thirty per IP within fifteen minutes are
@@ -89,10 +101,10 @@ the existing controlled recovery. Graceful shutdown stops admission and waits up
 to 150 seconds for executors before process shutdown. Terminal job responses are
 kept for three days; their submitted bodies are discarded after completion.
 
-The app limits each account to 30 accepted writes/minute. Existing daily totals
-stay **120 site-wide / 40 per account**: these count accepted HTTP write
-operations, not model HTTP calls. They can still constrain a longer ten-person
-trial. Raising them requires a separate cost/usage decision.
+The app limits each account to 30 accepted writes/minute. Daily totals default to
+**3000 site-wide / 300 per account** (`SKILLTREE_DAILY_WRITES`,
+`SKILLTREE_ACCOUNT_DAILY_WRITES`); these count accepted HTTP write operations,
+not model HTTP calls. Guests and registered accounts share these limits.
 
 Nginx keeps coarse shared-IP protection: reads 60/s with burst 200, writes 60/min
 with burst 40, connections 64. Login has its own 10/min with burst 10. Public

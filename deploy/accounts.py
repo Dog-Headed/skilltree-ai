@@ -12,6 +12,9 @@ def main():
     create.add_argument('email')
     imported = sub.add_parser('import-htpasswd')
     imported.add_argument('path')
+    bound = sub.add_parser('bind-email')
+    bound.add_argument('account')
+    bound.add_argument('email')
     args = parser.parse_args()
     store = AuthStore(args.database)
     if args.action == 'create':
@@ -20,6 +23,9 @@ def main():
             raise SystemExit('Passwords do not match; nothing changed')
         store.create_account(args.email, password)
         print('Account created; existing accounts were not replaced.')
+    elif args.action == 'bind-email':
+        store.bind_email(args.account, args.email)
+        print('Email login bound; canonical ownership and password unchanged.')
     else:
         count = store.import_htpasswd(args.path)
         print(f'Imported {count} legacy identities without replacing existing accounts.')

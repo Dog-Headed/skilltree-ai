@@ -183,7 +183,7 @@ def test_legacy_password_import_preserves_canonical_owner(tmp_path):
     assert auth.login('goutouren', 'bad-password', '127.0.0.1')['status'] == 401
 
 
-def test_brute_force_expiry_and_no_self_registration(beta):
+def test_brute_force_expiry_and_registration_requires_origin_header(beta):
     client, gateway, auth, *_ = beta
     for _ in range(8):
         assert client.post('/auth/login', headers={'X-SkillTree-Login': '1'}, json={'account': 'nobody@example.test', 'password': 'bad'}).status_code == 401

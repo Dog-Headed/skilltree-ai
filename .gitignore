@@ -30,3 +30,5 @@ work/day8/*
 *.log
 *.pem
 *.key
+# Runtime worker leases contain no source and must stay outside Git.
+*.sqlite.worker.lock

@@ -28,4 +28,4 @@ def create_app():
         quiz_generation_mode=os.getenv('SKILLTREE_QUIZ_GENERATION', 'content-v1'),
         preparation_generation_mode=os.getenv('SKILLTREE_PREPARATION_GENERATION', 'notes-outline-v1'))
     return EvaluationGateway(app, paths, root/'quota.sqlite', auth_store=auth, queued=True,
-                 origin='http://127.0.0.1:18230', cookie_secure=False)
+                 origin='http://127.0.0.1:18231', cookie_secure=False, cookie_name='skilltree_preview_session')

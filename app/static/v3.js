@@ -855,7 +855,7 @@
       authSession = session;
       if (session?.account) {
         accountStoragePrefix = encodeURIComponent(session.account) + '.';
-        const account = el('span', { class: 'chip', text: '当前账号：' + session.account, id: 'current-account' });
+        const account = el('span', { class: 'chip', text: '当前账号：' + (session.login || session.account), id: 'current-account' });
         $('new-project').before(account);
         if (session.logout) {
           const logout = el('button', { class: 'btn subtle', type: 'button', text: '退出登录', onclick: async () => {

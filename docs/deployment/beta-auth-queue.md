@@ -3,8 +3,9 @@
 ## Identity and sessions
 
 New accounts use a normalized lowercase email username and password. No email,
-SMS, verification code, mailbox verification or public registration is involved.
-An administrator creates an identity locally on the server:
+SMS, verification code or mailbox verification is involved. The login page offers
+email/password registration with password confirmation (10 to 256 characters),
+then signs the new user in. An administrator can also create an identity:
 
 ```sh
 .venv/bin/python -m deploy.accounts --database data/auth.sqlite create person@example.com
@@ -14,8 +15,18 @@ The CLI prompts twice without echoing the password. It refuses to replace an
 existing identity. Existing bcrypt htpasswd accounts are imported once using
 `import-htpasswd /etc/skilltree/evaluators.htpasswd`, run by an administrator able
 to read that private file. Import preserves each original canonical owner and
-does not overwrite existing passwords. Existing users select the legacy-account
-checkbox on the login page.
+does not overwrite existing passwords. The public legacy-account checkbox has
+been removed. Administrators can bind an email to an existing canonical owner
+with `bind-email ACCOUNT EMAIL`; this preserves password hashes, sessions and
+course ownership. Never infer ownership from a matching email supplied at signup.
+
+Self-registration defaults to ten accounts (`SKILLTREE_REGISTRATION_LIMIT=10`);
+administrator-created, imported and disabled identities do not consume these slots. The
+capacity check is repeated atomically after hashing, so parallel registrations
+cannot oversubscribe. Each IP gets at most ten registration attempts/hour.
+Duplicate emails (case-insensitive) are refused and never replace an account.
+Email is only a login name: there is no self-service email recovery; contact the
+administrator for a forgotten password.
 
 New passwords use salted PBKDF2-SHA256 with 600,000 iterations; bcrypt verification
 exists only for legacy hashes. Raw session tokens are random 256-bit secrets;
@@ -32,8 +43,10 @@ These choices follow the [OWASP session guidance](https://cheatsheetseries.owasp
 [CSRF guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
 and [password storage guidance](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 
-GET /session returns account and csrf_token after authentication. POST /auth/login
-accepts account, password, remember. POST /auth/logout revokes the cookie.
+GET /session returns canonical account, display login and csrf_token after
+authentication. POST /auth/login accepts account, password, remember.
+POST /auth/register additionally requires confirm_password, uses the same
+JSON/origin protections and returns 201 plus the cookie. POST /auth/logout revokes it.
 Eight failed attempts per identity or thirty per IP within fifteen minutes are
 blocked temporarily. Password checks have two execution slots, separate from AI.
 
@@ -87,11 +100,17 @@ Uvicorn connection/task protection is 64; AI concurrency remains two.
 
 ## Local preview and validation
 
-`python -m uvicorn deploy.preview:create_app --factory --host 127.0.0.1 --port 18230`
+`python -m uvicorn deploy.preview:create_app --factory --host 127.0.0.1 --port 18231`
 starts isolated real authentication/ownership/storage. Local-only identities
 preview1@example.test through preview5@example.test use preview2026. They are not
 created by the production factory. Data resides in work/beta-login-preview.
 Preview model operations use the configured real provider; no auth mock is loaded.
+
+Port 18230 remains the separate Claude design catalogue. Original local service
+stays on 8765. Opt in with SKILLTREE_LOCAL_AUTH=1 only after backing up and
+explicitly assigning existing local projects; its data/v3 directory stays in
+place. Local 8765 and preview 18231 use different cookie names to avoid port
+collisions in the browser. Production uses its original secure __Host- cookie.
 
 Relevant checks: tests/test_beta_auth_queue.py, test_deployment_ownership.py,
 test_deployment_gateway.py and the public API regression suite. The five-user

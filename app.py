@@ -27,7 +27,16 @@ def load_application():
     if mode!='legacy':options['quiz_generation_mode']=mode
     preparation_mode=os.getenv('SKILLTREE_PREPARATION_GENERATION','legacy')
     if preparation_mode!='legacy':options['preparation_generation_mode']=preparation_mode
-    return create_learning_app(**options)
+    application=create_learning_app(**options)
+    if os.getenv('SKILLTREE_LOCAL_AUTH','0')=='1':
+        from deploy.asgi import EvaluationGateway
+        from deploy.auth import AuthStore
+        from app.v3.storage import V3Paths
+        paths=V3Paths()
+        application=EvaluationGateway(application,paths,os.getenv('SKILLTREE_LOCAL_QUOTA_DB',str(paths.root.parent/'local-quota.sqlite')),
+            auth_store=AuthStore(os.getenv('SKILLTREE_LOCAL_AUTH_DB',str(paths.root.parent/'local-auth.sqlite'))),
+            queued=True,origin='http://127.0.0.1:8765',cookie_secure=False,cookie_name='skilltree_local_session')
+    return application
 
 
 def open_browser_when_ready(server) -> None:

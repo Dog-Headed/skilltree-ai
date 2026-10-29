@@ -72,19 +72,23 @@
           <label for="account">邮箱</label>
           <input id="account" name="account" type="email" autocomplete="username" required maxlength="254" spellcheck="false" autocapitalize="off" aria-describedby="account-hint">
           <small id="account-hint">邮箱仅作登录名，不发送验证码。</small>
-          <label class="login-remember"><input id="legacy-login" type="checkbox"><span>使用原有的 goutouren / judge / test 账号</span></label>
         </div>
         <div class="field">
           <label for="password">密码</label>
           <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="256" aria-describedby="caps-hint">
           <small id="caps-hint" class="caps-hint" hidden>大写锁定已开启</small>
         </div>
+        <div id="confirm-field" class="field" hidden>
+          <label for="confirm-password">确认密码</label>
+          <input id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" maxlength="256">
+        </div>
         <label class="login-remember"><input id="remember" name="remember" type="checkbox" value="1" checked><span>在这台设备上保持登录 30 天</span></label>
         <button id="login-submit" class="btn primary login-submit" type="submit">进入我的花园</button>
       </form>
+      <button id="auth-mode" class="btn subtle" type="button">没有账号？用邮箱注册</button>
 
       <div class="login-foot">
-        <p>公测账号由管理员开通，请使用开通时的邮箱与密码。忘记密码请联系管理员。</p>
+        <p>邮箱只作登录名，无需验证码。公测名额有限，忘记密码请联系管理员。</p>
       </div>
     </section>
 

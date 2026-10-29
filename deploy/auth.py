@@ -1,4 +1,4 @@
-"""Administrator-provisioned identities and revocable, opaque browser sessions.
+"""Email identities and revocable, opaque browser sessions.
 
 Email is a username, never proof of mailbox ownership. Legacy logins keep their
 canonical project owner, so importing passwords does not reassign any course.
@@ -6,6 +6,7 @@ canonical project owner, so importing passwords does not reassign any course.
 from contextlib import contextmanager
 from hashlib import pbkdf2_hmac, sha256
 import hmac
+import os
 from pathlib import Path
 import re
 import secrets
@@ -64,6 +65,9 @@ class AuthStore:
               CREATE INDEX IF NOT EXISTS auth_session_account ON auth_sessions(account);
               CREATE TABLE IF NOT EXISTS auth_attempts(actor TEXT NOT NULL, at REAL NOT NULL);
               CREATE INDEX IF NOT EXISTS auth_attempt_time ON auth_attempts(actor,at);
+              CREATE TABLE IF NOT EXISTS auth_registrations(account TEXT PRIMARY KEY,ip_hash TEXT NOT NULL,created REAL NOT NULL);
+              CREATE TABLE IF NOT EXISTS auth_register_attempts(ip_hash TEXT NOT NULL,at REAL NOT NULL);
+              CREATE INDEX IF NOT EXISTS auth_register_ip_time ON auth_register_attempts(ip_hash,at);
             ''')
         # Same KDF cost for nonexistent accounts; do not cache a plaintext secret.
         self.dummy_hash = password_hash(secrets.token_urlsafe(24))
@@ -106,6 +110,62 @@ class AuthStore:
                     raise ValueError('Identity collision; import stopped')
                 conn.execute('INSERT OR IGNORE INTO auth_accounts(login,account,password_hash) VALUES (?,?,?)', entry)
         return len(entries)
+
+    def bind_email(self, account, email):
+        """Administrator-only alias change; preserve canonical owner and hash."""
+        email = normalize_login(email)
+        if '@' not in email:
+            raise ValueError('Email username required')
+        with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            if not conn.execute('SELECT 1 FROM auth_accounts WHERE account=?', (account,)).fetchone():
+                raise KeyError('Unknown canonical account')
+            row = conn.execute('SELECT account FROM auth_accounts WHERE login=?', (email,)).fetchone()
+            if row and row['account'] != account:
+                raise ValueError('Email is already in use; no identity was merged')
+            conn.execute('UPDATE auth_accounts SET login=? WHERE account=?', (email, account))
+        return email
+
+    def login_name(self, account):
+        with self.connect() as conn:
+            row = conn.execute('SELECT login FROM auth_accounts WHERE account=?', (account,)).fetchone()
+        return row['login'] if row else account
+
+    def register(self, login, password, ip, remember=False):
+        try:
+            login = normalize_login(login)
+        except ValueError:
+            return {'status': 422, 'code': 'invalid_input'}
+        if '@' not in login or not isinstance(password, str) or not 10 <= len(password) <= 256:
+            return {'status': 422, 'code': 'invalid_input'}
+        at = time.time()
+        ip_hash = sha256(ip.encode()).hexdigest()
+        limit = max(0, int(os.getenv('SKILLTREE_REGISTRATION_LIMIT', '10')))
+        with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            conn.execute('DELETE FROM auth_register_attempts WHERE at<?', (at-3600,))
+            attempts = conn.execute('SELECT at FROM auth_register_attempts WHERE ip_hash=? ORDER BY at', (ip_hash,)).fetchall()
+            if len(attempts) >= 10:
+                return {'status': 429, 'code': 'rate_limited', 'retry_after': max(1, int(attempts[0]['at']+3601-at))}
+            conn.execute('INSERT INTO auth_register_attempts VALUES (?,?)', (ip_hash, at))
+            if conn.execute('SELECT 1 FROM auth_accounts WHERE login=? OR account=?', (login, login)).fetchone():
+                return {'status': 409, 'code': 'email_taken'}
+            if conn.execute('SELECT COUNT(*) FROM auth_registrations r JOIN auth_accounts a ON a.account=r.account WHERE a.disabled=0').fetchone()[0] >= limit:
+                return {'status': 403, 'code': 'registration_closed'}
+        # Expensive hashing occurs outside the SQLite write transaction.
+        encoded, token = password_hash(password), secrets.token_urlsafe(32)
+        with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            # Recheck after the KDF so parallel registrations cannot exceed capacity.
+            if conn.execute('SELECT 1 FROM auth_accounts WHERE login=? OR account=?', (login, login)).fetchone():
+                return {'status': 409, 'code': 'email_taken'}
+            if conn.execute('SELECT COUNT(*) FROM auth_registrations r JOIN auth_accounts a ON a.account=r.account WHERE a.disabled=0').fetchone()[0] >= limit:
+                return {'status': 403, 'code': 'registration_closed'}
+            conn.execute('INSERT INTO auth_accounts(login,account,password_hash) VALUES (?,?,?)', (login, login, encoded))
+            conn.execute('INSERT INTO auth_registrations VALUES (?,?,?)', (login, ip_hash, at))
+            conn.execute('INSERT INTO auth_sessions VALUES (?,?,?,?)',
+                         (sha256(token.encode()).hexdigest(), login, at+(2592000 if remember else 43200), at))
+        return {'status': 201, 'account': login, 'token': token}
 
     def login(self, login, password, ip, remember=False):
         at = time.time()

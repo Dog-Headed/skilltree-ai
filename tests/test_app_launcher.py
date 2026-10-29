@@ -15,6 +15,7 @@ def explicit_launcher_profile(monkeypatch):
     monkeypatch.delenv('SKILLTREE_LOCAL_RUNTIME',raising=False)
     monkeypatch.delenv('SKILLTREE_QUIZ_GENERATION',raising=False)
     monkeypatch.delenv('SKILLTREE_PREPARATION_GENERATION',raising=False)
+    monkeypatch.delenv('SKILLTREE_LOCAL_AUTH',raising=False)
 
 
 def launcher():
@@ -94,3 +95,25 @@ def test_local_preparation_opt_in_is_forwarded_without_changing_default(monkeypa
     monkeypatch.setenv('SKILLTREE_PREPARATION_GENERATION','content-v1')
     launcher().load_application()
     make.assert_called_once_with(preparation_generation_mode='content-v1')
+
+
+def test_local_email_auth_opt_in_wraps_original_paths(tmp_path,monkeypatch):
+    from app.v3 import learning_api, storage
+    from deploy.auth import AuthStore
+    frozen=build_frozen_project(tmp_path/'v3',node_count=1)
+    factory=learning_api.create_learning_app
+    monkeypatch.setattr(learning_api,'create_learning_app',lambda **options:factory(frozen['paths'],llm=frozen['model']))
+    monkeypatch.setattr(storage,'V3Paths',lambda:frozen['paths'])
+    monkeypatch.setenv('SKILLTREE_LOCAL_AUTH','1')
+    monkeypatch.setenv('SKILLTREE_LOCAL_AUTH_DB',str(tmp_path/'auth.sqlite'))
+    monkeypatch.setenv('SKILLTREE_LOCAL_QUOTA_DB',str(tmp_path/'quota.sqlite'))
+    auth=AuthStore(tmp_path/'auth.sqlite');auth.create_account('owner@example.test','valid-password')
+    gateway=launcher().load_application()
+    assert gateway.paths==frozen['paths'] and gateway.origin=='http://127.0.0.1:8765'
+    assert gateway.cookie_name=='skilltree_local_session'
+    assert gateway.ownership.claim(frozen['project_id'],'owner@example.test')
+    with TestClient(gateway,base_url='http://127.0.0.1:8765') as client:
+        assert client.get('/session').status_code==401
+        response=client.post('/auth/login',headers={'X-SkillTree-Login':'1'},json={'account':'owner@example.test','password':'valid-password'})
+        assert response.status_code==200
+        assert [p['project_id'] for p in client.get('/projects').json()]==[frozen['project_id']]

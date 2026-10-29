@@ -1,5 +1,6 @@
 /* Sign-in page. Tokens from botanical.css; controls from controls.css. */
 *{box-sizing:border-box}
+.login-page [hidden]{display:none!important}
 html{color-scheme:light}
 :root[data-theme="dark"]{color-scheme:dark}
 body.login-page{margin:0;min-height:100vh;background:var(--paper);color:var(--ink);font:15px/1.7 var(--font-body);-webkit-font-smoothing:antialiased}
@@ -18,7 +19,10 @@ body.login-page{margin:0;min-height:100vh;background:var(--paper);color:var(--in
 .login-tree .b1{animation-delay:.7s}.login-tree .b2{animation-delay:.85s}.login-tree .b3{animation-delay:1s;stroke-width:5}.login-tree .b4{animation-delay:1.1s;stroke-width:5}.login-tree .b5{animation-delay:1.2s;stroke-width:4}
 .login-tree .root{fill:none;stroke:var(--stem);stroke-width:1.6;stroke-linecap:round;opacity:.7}
 .login-tree .future path{fill:none;stroke:var(--line-strong);stroke-width:1.5;stroke-dasharray:.012 .02;opacity:0;animation:lg-fade .6s 1.8s forwards}
-.login-tree .leaf,.login-tree .bud{transform-box:fill-box}
+/* SVG transforms anchor each leaf at the branch endpoint (local 0,0).
+   A fill-box origin rotates the translated group around its bounding box,
+   pulling the leaf stalk away from its branch. */
+.login-tree .leaf,.login-tree .bud{transform-box:view-box;transform-origin:0 0}
 .login-tree .leaf>path:first-of-type{fill:var(--leaf-deep)}
 .login-tree .leaf .vein{fill:none;stroke:var(--sheet);stroke-width:1.2;opacity:.8}
 .login-tree .leaf:not(.welcome)>*:not(.ring){transform-origin:0 0;transform:scale(0);animation:lg-pop .55s cubic-bezier(.3,.7,.3,1.4) forwards}

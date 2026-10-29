@@ -21,7 +21,7 @@ from .jobs import AdmissionError, JobStore, JobRunner
 
 class EvaluationGateway:
     def __init__(self, application, paths, quota_path, *, auth_store=None, queued=False,
-                 origin='https://skilltree.goutouren.work', cookie_secure=True, queue_capacity=10):
+                 origin='https://skilltree.goutouren.work', cookie_secure=True, queue_capacity=10, cookie_name=None):
         self.application = application
         self.paths = paths
         self.quota_path = Path(quota_path).resolve()
@@ -30,7 +30,7 @@ class EvaluationGateway:
         self.auth = auth_store
         self.origin = origin.rstrip('/')
         self.cookie_secure = cookie_secure
-        self.cookie_name = '__Host-skilltree_session' if cookie_secure else 'skilltree_session'
+        self.cookie_name = cookie_name or ('__Host-skilltree_session' if cookie_secure else 'skilltree_session')
         self.auth_slots = asyncio.Semaphore(2)
         self.jobs = JobStore(self.quota_path, capacity=queue_capacity) if queued else None
         self.runner = JobRunner(self.jobs, application, self.origin) if queued else None
@@ -89,7 +89,7 @@ class EvaluationGateway:
             if cross_site or (origin and origin.rstrip('/') != self.origin):
                 await self.reply(send, 403, {'error': {'code': 'invalid_origin', 'message': '请从当前网站提交。'}})
                 return None, token
-        if path == '/auth/login' and method == 'POST':
+        if path in {'/auth/login', '/auth/register'} and method == 'POST':
             if headers.get(b'x-skilltree-login') != b'1' or headers.get(b'content-type', b'').split(b';')[0].strip() != b'application/json':
                 await self.reply(send, 403, {'error': {'code': 'invalid_origin', 'message': '请使用登录页面。'}})
                 return None, token
@@ -97,18 +97,26 @@ class EvaluationGateway:
                 value = json.loads(await self.body(receive, 4096))
                 if not isinstance(value, dict) or not isinstance(value.get('remember', False), bool):
                     raise ValueError()
+                registering = path == '/auth/register'
+                if registering and value.get('password') != value.get('confirm_password'):
+                    raise ValueError()
                 async with self.auth_slots:
-                    result = await asyncio.to_thread(self.auth.login, value.get('account'), value.get('password'),
+                    operation = self.auth.register if registering else self.auth.login
+                    result = await asyncio.to_thread(operation, value.get('account'), value.get('password'),
                                                      str((scope.get('client') or ('unknown',))[0]), value.get('remember', False))
-                if result['status'] == 200:
+                if result['status'] in (200, 201):
                     if token:
                         await asyncio.to_thread(self.auth.logout, token)
-                    await self.reply(send, 200, {'account': result['account'], 'csrf_token': csrf_token(result['token'])},
+                    await self.reply(send, result['status'], {'account': result['account'], 'csrf_token': csrf_token(result['token'])},
                                      [(b'set-cookie', self.cookie(result['token'], value.get('remember', False)))])
                 else:
                     status = result['status']; retry = result.get('retry_after', 0)
-                    await self.reply(send, status, {'error': {'code': 'rate_limited' if status == 429 else 'invalid_credentials',
-                                      'message': '尝试过于频繁，请稍后再试。' if status == 429 else '邮箱或密码不正确。', 'retry_after': retry}},
+                    code = result.get('code', 'rate_limited' if status == 429 else 'invalid_credentials')
+                    message = {'rate_limited': '尝试过于频繁，请稍后再试。', 'email_taken': '该邮箱已注册，请直接登录。',
+                               'registration_closed': '本轮公测注册名额已满，请稍后再来。',
+                               'invalid_input': '请填写有效邮箱和至少 10 位密码。'}.get(code, '邮箱或密码不正确。')
+                    await self.reply(send, status, {'error': {'code': code,
+                                      'message': message, 'retry_after': retry}},
                                      [(b'retry-after', str(retry).encode())] if retry else [])
             except (ValueError, TypeError, AdmissionError):
                 await self.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请检查登录信息。'}})
@@ -202,7 +210,7 @@ class EvaluationGateway:
         if not self.auth and not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', user):
             return await self.reply(send, 401, {'error': {'code': 'invalid_account', 'message': '请重新登录。'}})
         if path == '/session' and method == 'GET':
-            return await self.reply(send, 200, {'account': user, **({'csrf_token': csrf_token(token), 'logout': True} if self.auth else {})})
+            return await self.reply(send, 200, {'account': user, **({'login': await asyncio.to_thread(self.auth.login_name, user), 'csrf_token': csrf_token(token), 'logout': True} if self.auth else {})})
         if self.jobs and path.startswith('/jobs') and method == 'GET':
             job = await asyncio.to_thread(self.jobs.active, user) if path == '/jobs/active' else await asyncio.to_thread(self.jobs.public, path.removeprefix('/jobs/'), user)
             if job is None and path != '/jobs/active':

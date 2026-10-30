@@ -60,7 +60,7 @@
   function busy(value, text = null) {
     // Long AI steps show how long they have been waiting instead of a bare spinner.
     if (value && !state.busy) { const started = Date.now(); $('busy-elapsed').textContent = ''; clearInterval(busyTimer); busyTimer = setInterval(() => { const s = Math.round((Date.now() - started) / 1000); $('busy-elapsed').textContent = s >= 3 ? `已等待 ${s} 秒` : ''; }, 1000); }
-    if (!value) { clearInterval(busyTimer); busyTimer = null; $('busy-elapsed').textContent = ''; state.grading = false; }
+    if (!value) { clearInterval(busyTimer); busyTimer = null; $('busy-elapsed').textContent = ''; state.grading = false; window.SkillTreeLive?.clear(); }
     state.busy = value; $('busy-notice').hidden = !value;
     if (text) $('busy-text').textContent = text;
     // Only a submitted quiz shows the full grading screen; write() sets the flag for it.
@@ -764,8 +764,10 @@
   async function followJob(initial) {
     storage.write('active-job', initial.id);
     const started = Date.now(); let job = initial;
+    const live = ['queued','running'].includes(job.state) ? window.SkillTreeLive?.watch(job.id,{renderText:markdown}) : null;
+    try {
     while (['queued', 'running'].includes(job.state)) {
-      $('busy-text').textContent = job.state === 'queued' ? `正在排队 · 等待位置第 ${job.position} 位` : '正在处理你的学习任务，进度会自动保存…';
+      $('busy-text').textContent = job.state === 'queued' ? `正在排队 · 等待位置第 ${job.position} 位` : live?.label || '正在处理你的学习任务，进度会自动保存…';
       if (Date.now() - started > 1200000) throw new Error('任务仍在后台处理，稍后刷新页面可以继续查询。');
       await new Promise(resolve => setTimeout(resolve, 1500));
       const response = await get('/jobs/' + encodeURIComponent(job.id)); job = response.job;
@@ -773,6 +775,7 @@
     storage.remove('active-job');
     if (job.state === 'interrupted') throw Object.assign(new Error('服务更新时任务中断，进度已保留，请核对当前步骤后使用恢复操作。'), { interrupted: true });
     return job;
+    } finally { live?.stop(); }
   }
   async function restoreJob() {
     try {

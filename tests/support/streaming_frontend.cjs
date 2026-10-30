@@ -1,0 +1,41 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs/promises');
+(async()=>{
+ const [baseURL,pid,size,evidence]=process.argv.slice(2),width=Number(size);
+ const browser=await chromium.launch({headless:true,channel:process.env.SKILLTREE_TEST_BROWSER_CHANNEL||'msedge'});
+ const context=await browser.newContext({baseURL,viewport:{width,height:width===390?844:960}});
+ const login=await context.request.post('/auth/login',{headers:{Origin:baseURL,'X-SkillTree-Login':'1'},data:{account:'stream-browser@example.test',password:'test-password-2026'}});
+ assert.equal(login.status(),200);
+ const page=await context.newPage(),errors=[],writes=[];
+ page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.method()==='POST'&&new URL(r.url()).pathname.includes('/projects/'))writes.push(r.url());});
+ await page.goto('/#/p/'+pid+'/learn');
+ await page.getByRole('button',{name:'开始学习',exact:true}).click();
+ const live=page.locator('#live-generation'),text=page.locator('#live-generation-text');
+ await live.waitFor({state:'visible'});const before=(await text.textContent()).length;
+ await page.waitForFunction(n=>document.getElementById('live-generation-text').textContent.length>n+25,before);
+ assert.equal(await live.locator('img').count(),0);assert.equal(await page.evaluate(()=>window.streamInjected),undefined);
+ await page.screenshot({path:evidence+'/live-teaching.png',fullPage:true});
+ // Refresh subscribes to the saved task instead of repeating begin.
+ await page.reload();await live.waitFor({state:'visible'});
+ assert.ok((await text.textContent()).length>=before);
+ await page.locator('#busy-notice').waitFor({state:'hidden',timeout:20000});
+ assert.equal(writes.filter(u=>u.endsWith('/begin')).length,1);
+ assert.equal(await live.isVisible(),false);
+ await page.locator('textarea[name="question"]').fill('请用一个生活中的例子解释。');
+ await page.locator('.composer button[type="submit"]').click();
+ await live.waitFor({state:'visible'});await page.screenshot({path:evidence+'/live-ask.png',fullPage:true});
+ await page.locator('#busy-notice').waitFor({state:'hidden',timeout:20000});
+ let view=await (await context.request.get('/projects/'+pid)).json();assert.equal(view.conversation.length,2);
+ await page.reload();await page.locator('.composer').waitFor();assert.equal(await live.isVisible(),false);
+ assert.equal(await page.evaluate(()=>window.streamInjected),undefined);
+ // EventSource unavailable: the original read-only polling path still works.
+ await page.addInitScript(()=>{window.EventSource=undefined;});await page.reload();
+ await page.locator('textarea[name="question"]').fill('再举一个不同的例子。');await page.locator('.composer button[type="submit"]').click();
+ await page.locator('#busy-notice').waitFor({state:'visible'});await page.locator('#busy-notice').waitFor({state:'hidden',timeout:20000});
+ view=await (await context.request.get('/projects/'+pid)).json();assert.equal(view.conversation.length,3);
+ assert.equal(writes.length,3);assert.deepEqual(errors,[]);
+ await page.screenshot({path:evidence+'/final-teaching.png',fullPage:true});
+ await fs.writeFile(evidence+'/result.json',JSON.stringify({width,writes:writes.length,conversation:view.conversation.length,noScriptErrors:true,reloadNoDuplicate:true,pollFallback:true},null,2));
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1);});

@@ -15,6 +15,7 @@
   <script src="/assets/botanical.js" defer></script>
   <script src="/assets/controls.js" defer></script>
   <script src="/assets/garden.js" defer></script>
+  <script src="/assets/live-progress.js" defer></script>
   <script src="/assets/v3.js" defer></script>
   <link rel="stylesheet" href="/assets/model-settings.css">
   <script src="/assets/model-settings.js" defer></script>
@@ -43,6 +44,10 @@
     <div class="main-inner">
       <div id="message" class="message" role="status" aria-live="polite" hidden></div>
       <div id="busy-notice" class="busy-notice" role="status" aria-live="polite" hidden><svg class="seed thinking-seed" viewBox="0 0 120 120" aria-hidden="true"><path class="ground" d="M14 94 Q60 88 106 94"/><ellipse class="seed-b" cx="60" cy="97" rx="8" ry="5"/><path class="sprout" pathLength="1" d="M60 93 C60 80 57 70 61 52"/><g transform="translate(61 58)"><g class="pop"><path class="lf" d="M0 0 C6 -2 12 -8 13 -15 C6 -14 1 -8 0 0Z"/></g></g><g transform="translate(60 66)"><g class="pop two"><path class="lf" d="M0 0 C-6 -1 -12 -6 -13 -13 C-6 -12 -1 -7 0 0Z"/></g></g></svg><span class="thinking-copy"><span id="busy-text">正在处理，请稍候…</span><span id="busy-elapsed" class="busy-elapsed"></span><span class="thinking-dots" aria-hidden="true"><i></i><i></i><i></i></span></span></div>
+      <section id="live-generation" class="card live-generation" aria-label="正在生成的讲解" hidden>
+        <div class="card-header"><h2>讲解正在展开</h2><span class="muted">生成中…</span></div>
+        <div id="live-generation-text" class="live-generation-text"></div>
+      </section>
       <section id="grading-state" class="grading-state" role="status" hidden>
         <svg class="seed" viewBox="0 0 120 120" aria-hidden="true"><path class="ground" d="M14 94 Q60 88 106 94"/><ellipse class="seed-b" cx="60" cy="97" rx="8" ry="5"/><path class="sprout" pathLength="1" d="M60 93 C60 80 57 70 61 52"/><g transform="translate(61 58)"><g class="pop"><path class="lf" d="M0 0 C6 -2 12 -8 13 -15 C6 -14 1 -8 0 0Z"/></g></g><g transform="translate(60 66)"><g class="pop two"><path class="lf" d="M0 0 C-6 -1 -12 -6 -13 -13 C-6 -12 -1 -7 0 0Z"/></g></g></svg>
         <h1>正在批改你的作答</h1><p class="muted">正在核对作答、阅读文字回答，并判断下一步怎么安排。</p>

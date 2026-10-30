@@ -110,6 +110,8 @@ def run_model_task(paths,project_id,operation_id,key,input_data,result_type,call
         row=dict(row)
     if row['result_json']:return result_type.model_validate(json.loads(row['result_json']))
     if row['status']=='invalid' or row['requests']>=SERVER_LIMITS.max_logical_requests:raise LogicalTaskExhausted('Logical model task has no remaining requests')
+    from app.services.live_progress import phase_for_task
+    phase_for_task(key)
     budget=DurableBudget(paths,project_id,key,operation_id,row)
     tracked=_TrackedModel(llm,budget,row['repair_json'])
     try:result=callback(tracked,budget)

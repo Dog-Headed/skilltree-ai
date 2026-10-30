@@ -50,6 +50,8 @@ class JobStore:
               CREATE INDEX IF NOT EXISTS deployment_queue ON deployment_jobs(state,created);
               CREATE TABLE IF NOT EXISTS deployment_write_ticks(account TEXT NOT NULL,at REAL NOT NULL);
               CREATE INDEX IF NOT EXISTS deployment_write_rate ON deployment_write_ticks(account,at);
+              CREATE TABLE IF NOT EXISTS deployment_job_progress(
+                job_id TEXT PRIMARY KEY,seq INTEGER NOT NULL,payload TEXT NOT NULL);
             ''')
 
     @contextmanager
@@ -127,11 +129,32 @@ class JobStore:
         with self.connect() as conn:
             conn.execute('UPDATE deployment_jobs SET state=?,finished=?,status_code=?,result=?,body=x\'\' WHERE id=? AND state=\'running\'',
                          ('completed' if status < 400 else 'failed', time.time(), status, body, job_id))
+            conn.execute('DELETE FROM deployment_job_progress WHERE job_id=?',(job_id,))
+
+    def publish_progress(self, job_id, account, payload):
+        from app.services.live_progress import STAGES
+        if set(payload)!={'stage','text','generation'} or payload['stage'] not in STAGES:
+            return
+        if not isinstance(payload['text'],str) or len(payload['text'])>8000 or type(payload['generation']) is not int:
+            return
+        if payload['text'] and payload['stage']!='teaching':return
+        with self.connect() as conn:
+            conn.execute('''INSERT INTO deployment_job_progress(job_id,seq,payload)
+                SELECT id,1,? FROM deployment_jobs WHERE id=? AND account=? AND state='running'
+                ON CONFLICT(job_id) DO UPDATE SET seq=seq+1,payload=excluded.payload''',
+                (json.dumps(payload,ensure_ascii=False),job_id,account))
+
+    def public_progress(self, job_id, account):
+        with self.connect() as conn:
+            row=conn.execute('''SELECT p.seq,p.payload FROM deployment_job_progress p JOIN deployment_jobs j ON j.id=p.job_id
+                WHERE j.id=? AND j.account=? AND j.state='running' ''',(job_id,account)).fetchone()
+        return {'seq':row['seq'],**json.loads(row['payload'])} if row else None
 
     def recover(self):
         # Called only by the exclusive worker owner, after the prior process exits.
         with self.connect() as conn:
             conn.execute("UPDATE deployment_jobs SET state='interrupted',finished=?,body=x'' WHERE state='running'", (time.time(),))
+            conn.execute("DELETE FROM deployment_job_progress WHERE job_id NOT IN (SELECT id FROM deployment_jobs WHERE state='running')")
             conn.execute("DELETE FROM deployment_jobs WHERE state NOT IN ('queued','running') AND finished<?", (time.time()-259200,))
 
     def active(self, account):
@@ -256,7 +279,11 @@ class JobRunner:
                  'headers': [(b'host', parsed.netloc.encode()), (b'content-type', b'application/json'),
                              (b'content-length', str(len(job['body'])).encode())]}
         try:
-            await self.application(scope, receive, send)
+            from app.services.live_progress import LiveProgress, reporting
+            reporter=LiveProgress(lambda value:self.store.publish_progress(job['id'],job['account'],value))
+            with reporting(reporter):
+                reporter.flush(True)
+                await self.application(scope, receive, send)
             response = b''.join(chunks)
             json.loads(response)
         except asyncio.CancelledError:

@@ -26,6 +26,8 @@ class StructuredReply:
         self.schema = schema
 
     def invoke(self, messages, *args, **kwargs):
+        from app.services.live_progress import phase_for_schema
+        phase_for_schema(self.schema_name)
         if self.schema_name == 'TextBatchScore':
             from deploy.text_evidence import with_text_evidence
             messages = with_text_evidence(messages)
@@ -47,6 +49,12 @@ class StructuredReply:
                     'previous_question_prompts 是禁止重用的历史题，换题必须设计不同的新题干与比较实例，不要复述历史题。'
                     '原样保留所有项目、节点、测评身份和完整 frozen snapshot，不改变评分标准。')
             messages = [SystemMessage(content=hint), *messages]
+        if self.schema_name in {'TutorReply','TutorContent'}:
+            from app.services.live_progress import tutor_callback
+            callback=tutor_callback()
+            if callback is not None:
+                from langchain_core.runnables.config import merge_configs
+                kwargs['config']=merge_configs(kwargs.get('config'),{'callbacks':[callback]})
         result = self.runnable.invoke(messages, *args, **kwargs)
         raw = result.get('raw')
         content = getattr(raw, 'content', None)
@@ -159,7 +167,7 @@ def create_runtime_model(*, model=None, thinking=None, extra_body_override=None)
         # Aggregate the provider stream into one strictly checked result.
         # Receiving chunks avoids retrying a still-generating preparation
         # merely because its non-streaming HTTP response stayed silent.
-        return client(timeout, streaming=name in {'LearningPlan', 'PlanContent', 'LearningPreparation', 'StudyNotes', 'StudyNotesContent'})
+        return client(timeout, streaming=name in {'LearningPlan', 'PlanContent', 'LearningPreparation', 'StudyNotes', 'StudyNotesContent','TutorReply','TutorContent'})
     # Core injection remains an actual model. Route at the structured schema
     # boundary so its task-specific transports and strict adapters both apply.
     return content_model(StrictProvider(client(seconds), structured_model=structured_model,

@@ -323,6 +323,8 @@ def generate_tutor_reply(*, profile, node, mode: TutorMode, contexts: list, hist
                 prefix += "尚无课程资料可供核验。" if not parsed else "仅在所附资料范围内参考。"
                 prefix += "不构成正式测评通过或依赖解锁。\n\n"
                 reply = TutorReply(text=prefix + reply.text, citations=reply.citations, exploration=True)
+            from app.services.live_progress import validated_tutor
+            validated_tutor(reply.text)
             return reply
         except (ValidationError, ValueError) as exc:
             raise ModelOutputValidationError(f"Tutor输出校验失败：{exc}") from exc
@@ -330,8 +332,10 @@ def generate_tutor_reply(*, profile, node, mode: TutorMode, contexts: list, hist
     started = perf_counter()
     error_type = None
     try:
-        return invoke_with_shared_budget(invoke_fn=invoke_once, validate_fn=validate, budget=budget,
-                                         operation=f"v3_tutor:{TUTOR_PROMPT_VERSION}")
+        from app.services.live_progress import tutor_preview
+        with tutor_preview(validate_public_reply is None and mode in {'normal','qa','exploration'}, has_completion_claim):
+            return invoke_with_shared_budget(invoke_fn=invoke_once, validate_fn=validate, budget=budget,
+                                             operation=f"v3_tutor:{TUTOR_PROMPT_VERSION}")
     except Exception as exc:
         error_type = type(exc).__name__
         raise

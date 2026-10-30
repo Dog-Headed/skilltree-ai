@@ -130,6 +130,9 @@ def invoke_with_shared_budget(
     logical_call_id = uuid4().hex
 
     def record_attempt(started, error_type=None):
+        if error_type:
+            from app.services.live_progress import discard_preview
+            discard_preview()
         log_event(
             "model_attempt", logical_call_id=logical_call_id, operation=operation,
             request_count=budget.request_count, network_retry_count=budget.network_retry_count,

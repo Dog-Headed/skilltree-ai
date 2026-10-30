@@ -38,6 +38,7 @@ class EvaluationGateway:
         self.guest_access = guest_access
         self.jobs = JobStore(self.quota_path, capacity=queue_capacity) if queued else None
         self.runner = JobRunner(self.jobs, application, self.origin) if queued else None
+        self.live_connections = {}
 
     async def reply(self, send, status, value, extra_headers=()):
         body = json.dumps(value, ensure_ascii=False).encode()
@@ -257,6 +258,10 @@ class EvaluationGateway:
             guest = bool(self.auth and await asyncio.to_thread(self.auth.is_guest, user))
             return await self.reply(send, 200, {'account': user, **({'login': await asyncio.to_thread(self.auth.login_name, user), 'csrf_token': csrf_token(token), 'guest': guest, 'logout': not guest} if self.auth else {})})
         if self.jobs and path.startswith('/jobs') and method == 'GET':
+            events=re.fullmatch(r'/jobs/([a-f0-9]{32})/events',path)
+            if events:
+                from .live_events import serve_events
+                return await serve_events(self,scope,receive,send,events[1],user,token)
             job = await asyncio.to_thread(self.jobs.active, user) if path == '/jobs/active' else await asyncio.to_thread(self.jobs.public, path.removeprefix('/jobs/'), user)
             if job is None and path != '/jobs/active':
                 return await self.reply(send, 404, {'error': {'code': 'not_found', 'message': '任务不存在。'}})

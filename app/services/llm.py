@@ -290,14 +290,16 @@ def get_llm(*, timeout=45):
             f"缺少模型配置：{', '.join(missing)}。请在 {ENV_PATH} 中填写对应的环境变量。"
         )
 
-    return ChatOpenAI(
+    from app.v3.model_content import content_model
+    from deploy.provider import StrictProvider
+    return content_model(StrictProvider(ChatOpenAI(
         model=config["LLM_MODEL"],
         api_key=config["LLM_API_KEY"],
         base_url=config["LLM_BASE_URL"],
         temperature=0,
         timeout=timeout,
         max_retries=0,
-    )
+    )))
 
 
 def get_planning_llm():

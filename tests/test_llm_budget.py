@@ -238,7 +238,7 @@ def test_get_llm_disables_hidden_retries_and_sets_request_timeout(monkeypatch):
     monkeypatch.setattr("app.services.llm.ChatOpenAI", fake_chat_openai)
 
     # 调用导入时保留的原函数，构造器使用替身，不访问真实模型。
-    assert get_llm() is model
+    assert get_llm().model.model is model
     assert captured == {
         "model": "test-model", "api_key": "test-key",
         "base_url": "https://example.invalid/v1", "temperature": 0,

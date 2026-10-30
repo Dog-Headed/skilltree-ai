@@ -22,13 +22,14 @@ from .jobs import AdmissionError, JobStore, JobRunner
 class EvaluationGateway:
     def __init__(self, application, paths, quota_path, *, auth_store=None, queued=False,
                  origin='https://skilltree.goutouren.work', cookie_secure=True, queue_capacity=10, cookie_name=None,
-                 guest_access=True):
+                 guest_access=True, model_settings=None):
         self.application = application
         self.paths = paths
         self.quota_path = Path(quota_path).resolve()
         self.ownership = Ownership(self.quota_path)
         self.active_writes = 0
         self.auth = auth_store
+        self.model_settings = model_settings
         self.origin = origin.rstrip('/')
         self.cookie_secure = cookie_secure
         self.cookie_name = cookie_name or ('__Host-skilltree_session' if cookie_secure else 'skilltree_session')
@@ -237,6 +238,21 @@ class EvaluationGateway:
                     await original_send(message)
         if not self.auth and not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', user):
             return await self.reply(send, 401, {'error': {'code': 'invalid_account', 'message': '请重新登录。'}})
+        scope['skilltree_account'] = user
+        if path == '/model-settings' and self.model_settings:
+            if method not in {'GET', 'POST'}:
+                return await self.reply(send, 405, {'error': {'code': 'method_not_allowed', 'message': '请使用模型设置窗口。'}})
+            try:
+                if method == 'GET':
+                    value = await asyncio.to_thread(self.model_settings.public, user)
+                else:
+                    payload = json.loads(await self.body(receive, 4096))
+                    value = await asyncio.to_thread(self.model_settings.update, user, payload)
+                return await self.reply(send, 200, value)
+            except AdmissionError as exc:
+                return await self.reply(send, exc.status, {'error': {'code': exc.code, 'message': exc.message}})
+            except (ValueError, TypeError):
+                return await self.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请检查模型设置。'}})
         if path == '/session' and method == 'GET':
             guest = bool(self.auth and await asyncio.to_thread(self.auth.is_guest, user))
             return await self.reply(send, 200, {'account': user, **({'login': await asyncio.to_thread(self.auth.login_name, user), 'csrf_token': csrf_token(token), 'guest': guest, 'logout': not guest} if self.auth else {})})
@@ -251,7 +267,7 @@ class EvaluationGateway:
                     conn.execute('SELECT 1 FROM runtime_metadata LIMIT 1').fetchone()
                 if not self.paths.checkpoints.is_file() or not (self.paths.root / 'learning-checkpoints.sqlite').is_file():
                     raise RuntimeError('missing checkpoint store')
-                return await self.reply(send, 200, {'status': 'ok', 'version': os.environ.get('SKILLTREE_COMMIT', 'unknown')})
+                return await self.reply(send, 200, {'status': 'ok', 'version': os.environ.get('SKILLTREE_COMMIT', 'unknown'), 'overlay': os.environ.get('SKILLTREE_SERVER_OVERLAY', '')})
             except Exception:
                 return await self.reply(send, 503, {'status': 'unhealthy'})
         allowed = path in {'/', '/login', '/capabilities'} or path.startswith('/assets/') or path == '/projects' or path.startswith('/projects/') or path == '/material-packs' or path.startswith('/material-packs/')
@@ -323,14 +339,14 @@ class EvaluationGateway:
 
 
 def create_app():
+    from .model_settings import AccountModel, ModelSettings, ModelScopedApplication
     paths = V3Paths(Path(os.environ.get('SKILLTREE_DATA_ROOT', 'data/v3')))
-    # Intern-S2 may reason for up to 120 seconds before returning non-streaming
-    # JSON. Configure transport here; retain business budgets and deep thinking.
-    # LearningService expects an actual model instance; its own provider method
-    # already supplies lazy access to durable model tasks.
-    return EvaluationGateway(create_learning_app(paths, llm=create_runtime_model(),
+    quota = os.environ.get('SKILLTREE_QUOTA_DB', 'data/deployment-quota.sqlite')
+    settings = ModelSettings(quota, os.environ.get('SKILLTREE_MODEL_KEY_FILE', 'data/model-settings.key'))
+    application = create_learning_app(paths, llm=AccountModel(),
         quiz_generation_mode=os.getenv('SKILLTREE_QUIZ_GENERATION', 'legacy'),
-        preparation_generation_mode=os.getenv('SKILLTREE_PREPARATION_GENERATION', 'legacy')), paths,
-        os.environ.get('SKILLTREE_QUOTA_DB', 'data/deployment-quota.sqlite'),
+        preparation_generation_mode=os.getenv('SKILLTREE_PREPARATION_GENERATION', 'legacy'))
+    return EvaluationGateway(ModelScopedApplication(application, settings), paths, quota,
+        model_settings=settings,
         auth_store=AuthStore(os.getenv('SKILLTREE_AUTH_DB', 'data/auth.sqlite')), queued=True,
         origin=os.getenv('SKILLTREE_PUBLIC_ORIGIN', 'https://skilltree.goutouren.work'))

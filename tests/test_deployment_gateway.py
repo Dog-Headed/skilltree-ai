@@ -54,19 +54,20 @@ def test_model_timeout_reaches_underlying_transport(monkeypatch,tmp_path):
     monkeypatch.setenv('SKILLTREE_MODEL_TIMEOUT','150')
     from langchain_openai import ChatOpenAI
     from deploy import asgi
+    from deploy.provider import create_runtime_model
     import app.services.llm
 
     monkeypatch.setattr(app.services.llm, 'get_llm', lambda: ChatOpenAI(
         model='unit-test-model', api_key='unit-test-placeholder',
         base_url='http://127.0.0.1:1/v1', timeout=45, max_retries=0))
     monkeypatch.setattr(asgi, 'create_learning_app', lambda paths, llm, **options: llm)
-    model = asgi.create_app().application
+    model = create_runtime_model()
     assert hasattr(model, 'invoke') and hasattr(model, 'with_structured_output')
     assert model.root_client.timeout == 150
     assert model.root_client.max_retries == 0
     assert model.extra_body is None
     monkeypatch.setenv('SKILLTREE_THINKING_MODE', 'false')
-    model = asgi.create_app().application
+    model = create_runtime_model()
     assert model.extra_body == {'thinking_mode': False}
 
 
@@ -76,6 +77,7 @@ def test_production_injection_uses_task_timeouts_and_keeps_strict_provider(monke
     from types import SimpleNamespace
     from langchain_openai import ChatOpenAI
     from deploy import asgi
+    from deploy.provider import create_runtime_model
     from deploy.provider import StructuredReply
     from app.v3.contracts import AssessmentQuiz, LearningPlan
     from app.v3.evaluators import TextBatchScore
@@ -96,7 +98,7 @@ def test_production_injection_uses_task_timeouts_and_keeps_strict_provider(monke
         return SimpleNamespace(model=self)
     monkeypatch.setattr(ChatOpenAI, 'with_structured_output', bind)
     monkeypatch.setattr(ChatOpenAI, 'bind_tools', lambda self, *a, **kw: self)
-    provider = asgi.create_app().application
+    provider = create_runtime_model().model
     for schema, seconds in [(TextBatchScore,180),(AssessmentQuiz,120),(DiagnosisDecision,120),(TutorReply,45),
                             (LearningPlan,120),(LearningPreparation,120),(StudyNotes,120),(StudyNotesContent,120)]:
         bound = provider.with_structured_output(schema, method='json_mode')

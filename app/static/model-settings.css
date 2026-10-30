@@ -1,0 +1,14 @@
+.model-settings-button{width:100%;flex-shrink:0;justify-content:flex-start;border:1px solid var(--line);background:var(--raised);color:var(--text);font-size:12px;margin-top:12px;text-align:left;overflow-wrap:anywhere}
+.model-settings-dialog{width:min(540px,calc(100% - 28px));border-color:var(--line)}
+.model-settings-dialog form{display:flex;flex-direction:column;gap:18px}
+.model-settings-dialog .field{gap:8px}
+.model-settings-dialog select,.model-settings-dialog input[type=password]{width:100%;min-height:46px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit}
+.model-settings-dialog select:focus-visible,.model-settings-dialog input:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+.model-settings-dialog .model-settings-note{font-size:12px;line-height:1.8;color:var(--muted);margin:0 0 16px}
+.model-settings-dialog form .model-settings-note{margin:0}
+.model-settings-status{font-size:13px;line-height:1.7;color:var(--leaf-deep);margin:0;min-height:22px;overflow-wrap:anywhere}
+.model-settings-dialog .actions{margin:0;justify-content:flex-end}
+.model-settings-dialog .check-label{font-size:12px;color:var(--muted)}
+.model-settings-dialog [hidden]{display:none!important}
+.model-settings-dialog .modal-head .icon-button{min-width:44px;min-height:44px}
+@media(max-width:450px){.model-settings-dialog{padding:20px}.model-settings-dialog .actions .btn{width:100%}.model-settings-dialog form{gap:16px}}

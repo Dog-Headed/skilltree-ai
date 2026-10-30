@@ -68,7 +68,7 @@ advance、remediate、collect_more_evidence的review_node_id必须是JSON null�
 若缺乏已查询的同源前置错答证据，无法区分当前与前置归因时优先当前remediate，
 不能仅凭先修名称、completed或no_history把当前错误归因于先修。
 reason若提及证据ID必须逐字使用allowed_evidence_ids中的值，不能改前缀；也可不用ID而用自然语言解释。
-project_id、node_id、assessment_id和snapshot须逐字复制本轮输入，不得推断、缩写或改动任一字符。
+固定身份及冻结快照由服务端绑定，不能改变本轮任务的归属与标准。
 最终JSON只含output_schema定义的字段；type/json_object是请求格式配置，不是诊断输出字段，不得加入。
 按frozen_questions中的实际题面与量规描述解释criterion_id，不得凭分项序号猜测含义或添加隐形要求。
 查询最多两轮、执行最多三次；明确需要多个查询时尽量同一轮申请，保留最终输出额度。
@@ -370,7 +370,7 @@ def diagnose(*, quiz, evaluation, node, policy, history, completed_node_ids, llm
         if repair:
             messages.append(HumanMessage(content="诊断输出校验失败：" + repair.error_message +
                 "。本轮必须逐字复制的身份：" + json.dumps(identity, ensure_ascii=False) +
-                "。snapshot逐字复制原输入；只返回output_schema定义的诊断字段，不能添加type等格式配置。仅使用允许证据，返回完整修正版JSON。"))
+                "。只返回本轮实际输出schema定义的诊断字段，不能添加type等格式配置。固定身份和冻结信息由服务端绑定时不能输出。仅使用允许证据，返回完整修正版JSON。"))
         if sum(len(str(item.content)) for item in messages) > SERVER_LIMITS.max_context_characters:
             raise ValueError("诊断最终上下文超过服务端上限")
         try:

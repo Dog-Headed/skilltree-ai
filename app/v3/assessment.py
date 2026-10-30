@@ -2,7 +2,6 @@
 from decimal import Decimal
 from hashlib import sha256
 import json
-import re
 from typing import Literal
 
 from langchain_core.exceptions import OutputParserException
@@ -13,6 +12,7 @@ from app.services.llm import ModelOutputValidationError, get_llm, invoke_with_sh
 from app.v3.capabilities import require_evaluator, validate_policy
 from app.v3.config import SERVER_LIMITS
 from app.v3.materials import ContextBudgetExceeded
+from app.v3.question_novelty import prompt_fingerprint as _fingerprint
 from app.v3.contracts import (
     AssessmentQuiz, EvaluationResult, FrozenSnapshot, ObjectiveResult,
     SkillNode, AssessmentQuestion, RubricCriterion, SourceCitation, validate_evaluation_context,
@@ -100,10 +100,6 @@ def _standards(node, snapshot, policy):
     if not {objective.objective_id for objective in node.objectives} <= rules.keys():
         raise ValueError("Frozen policy does not cover this node")
     return node, snapshot, policy
-
-
-def _fingerprint(prompt):
-    return re.sub(r"[\W_]+", "", prompt.casefold())
 
 
 def validate_quiz(quiz, *, node, policy, contexts, previous_question_prompts=()):
@@ -195,9 +191,9 @@ def quiz_generation_messages(*, project_id, node, assessment_id, snapshot, polic
             '选择题options是字符串数组；correct_option/correct_options为从1开始的选项序号。先核对题干、选项与正确答案一致。'
             '每个slot只输出其output_fields列出的字段。文字题只含prompt、source_refs、reference_answer、rubric，文字题顶层禁止max_score。'
             '文字题reference_answer非空；rubric必须逐项填写预定义r1/r2等槽位，不增加criterion_id。max_score只能放在rubric.r1等评分项内部，总分由程序求和；多个检查点合在本项说明中。'
-            '数值题只要求一个数值；numeric_rules只输出expected和unit两个字段。单位仅使用supported_numeric_units。'
+            '数值题只要求一个数值；numeric_rules按本轮实际schema提供期望值和单位选择，单位只能来自给定选项。'
             'allowed_units、abs_tolerance、rel_tolerance禁止输出，单位白名单由程序按标准单位生成，容差直接沿用冻结策略。'
-            '元、股等不支持的单位在题干中说明并要求只填数值，numeric_rules.unit=null。'
+            '元、股等不支持的单位在题干中说明并要求只填数值，选择无机器单位。'
             '题干、数值期望、单位、百分数与舍入要求必须一致。不要照抄本卷或历史题，不得通过只改标点来换题。'
             '只填写相应题型的字段；身份、版本、评价器和题目ID由服务端负责。')),
             HumanMessage(content='出题内容与槽位：\n'+encode(content_payload(contract,node,policy,bound,previous_question_prompts)))]

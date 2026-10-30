@@ -65,7 +65,7 @@ class StructuredReply:
                         if key in value:raise _DuplicateContentField(key)
                         value[key]=item
                     return value
-                json.loads(text,object_pairs_hook=unique_members if self.schema_name in {'QuizContent','StudyNotesContent'} else None)
+                json.loads(text,object_pairs_hook=unique_members)
             except json.JSONDecodeError as exc:
                 raise OutputParserException(compact_parse_error(exc)) from exc
             except ValueError as exc:
@@ -75,7 +75,7 @@ class StructuredReply:
             raise OutputParserException(compact_parse_error(error)) from error
         if result.get('parsed') is None:
             raise OutputParserException('A complete schema-valid JSON object is required.')
-        if self.schema_name == 'LearningPlan':
+        if self.schema_name in {'LearningPlan', 'PlanContent'}:
             for ni, node in enumerate(result['parsed'].nodes):
                 for oi, objective in enumerate(node.objectives):
                     if 'text_rubric' not in objective.required_capability_ids and objective.criterion_ids:
@@ -116,17 +116,18 @@ class StrictProvider:
         return model.bind_tools(*args, **kwargs)
 
 
-def create_runtime_model():
+def create_runtime_model(*, model=None, thinking=None, extra_body_override=None):
     from langchain_openai import ChatOpenAI
     from app.services.llm import get_llm, TASK_TIMEOUTS
-    model = get_llm()
+    from app.v3.model_content import content_model
+    model = model if model is not None else get_llm()
     seconds = float(os.environ.get('SKILLTREE_MODEL_TIMEOUT', '150'))
     if not 45 <= seconds <= 180:
         raise ValueError('Deployment model timeout must be 45..180 seconds')
-    thinking = os.environ.get('SKILLTREE_THINKING_MODE', 'auto').lower()
+    thinking = thinking if thinking is not None else os.environ.get('SKILLTREE_THINKING_MODE', 'auto').lower()
     if thinking not in {'auto', 'true', 'false'}:
         raise ValueError('Thinking mode must be auto, true, or false')
-    extra_body = None if thinking == 'auto' else {'thinking_mode': thinking == 'true'}
+    extra_body = extra_body_override if extra_body_override is not None else (None if thinking == 'auto' else {'thinking_mode': thinking == 'true'})
     # Construct the SDK client with the timeout. Changing a Pydantic field
     # on an already-built model leaves its underlying HTTP client unchanged.
     clients = {}
@@ -135,19 +136,20 @@ def create_runtime_model():
         if key not in clients:
             clients[key] = ChatOpenAI(model=model.model_name, api_key=model.openai_api_key,
                 base_url=model.openai_api_base, temperature=model.temperature,
-                timeout=timeout, max_retries=0, extra_body=extra_body, streaming=streaming)
+                timeout=timeout, max_retries=0, extra_body=extra_body, streaming=streaming,
+                max_tokens=model.max_tokens)
         return clients[key]
     def structured_model(schema):
         name = getattr(schema, '__name__', '')
-        kind = {'TextBatchScore': 'grade', 'AssessmentQuiz': 'quiz', 'QuizContent': 'quiz',
-                'DiagnosisDecision': 'diagnosis', 'TutorReply': 'tutor'}.get(name)
+        kind = {'TextBatchScore': 'grade', 'TextGradeContent': 'grade', 'AssessmentQuiz': 'quiz', 'QuizContent': 'quiz', 'QuizContentWire': 'quiz',
+                'DiagnosisDecision': 'diagnosis', 'DiagnosisContent': 'diagnosis', 'TutorReply': 'tutor', 'TutorContent': 'tutor'}.get(name)
         timeout = TASK_TIMEOUTS.get(kind, 45) if kind else 120 if name in {
-            'LearningPlan', 'LearningPreparation', 'StudyNotes', 'StudyNotesContent'} else seconds
+            'LearningPlan', 'PlanContent', 'LearningPreparation', 'StudyNotes', 'StudyNotesContent'} else seconds
         # Aggregate the provider stream into one strictly checked result.
         # Receiving chunks avoids retrying a still-generating preparation
         # merely because its non-streaming HTTP response stayed silent.
-        return client(timeout, streaming=name in {'LearningPlan', 'LearningPreparation', 'StudyNotes', 'StudyNotesContent'})
+        return client(timeout, streaming=name in {'LearningPlan', 'PlanContent', 'LearningPreparation', 'StudyNotes', 'StudyNotesContent'})
     # Core injection remains an actual model. Route at the structured schema
     # boundary so its task-specific transports and strict adapters both apply.
-    return StrictProvider(client(seconds), structured_model=structured_model,
-                          tools_model=lambda: client(TASK_TIMEOUTS['diagnosis']))
+    return content_model(StrictProvider(client(seconds), structured_model=structured_model,
+                          tools_model=lambda: client(TASK_TIMEOUTS['diagnosis'])))

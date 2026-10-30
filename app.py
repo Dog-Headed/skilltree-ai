@@ -20,7 +20,16 @@ def load_application():
     from app.v3.learning_api import create_learning_app
 
     options={}
-    if os.getenv('SKILLTREE_LOCAL_RUNTIME')=='production':
+    local_auth = os.getenv('SKILLTREE_LOCAL_AUTH', '0') == '1'
+    if local_auth:
+        from app.v3.storage import V3Paths
+        from deploy.model_settings import AccountModel, ModelSettings, ModelScopedApplication, ensure_local_key_file
+        paths = V3Paths()
+        quota = os.getenv('SKILLTREE_LOCAL_QUOTA_DB', str(paths.root.parent/'local-quota.sqlite'))
+        key = ensure_local_key_file(os.getenv('SKILLTREE_LOCAL_MODEL_KEY_FILE', str(paths.root.parent/'local-model-settings.key')))
+        settings = ModelSettings(quota, key)
+        options['llm'] = AccountModel()
+    elif os.getenv('SKILLTREE_LOCAL_RUNTIME')=='production':
         from deploy.provider import create_runtime_model
         options['llm']=create_runtime_model()
     mode=os.getenv('SKILLTREE_QUIZ_GENERATION','legacy')
@@ -28,12 +37,11 @@ def load_application():
     preparation_mode=os.getenv('SKILLTREE_PREPARATION_GENERATION','legacy')
     if preparation_mode!='legacy':options['preparation_generation_mode']=preparation_mode
     application=create_learning_app(**options)
-    if os.getenv('SKILLTREE_LOCAL_AUTH','0')=='1':
+    if local_auth:
         from deploy.asgi import EvaluationGateway
         from deploy.auth import AuthStore
         from app.v3.storage import V3Paths
-        paths=V3Paths()
-        application=EvaluationGateway(application,paths,os.getenv('SKILLTREE_LOCAL_QUOTA_DB',str(paths.root.parent/'local-quota.sqlite')),
+        application=EvaluationGateway(ModelScopedApplication(application, settings),paths,quota,model_settings=settings,
             auth_store=AuthStore(os.getenv('SKILLTREE_LOCAL_AUTH_DB',str(paths.root.parent/'local-auth.sqlite'))),
             queued=True,origin='http://127.0.0.1:8765',cookie_secure=False,cookie_name='skilltree_local_session')
     return application

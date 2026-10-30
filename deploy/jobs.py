@@ -250,6 +250,8 @@ class JobRunner:
         scope = {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1',
                  'method': job['method'], 'scheme': parsed.scheme, 'path': job['path'], 'raw_path': job['path'].encode(),
                  'root_path': '', 'query_string': b'', 'client': ('127.0.0.1', 0),
+                 'skilltree_account': job['account'],
+                 'skilltree_job_id': job['id'],
                  'server': (parsed.hostname, parsed.port or (443 if parsed.scheme == 'https' else 80)),
                  'headers': [(b'host', parsed.netloc.encode()), (b'content-type', b'application/json'),
                              (b'content-length', str(len(job['body'])).encode())]}

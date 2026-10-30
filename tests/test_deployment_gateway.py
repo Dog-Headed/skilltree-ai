@@ -87,6 +87,8 @@ def test_production_injection_uses_task_timeouts_and_keeps_strict_provider(monke
     from app.v3.preparation_content import notes_contract
     from tests.test_v3_preparation_content import notes_payload
     StudyNotesContent=notes_contract(notes_payload())[0]
+    from app.v3.model_content import _tutor
+    TutorContent=_tutor({'teaching_contexts':[],'exploration':True}).schema
     import app.services.llm
     monkeypatch.setattr(app.services.llm, 'get_llm', lambda: ChatOpenAI(
         model='unit-test-model', api_key='unit-test-placeholder',
@@ -99,13 +101,13 @@ def test_production_injection_uses_task_timeouts_and_keeps_strict_provider(monke
     monkeypatch.setattr(ChatOpenAI, 'with_structured_output', bind)
     monkeypatch.setattr(ChatOpenAI, 'bind_tools', lambda self, *a, **kw: self)
     provider = create_runtime_model().model
-    for schema, seconds in [(TextBatchScore,180),(AssessmentQuiz,120),(DiagnosisDecision,120),(TutorReply,45),
+    for schema, seconds in [(TextBatchScore,180),(AssessmentQuiz,120),(DiagnosisDecision,120),(TutorReply,45),(TutorContent,45),
                             (LearningPlan,120),(LearningPreparation,120),(StudyNotes,120),(StudyNotesContent,120)]:
         bound = provider.with_structured_output(schema, method='json_mode')
         assert isinstance(bound, StructuredReply) and bound.schema_name == schema.__name__
         assert bound.runnable.model.root_client.timeout == seconds
         assert bound.runnable.model.root_client.max_retries == 0
         assert bound.runnable.model.extra_body == {'thinking_mode': False}
-        assert bound.runnable.model.streaming is (schema in {LearningPlan, LearningPreparation, StudyNotes,StudyNotesContent})
+        assert bound.runnable.model.streaming is (schema in {LearningPlan, LearningPreparation, StudyNotes,StudyNotesContent,TutorReply,TutorContent})
     assert provider.bind_tools([]).root_client.timeout == 120
     assert provider.bind_tools([]).streaming is False

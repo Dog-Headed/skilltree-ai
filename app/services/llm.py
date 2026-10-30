@@ -41,8 +41,16 @@ def compact_parse_error(error):
                 {'field': '.'.join(map(str, issue['loc'])), 'type': issue['type'], 'message': issue['msg'][:180]}
                 for issue in issues[:12]], 'instruction': 'Return the complete corrected JSON. Preserve all supplied identities and frozen values.'}, ensure_ascii=False)
         if isinstance(current, json.JSONDecodeError):
-            return json.dumps({'json_error': current.msg, 'line': current.lineno, 'column': current.colno,
-                               'instruction': 'Return complete valid JSON with correctly escaped string values and no surrounding commentary.'})
+            detail = {'json_error': current.msg, 'line': current.lineno, 'column': current.colno,
+                      'instruction': 'Return complete valid JSON with correctly escaped string values and no surrounding commentary.'}
+            if current.msg == 'Invalid \\escape' and current.doc[current.pos:current.pos + 1] == '\\':
+                # Only the two-character escape token, never the completion or
+                # nearby learner content. A position alone cannot guide repair.
+                detail['invalid_escape'] = current.doc[current.pos:current.pos + 2]
+                detail['instruction'] = (r'A literal backslash in a JSON string must be doubled; '
+                    r'for example, the C token \0 is written "\\0" in JSON. '
+                    'Preserve the intended content and return one complete valid JSON object.')
+            return json.dumps(detail)
         current = current.__cause__
     return 'Structured JSON did not match the supplied schema. Return one complete JSON object, preserving the supplied identities and frozen values.'
 

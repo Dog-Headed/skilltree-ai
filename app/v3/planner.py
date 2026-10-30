@@ -29,7 +29,9 @@ from app.v3.contracts import (
 )
 
 
-PLANNER_PROMPT_VERSION = "v3-garden-planner-7"
+from .planning_contract import OBSERVABLE as _OBSERVABLE, assessment_contract, validate_objective_tasks
+
+PLANNER_PROMPT_VERSION = "v3-garden-planner-9"
 _EVIDENCE_CAPABILITIES = {
     "choice": "choice_exact", "numeric_result": "numeric_scalar", "text_excerpt": "text_rubric",
 }
@@ -40,12 +42,7 @@ _STOP_WORDS = {
     "学习", "资料", "概念", "理解", "掌握", "解释", "说明", "选择", "识别", "正确", "错误",
     "能够", "可以", "一个", "给出", "描述", "完成", "规则", "内容", "示例", "例子", "目标",
 }
-_OBSERVABLE = re.compile(
-    r"选择|选出|辨认|辨识|识别|指出|比较|解释|说明|列出|写出|改写|求解|计算|验证|判断|区分|匹配|完成|描述|归纳|"
-    r"排序|复述|分析|概括|构造|应用|找出|给出|标出|设计|推断|回答|转换|填|画|"
-    r"\b(?:choose|select|identify|recognize|explain|list|write|rewrite|solve|calculate|verify|compare|distinguish|"
-    r"match|describe|summarize|classify|predict|trace|apply|demonstrate|evaluate)\b", re.IGNORECASE,
-)
+
 
 
 class PlannerMaterial(ContractModel):
@@ -160,6 +157,7 @@ def validate_learnability(
         raise ValueError("评价策略目标身份必须与候选计划完全一致")
     if not any(objective.required for objective in objectives):
         raise ValueError("正式计划至少需要一个必要目标")
+    validate_objective_tasks([node.model_dump() for node in plan.nodes], profile.requested_capabilities)
     used_evaluation_capabilities: set[str] = set()
     for node in plan.nodes:
         if len(node.objectives) > SERVER_LIMITS.max_objectives_per_node:
@@ -167,8 +165,6 @@ def validate_learnability(
         if rules and sum(rules[objective.objective_id].min_items for objective in node.objectives if objective.required) > SERVER_LIMITS.max_questions_per_assessment:
             raise ValueError("节点必要目标覆盖无法容纳在服务端单卷题数上限内")
         for objective in node.objectives:
-            if not _OBSERVABLE.search(objective.observable_outcome):
-                raise ValueError(f"目标 {objective.objective_id} 只有笼统学习描述，缺少可观察行为")
             required = set(objective.required_capability_ids)
             if not required <= requested:
                 raise ValueError(f"目标 {objective.objective_id} 超出学习档案请求的能力范围")
@@ -239,6 +235,7 @@ def build_planner_messages(
             "default_nodes": [SERVER_LIMITS.default_min_nodes, SERVER_LIMITS.default_max_nodes],
             "time_budget_minutes": profile.time_budget_minutes,
         },
+        "assessment_contract": assessment_contract(profile.requested_capabilities),
         "planning_guidance": {
             "preferred_minutes_per_node": min(profile.session_minutes * 2, per_node),
             "suggested_max_minutes_per_node": per_node,
@@ -257,9 +254,10 @@ def build_planner_messages(
             "节点预计总分钟数不得超过项目预算。目标写明可观察行为及具体内容，不能只有掌握、理解。"
             "不用填满总预算；参考planning_guidance按每节一至三次session分配分钟数，最后逐项相加核对总量。"
             "默认每节点一个可观察目标，确需独立证据时可增加，最多五个；全树仍须覆盖全部请求能力和主要知识分支。"
-            "node_id用n1、n2等短身份，objective_id用o1、o2等全树唯一短身份；不要输出schema或重复资料正文。"
+            "以本轮输出协议为准：若需要填写身份，node_id用n1、n2，objective_id用全树唯一短身份；程序负责的字段无需输出。不要输出schema或重复资料正文。"
             "title简短，description一句话，observable_outcome只写具体可检查任务；有默认值且语义相同的可选字段可省略。"
-            "observable_outcome用明确可检查的动词，例如选出、辨认、指出、解释、说明、写出、计算、分析，并写明具体考查内容。"
+            "observable_outcome须遵守assessment_contract：具体写出给定材料、要求提交的答案或文字产物以及知识规则。"
+            "真实操作可作为自愿练习，正式目标不能声称已验证其实际完成；例如改为选出正确命令、解释给定输出或编写供文字量规检查的代码。"
             "选择题目标可写成‘从给定选项中选出/辨认具体规则或结果’，不要写成笼统知识点名称。"
             "固定身份及版本由服务端绑定；依赖只引用本计划节点，无自依赖、无环。"
             "prerequisite_ids只填掌握该节点所必需的直接前置，不是课程展示顺序，不要默认每节点依赖上一节点或所有早先节点。"
@@ -267,7 +265,7 @@ def build_planner_messages(
             "先分析知识关系再选边，不为增加交错、分叉数量或装饰树形而添加依赖，不用多余的传递依赖凑边。"
             "每目标仅使用请求且正式可用的评价能力，证据形式必须匹配策略评价器。"
             "required_capability_ids只能从allowed_objective_capability_ids逐字选取；全局存在的其他能力不代表本项目已经请求。"
-            "例如仅允许text_rubric时，所有目标仅使用text_rubric和text_excerpt，不得加入choice_exact、numeric_scalar或教学能力。"
+            "例如仅允许text_rubric时，所有目标只选该评价能力；证据类型若由本轮内容协议规定程序生成，不能重复输出。"
             "criterion_ids只用于text_rubric；纯choice_exact或numeric_scalar目标必须为空数组[]，不能编造量规标准。"
             "每目标引用目录内真实教学chunk_id，正文须与该目标相关，不引用私有答案或假造资料。"
             "本次目录的s1等短片段ID是服务端提供的有效引用，服务端会恢复正式身份；它们不是节点序号，必须按正文内容挑选。"
@@ -364,7 +362,7 @@ def generate_plan(
                 raise ValueError("候选计划 project_id/draft_revision/plan_version 与请求不一致")
             return validate_learnability(candidate, profile, [item.model_dump() for item in catalog], policy, capability_checker=checker)
         except (ValidationError, ValueError) as exc:
-            detail = compact_parse_error(exc) if isinstance(exc, ValidationError) else str(exc)
+            detail = compact_parse_error(exc) if isinstance(exc, ValidationError) or hasattr(exc, "errors") else str(exc)
             for short, real in aliases.items():detail = detail.replace(real, short)
             raise ModelOutputValidationError("V3 Planner 输出校验失败："+detail) from exc
 

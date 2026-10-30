@@ -128,11 +128,15 @@ def _structured(model, budget, schema, payload, instruction, *, validator=None, 
 
 def infer_scope(model,budget,payload,*,generation_mode='legacy'):
     from .preparation_content import GENERATION_MODES, scope_payload
+    from .planning_contract import assessment_contract
     if generation_mode not in GENERATION_MODES:raise ValueError('Unknown preparation generation contract')
+    payload = {**payload, 'assessment_contract': assessment_contract(payload.get('available_evaluators', ['choice_exact','numeric_scalar','text_rubric']))}
     def validate(result):
         if not all(v.strip() for v in (result.subject_label,result.topic,result.bounded_goal,result.explanation)):
             raise ValueError('学科、主题、范围及说明不得为空白')
         if len(result.evaluation_capabilities)!=len(set(result.evaluation_capabilities)):raise ValueError('评价能力不能重复')
+        if result.basis in {'general_knowledge','provided_material'} and not set(result.evaluation_capabilities)<=set(payload.get('available_evaluators',['choice_exact','numeric_scalar','text_rubric'])):
+            raise ValueError('evaluation_capabilities只能选择本次available_evaluators，不能扩展当前评价能力。')
         if any(not s.strip() for s in result.scope_in+result.scope_out):raise ValueError('范围不得包含空白项')
         if payload['user_material_catalog'] and result.basis=='general_knowledge':raise ValueError('已有上传资料时须围绕资料判断，不得改用无资料通识路线')
         if not payload['user_material_catalog'] and result.basis=='provided_material':raise ValueError('不能声称存在未提供的资料')
@@ -149,6 +153,7 @@ def infer_scope(model,budget,payload,*,generation_mode='legacy'):
         '已有用户教学资料时以真实内容限定范围；不能补造公司政策、制度条款、材料缺失的专用事实。'
         '只有通用文字知识可选general_knowledge；依赖指定文件却缺失或资料不相关时选requires_material并解释缺什么。'
         '大目标包含无法验证的实践时，保留有意义的文字或理论学习路线，在scope_out和说明中标出无法验证的实践，不冒称已完成整个大目标。'
+        '遵守assessment_contract，区分讲解操作步骤与认证实际操作：编程可学习代码阅读、命令含义及文字代码作答，不承诺系统执行或验证真实运行。'
         '若本课必须实际验证听说、实验、代码执行等尚未支持能力，选unsupported，说明当前边界。'
         '根据具体目标挑选已实现评价能力，解释步骤选text_rubric；不要默认要求所有题型。')
     if generation_mode=='content-v1':

@@ -177,7 +177,12 @@ def test_tutor_cannot_forge_modes_or_sources(extra):
 
 def test_plan_binds_versions_and_preserves_original_dag_and_source_validation():
     value = planner_case.plan()
-    model = Wire({'nodes': value['nodes']})
+    wire_nodes = deepcopy(value['nodes'])
+    for n in wire_nodes:
+        n.pop('node_id')
+        for o in n['objectives']:
+            o.pop('evidence_requirement');o.pop('objective_id')
+    model = Wire({'nodes': wire_nodes})
     result = planner_case.generate(ContentModel(model))
     assert result.project_id == value['project_id'] and result.plan_version == LearningPlan.model_validate(value).plan_version
     assert set(model.calls[0][0].model_fields) == {'nodes'}

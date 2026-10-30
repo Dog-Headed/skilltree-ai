@@ -32,6 +32,7 @@ def scope_payload(payload):
                 {k: item[k] for k in ('title', 'heading', 'content', 'source_description', 'trust_note') if k in item}
                 for item in payload['user_material_catalog']],
             'available_evaluators': payload.get('available_evaluators', ['choice_exact', 'numeric_scalar', 'text_rubric']),
+            'assessment_contract': payload.get('assessment_contract', {}),
             **({'prompt_version':payload['prompt_version']} if 'prompt_version' in payload else {})}
 
 

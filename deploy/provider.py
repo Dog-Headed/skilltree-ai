@@ -5,6 +5,8 @@ import re
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import SystemMessage
 from app.services.llm import compact_parse_error
+from app.services.json_syntax import complete_json
+from app.services.observability import log_event
 
 
 class _DuplicateContentField(ValueError):
@@ -18,9 +20,10 @@ class _DuplicateContentField(ValueError):
 
 
 class StructuredReply:
-    def __init__(self, runnable, schema_name=None):
+    def __init__(self, runnable, schema_name=None, schema=None):
         self.runnable = runnable
         self.schema_name = schema_name
+        self.schema = schema
 
     def invoke(self, messages, *args, **kwargs):
         if self.schema_name == 'TextBatchScore':
@@ -65,7 +68,15 @@ class StructuredReply:
                         if key in value:raise _DuplicateContentField(key)
                         value[key]=item
                     return value
-                json.loads(text,object_pairs_hook=unique_members)
+                punctuation_repair = self.schema_name in {'LearningPlan', 'PlanContent'} and hasattr(self.schema, 'model_validate')
+                decoded, repairs = complete_json(text, object_pairs_hook=unique_members, repair_punctuation=punctuation_repair)
+                if repairs:
+                    # SDK parsing used the original text. Re-validate the whole
+                    # recovered object against exactly the requested schema.
+                    parsed = self.schema.model_validate(decoded)
+                    result = {**result, 'parsed': parsed, 'parsing_error': None}
+                    log_event('planner_json_punctuation_recovered', operation=self.schema_name,
+                              outcome=','.join(repairs), attempt=len(repairs))
             except json.JSONDecodeError as exc:
                 raise OutputParserException(compact_parse_error(exc)) from exc
             except ValueError as exc:
@@ -109,7 +120,7 @@ class StrictProvider:
         kwargs['include_raw'] = True
         schema = args[0] if args else kwargs.get('schema')
         model = self._structured_model(schema) if self._structured_model else self.model
-        return StructuredReply(model.with_structured_output(*args, **kwargs), getattr(schema, '__name__', None))
+        return StructuredReply(model.with_structured_output(*args, **kwargs), getattr(schema, '__name__', None), schema)
 
     def bind_tools(self, *args, **kwargs):
         model = self._tools_model() if self._tools_model else self.model

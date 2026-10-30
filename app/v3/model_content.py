@@ -140,17 +140,61 @@ class Binding:
 
 
 def _plan(payload):
-    projection = Projection()
+    from .contracts import LearningObjective
+    from .planning_contract import EVIDENCE_BY_CAPABILITY, assessment_contract, validate_objective_tasks
+    class PlanProjection(Projection):
+        def data(self, value, field=''):
+            if isinstance(value, dict):
+                if isinstance(value.get('nodes'), list):
+                    value = deepcopy(value)
+                    node_refs = {n['node_id']: 'n'+str(i+1) for i,n in enumerate(value['nodes']) if 'node_id' in n}
+                    for n in value['nodes']:
+                        n['prerequisite_ids'] = [node_refs.get(ref,ref) for ref in n.get('prerequisite_ids',[])]
+                value = {k: v for k, v in value.items() if k not in {'evidence_requirement','node_id','objective_id'}}
+            return super().data(value, field)
+    projection = PlanProjection()
+    # Evidence kind is determined entirely by the selected registered evaluator.
+    # Keep the stored LearningObjective contract unchanged for old records.
+    fields = {name: (field.annotation, deepcopy(field))
+              for name, field in LearningObjective.model_fields.items() if name not in {'evidence_requirement','objective_id'}}
+    objective = create_model('PlanObjectiveContent', __base__=ContractModel, **fields)
+    node_fields = {name: (field.annotation, deepcopy(field)) for name,field in SkillNode.model_fields.items()
+                   if name not in {'node_id','objectives'}}
+    node = create_model('PlanNodeContent', __base__=ContractModel, **node_fields,
+        objectives=(list[objective], Field(min_length=1, max_length=5)))
+    schema = create_model('PlanContent', __base__=ContractModel,
+        nodes=(list[node], Field(min_length=1, max_length=20)))
+    allowed = payload['profile']['requested_capabilities']
     def assemble(content):
+        content = deepcopy(content)
+        goal_index = 0
+        for ni,n in enumerate(content['nodes'],1):
+            n['node_id'] = 'n'+str(ni)
+            for o in n['objectives']:
+                goal_index += 1
+                o['objective_id'] = 'o'+str(goal_index)
+                o['evidence_requirement'] = [kind for cap, kind in EVIDENCE_BY_CAPABILITY.items()
+                                             if cap in o['required_capability_ids']]
+        validate_objective_tasks(content['nodes'], allowed)
         return {**content, **{key: payload[key] for key in ('project_id', 'draft_revision', 'plan_version')}}
-    document = deepcopy(payload['learning_plan_schema'])
-    for key in ('project_id', 'draft_revision', 'plan_version'):
-        document['properties'].pop(key, None)
-    document['required'] = [key for key in document.get('required', []) if key in document['properties']]
-    # Preserve the existing planner's source aliases and reference sets. New
-    # node/objective symbols describe a DAG; they are not persisted UUIDs.
-    return Binding(PlanContent, projection.data(payload), assemble, projection,
-        '只输出nodes。用n1、n2及全树唯一o1、o2等短标记表达依赖和目标；项目身份、草稿和计划版本由程序绑定。', document)
+    document = schema.model_json_schema()
+    old = payload['learning_plan_schema']['$defs']
+    goal_fields = document['$defs']['PlanObjectiveContent']['properties']
+    for key in ('required_capability_ids', 'source_chunk_ids', 'observable_outcome'):
+        goal_fields[key] = deepcopy(old['LearningObjective']['properties'][key])
+    for key in ('estimated_minutes', 'title', 'description'):
+        document['$defs']['PlanNodeContent']['properties'][key] = deepcopy(old['SkillNode']['properties'][key])
+    data = projection.data(payload)
+    data['assessment_contract'] = assessment_contract(allowed)
+    return Binding(schema, data, assemble, projection,
+        '只输出nodes。节点编号由数组顺序自动生成n1、n2等；prerequisite_ids用这些位置编号表达真实依赖。'
+        'node_id、objective_id全部由程序生成，禁止输出这两个字段。保留真实课程内容和全部学习分支。'
+        '规划字段描述概念与作答任务，无需复制完整程序。可以用空字符、换行符等中文名称；'
+        '若包含代码或路径字面量，反斜杠必须按JSON规则双写转义。'
+        '只从已请求能力中选择required_capability_ids；evidence_requirement由程序按评价器生成，禁止在任何目标中输出。'
+        '目标须匹配assessment_contract中的作答形式；外部操作可作练习但不能成为无法验证的完成承诺。'
+        '修复时nodes.0.objectives.0等是本轮数组位置，改正全部列出的位置并返回完整计划，保留全部学习分支和所请求能力。'
+        '项目身份、草稿和计划版本由程序绑定。', document)
 
 
 def _grade(payload):

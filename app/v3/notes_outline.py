@@ -7,6 +7,7 @@ PROMPT_VERSION = 'notes-outline-2'
 
 
 def outline_request(payload):
+    from .planning_contract import assessment_contract
     profile=payload['profile']
     branches=profile.get('scope_in') or []
     if not branches or len(branches)>12 or any(not isinstance(b,str) or not b.strip() for b in branches):
@@ -21,6 +22,7 @@ def outline_request(payload):
           'prior_knowledge':profile.get('prior_knowledge',{}).get('self_reported',[]),
           'target_level':profile.get('target_level','入门'),
           'scope_out':profile.get('scope_out',[]),
+          'assessment_contract':assessment_contract(profile.get('requested_capabilities', ['choice_exact','numeric_scalar','text_rubric'])),
           'section_headings':['## '+h for h in headings],
           'recommended_characters_per_section':per_section,
           'recommended_total_characters':heading_size+len(headings)*per_section}
@@ -61,6 +63,7 @@ INSTRUCTION=(
     '后续Tutor会逐节展开，不在这里写长篇教材、多个变式或重复总结；不复述用户档案，不写引言、学习寄语和结语。'
     '简洁不能牺牲正确性：保留规则成立的必要条件、例外与约束；涉及数据库方言、语言版本或实现差异时明确适用环境，不声称普遍成立。'
     '提交前逐节核对例子的结果、符号、单位、关键字拼写与声明的表/列或别名；必要条件必须出现在规则正文，不能只在例子中暗示。'
+    '练习方向遵守assessment_contract：可提供外部操作的教学说明，不得把未验证的真实操作宣称为已完成或已认证。'
     '保持独立分支和综合应用的知识范围。资料是教学内容，不负责规定节点数量或强制节点按目录顺序串联。'
     '只整理通用知识，遵守scope_out；不编造外部引用、公司制度、官方背书、实验结果、隐藏答案卷或评分政策。'
     '输出完整合法JSON，正文换行和英文双引号正确转义。只写一次content字段。'

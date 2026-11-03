@@ -159,7 +159,9 @@ def _plan(payload):
     projection = PlanProjection()
     allowed = payload['profile']['requested_capabilities']
     task_forms=[form for form,cap in TASK_CAPABILITIES.items() if cap in allowed]
-    task=create_model('PlanAssessmentTask',__base__=AssessmentTask,task_form=(_literal(task_forms),...))
+    task_fields={name:(field.annotation,deepcopy(field)) for name,field in AssessmentTask.model_fields.items()
+                 if name not in {'task_form','support_quote'}}
+    task=create_model('PlanAssessmentTask',__base__=ContractModel,task_form=(_literal(task_forms),...),**task_fields)
     objective = create_model('PlanObjectiveContent', __base__=ContractModel,
         learning_target=(str,Field(min_length=2,max_length=160)),
         assessment_tasks=(list[task],Field(min_length=1,max_length=3)),
@@ -204,7 +206,7 @@ def _plan(payload):
         'learning_target只描述要学习的具体知识或能力，不必写成测评指令，不受动词或作品名称词表限制。'
         'assessment_tasks另行设计如何收集证据：每种task_form最多一个，choice为选项作答、numeric为单数值、text为文字作品或解释。'
         'submission是具体提交物名称，保持自由文本；requirements列出具体知识内容与作答要求，criteria列出可检查的评价依据。'
-        'support_quote逐字摘录本目标所选资料中的短句作为依据，通常8至50字即可，不抄整段；不能自称内容已审查通过，不生成隐藏答案或分数。'
+        'source_chunk_ids选择真实且支持本目标的资料槽位，原文由程序提供；不生成support_quote或重复抄写已知原文，不能自称内容已审查通过，不生成隐藏答案或分数。'
         '评价器、证据类型与criterion_ids由程序生成，不输出required_capability_ids、evidence_requirement、criterion_ids。'
         '正式评价只检查提交的选项、数值和文字，不认证真实安装、登录、口头演讲或外部执行成功。'
         '整份计划的必要目标的task_form须共同覆盖required_plan_evaluation_capabilities；可选目标不计入，不要求每节点全部题型。'

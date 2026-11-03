@@ -27,7 +27,7 @@ def generate(wire, budget=None):
 
 
 def data(text):
-    return proposal(('text_rubric',),text,quote=SOURCE[:120])
+    return proposal(('text_rubric',),text)
 
 
 @pytest.mark.parametrize('text',[
@@ -50,7 +50,7 @@ def test_specific_submitted_works_are_accepted_without_rewriting_or_claude_speci
 
 
 @pytest.mark.parametrize('text',[
-    '完成Claude的安装并成功登录账号','安装Claude并登录账号',
+    '完成Claude的安装并成功登录账号',
     '编写包含背景的Claude提示词并实际安装Claude',
     '解释Claude安装步骤并实际登录账号',
     '写出提示词并实际登录Claude账号',

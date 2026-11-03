@@ -16,7 +16,7 @@ from tests.test_planner_task_contract import proposal,feedback,Wire
 SOURCE='新文化运动提倡民主与科学，白话文有助于知识传播。三大战役之后发生渡江战役，随后举行开国大典。科学救国主张以科学知识和教育推动社会进步。'
 
 def course(target='讲清新文化运动中科学观念的含义',forms=('text',),submission='白话文演讲稿',requirement='以新文化运动为背景，围绕科学救国，约200字'):
-    value=proposal(tuple(TASK_CAPABILITIES[f] for f in forms),target,quote=SOURCE[:29])
+    value=proposal(tuple(TASK_CAPABILITIES[f] for f in forms),target)
     for task in value['nodes'][0]['objectives'][0]['assessment_tasks']:
         task.update(submission=submission,requirements=[requirement],criteria=['历史背景准确、核心概念正确、解释清楚'])
     return value
@@ -61,6 +61,7 @@ def test_ordering_can_use_existing_choice_and_explanation_without_matching_a_ver
     lambda g:g['assessment_tasks'][0].update(criteria=['  ']),
     lambda g:g['assessment_tasks'][0].update(approved=True),
     lambda g:g.update(required_capability_ids=['text_rubric']),
+    lambda g:g.update(source_chunk_ids=['s999']),
 ])
 def test_task_labels_or_self_approval_do_not_replace_the_required_contract(mutation):
     value=course();mutation(value['nodes'][0]['objectives'][0]);budget=ModelCallBudget()
@@ -85,11 +86,15 @@ def test_missing_task_content_is_repaired_with_its_actual_slot_and_bounded_fragm
     assert target['field'].endswith('.assessment_tasks.0.requirements')
     assert target['assessment_task']['requirements']==['按要求完成']
 
-def test_real_source_extracts_are_checked_and_fabricated_ones_are_rejected():
+def test_model_cannot_recopy_or_fabricate_program_owned_source_text():
     bad=course();bad['nodes'][0]['objectives'][0]['assessment_tasks'][0]['support_quote']='不存在于资料的历史原文'
     wire=Wire(lambda p,s:bad if len(wire.calls)==1 else course())
     generate(wire)
-    assert 'assessment_source_quote_missing' in feedback(wire)['validation_error']
+    assert 'extra_forbidden' in feedback(wire)['validation_error']
+
+@pytest.mark.parametrize('artifact',['安装指南','登录流程说明','部署检查清单'])
+def test_artifact_names_are_not_interpreted_as_verified_execution_claims(artifact):
+    assert generate(Wire(course(submission=artifact)))
 
 def test_lexical_mismatch_is_a_warning_and_not_semantic_proof_or_a_hard_veto(caplog):
     value=course('Present the intellectual movement in accessible language')
@@ -108,3 +113,11 @@ def test_final_guard_rechecks_mutated_tasks_instead_of_trusting_the_schema_tag()
     profile=case.profile(requested_capabilities=['text_rubric'])
     policy=case.policy(evaluators=[{'evaluator_id':'text_rubric','evaluator_version':'1.0.0'}],allowed_question_types=['text'])
     with pytest.raises(ValueError):validate_learnability(plan,profile,case.catalog(SOURCE),policy)
+
+def test_existing_legacy_quote_still_requires_an_actual_selected_source_extract():
+    plan=generate(Wire(course()));goal=plan.nodes[0].objectives[0]
+    goal.assessment_tasks[0]=goal.assessment_tasks[0].model_copy(update={'support_quote':'不是该资料中的原文'})
+    profile=case.profile(requested_capabilities=['text_rubric'])
+    policy=case.policy(evaluators=[{'evaluator_id':'text_rubric','evaluator_version':'1.0.0'}],allowed_question_types=['text'])
+    with pytest.raises(ValueError,match='assessment_source_quote_missing'):
+        validate_learnability(plan,profile,case.catalog(SOURCE),policy)

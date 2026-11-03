@@ -3,6 +3,7 @@
 Exact references and quotes are factual checks. Narrow known unsupported
 claims are repairable content issues, not proof of general semantic quality.
 """
+import re
 from .contracts import AssessmentTask
 
 TASK_CAPABILITIES = {'choice': 'choice_exact', 'numeric': 'numeric_scalar', 'text': 'text_rubric'}
@@ -11,7 +12,7 @@ TASK_INSTRUCTIONS = {
     'numeric': '提交一个数值结果及题目允许的单位，按确定性数值规格评分',
     'text': '提交文字作品或解释，按文字量规评分',
 }
-PROTOCOL = 'assessment-design-1'
+PROTOCOL = 'assessment-design-2'
 PLACEHOLDERS = frozenset({'任务', '要求', '评价标准', '按要求完成', '完成任务', '提交答案', '同上', '无', '待定',
                           'task', 'requirements', 'criteria', 'answer', 'tbd', 'n/a'})
 
@@ -27,7 +28,7 @@ def content_issues(tasks, path):
     An unfamiliar verb or artifact name is never an error. The goal itself may
     name a real-world skill: only the proposed assessment is bounded here.
     """
-    from .planning_contract import EXTERNAL_OPERATION, EXTERNAL_ACCOUNT_OPERATION, EXPLICIT_EXECUTION, DESCRIBE_OPERATION, GIVEN_ARTIFACT
+    from .planning_contract import EXTERNAL_OPERATION, EXPLICIT_EXECUTION, DESCRIBE_OPERATION, GIVEN_ARTIFACT
     issues=[]
     for i,task in enumerate(tasks):
         for field in ('submission','requirements','criteria'):
@@ -39,7 +40,11 @@ def content_issues(tasks, path):
         # Describing a command or interpreting a supplied transcript is valid.
         for field in ('submission','requirements','criteria'):
             for value in task[field] if isinstance(task[field],list) else [task[field]]:
-                op=EXTERNAL_OPERATION.search(value) or EXTERNAL_ACCOUNT_OPERATION.search(value)
+                # Artifact names such as "安装指南" are not execution claims.
+                # Only an explicit completion/actual-success claim is evidence
+                # of an account operation here, never an unfamiliar verb.
+                explicit_account=re.search(r'(?:完成|实际|真实|成功).{0,24}(?:安装|登录|登陆|部署)|\b(?:actually|successfully|certify|prove)\b.{0,24}\b(?:install|login|deploy)\b',value,re.I)
+                op=EXTERNAL_OPERATION.search(value) or explicit_account
                 describe=DESCRIBE_OPERATION.search(value);given=GIVEN_ARTIFACT.search(value)
                 if EXPLICIT_EXECUTION.search(value) or op and not (
                         describe and describe.start()<op.start() or given and given.start()<op.start()):
@@ -73,7 +78,7 @@ def validate_quotes(objective, chunks, path):
     """A real extract is required; its existence is not semantic entailment."""
     from .planning_contract import PlanningTaskError
     for i,task in enumerate(objective.assessment_tasks):
-        if not any(task.support_quote in chunks[c].content for c in objective.source_chunk_ids):
+        if task.support_quote is not None and not any(task.support_quote in chunks[c].content for c in objective.source_chunk_ids):
             raise PlanningTaskError([{'loc':(*path,'assessment_tasks',i,'support_quote'),
                 'type':'assessment_source_quote_missing','msg':'逐字摘录本目标所选真实教学片段中的短句，不得编造或引用其他目标未选择的资料。'}])
 

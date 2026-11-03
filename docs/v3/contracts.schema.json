@@ -621,18 +621,25 @@
             "type": "array"
           },
           "support_quote": {
-            "maxLength": 180,
-            "minLength": 1,
-            "title": "Support Quote",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 180,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Support Quote"
           }
         },
         "required": [
           "task_form",
           "submission",
           "requirements",
-          "criteria",
-          "support_quote"
+          "criteria"
         ],
         "title": "AssessmentTask",
         "type": "object"

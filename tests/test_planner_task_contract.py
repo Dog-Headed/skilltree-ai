@@ -32,14 +32,14 @@ def test_json_escape_feedback_locates_token_without_exposing_completion(token):
         json.loads(raw)
 
 
-def proposal(caps=('choice_exact',), outcome='从给定选项中选出C程序的正确编译顺序', *, quote=MATERIAL[:70]):
+def proposal(caps=('choice_exact',), outcome='从给定选项中选出C程序的正确编译顺序'):
     nodes = deepcopy(case.plan()['nodes'])
     goal = nodes[0]['objectives'][0]
     goal.clear()
     forms={'choice_exact':'choice','numeric_scalar':'numeric','text_rubric':'text'}
     goal.update(learning_target=outcome,source_chunk_ids=['s1'],assessment_tasks=[{
         'task_form':forms[cap],'submission':{'choice':'选项作答','numeric':'一个数值结果','text':'文字解释或作品'}[forms[cap]],
-        'requirements':[outcome],'criteria':['依据资料准确说明所学知识与推理'],'support_quote':quote} for cap in caps])
+        'requirements':[outcome],'criteria':['依据资料准确说明所学知识与推理']} for cap in caps])
     for node in nodes:
         node.pop('node_id')
         for item in node['objectives']: item.pop('objective_id',None)

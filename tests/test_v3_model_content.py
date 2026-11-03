@@ -184,7 +184,7 @@ def test_plan_binds_versions_and_preserves_original_dag_and_source_validation():
             target=o['observable_outcome'];o.clear()
             o.update(learning_target=target,source_chunk_ids=['s1'],assessment_tasks=[{
                 'task_form':'choice','submission':'选择正确描述','requirements':['循环停止条件与资料相符'],
-                'criteria':['准确辨别循环的停止条件'],'support_quote':planner_case.catalog()[0]['content']}])
+                'criteria':['准确辨别循环的停止条件']}])
     model = Wire({'nodes': wire_nodes})
     result = planner_case.generate(ContentModel(model))
     assert result.project_id == value['project_id'] and result.plan_version == LearningPlan.model_validate(value).plan_version

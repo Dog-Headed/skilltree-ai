@@ -225,11 +225,19 @@ class AssessmentTask(ContractModel):
     submission: str = Field(min_length=1, max_length=100)
     requirements: list[Annotated[str, Field(min_length=1, max_length=160)]] = Field(min_length=1, max_length=4)
     criteria: list[Annotated[str, Field(min_length=1, max_length=120)]] = Field(min_length=1, max_length=4)
-    support_quote: str = Field(min_length=1, max_length=180)
+    # Older assessment-design-1 QA plans may carry an exact extract. New
+    # generation uses the already-verified source IDs and does not recopy it.
+    support_quote: str | None = Field(default=None, min_length=1, max_length=180)
+
+    @model_serializer(mode='wrap')
+    def omit_absent_legacy_quote(self, handler):
+        data=handler(self)
+        if self.support_quote is None:data.pop('support_quote',None)
+        return data
 
     @model_validator(mode='after')
     def nonempty_content(self):
-        if any(not s.strip() for s in [self.submission, self.support_quote, *self.requirements, *self.criteria]):
+        if any(not s.strip() for s in [self.submission, *self.requirements, *self.criteria]) or self.support_quote is not None and not self.support_quote.strip():
             raise ValueError('提交物、任务要求、评价依据和资料摘录不能为空白')
         _unique(self.requirements, '任务要求')
         _unique(self.criteria, '评价依据')

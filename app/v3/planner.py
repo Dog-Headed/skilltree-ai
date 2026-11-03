@@ -31,7 +31,7 @@ from app.v3.contracts import (
 
 from .planning_contract import assessment_contract, validate_objective_tasks, validate_plan_coverage, rejected_planning_data
 
-PLANNER_PROMPT_VERSION = "v3-garden-planner-13-task-design"
+PLANNER_PROMPT_VERSION = "v3-garden-planner-14-task-design"
 _EVIDENCE_CAPABILITIES = {
     "choice": "choice_exact", "numeric_result": "numeric_scalar", "text_excerpt": "text_rubric",
 }
@@ -182,7 +182,7 @@ def validate_learnability(
                 if not source_is_relevant(objective.observable_outcome, chunks[chunk_id].content):
                     if not objective.assessment_tasks:
                         # Preserve old plan compatibility; new task contracts
-                        # use factual extracts instead of a lexical hard veto.
+                        # use verified source contexts, never a lexical veto.
                         raise ValueError(f"目标 {objective.objective_id} 与引用片段 {chunk_id} 未通过保守词汇相关性检查，请调整目标或补资料")
                     log_event('planner_source_relevance_warning',project_id=plan.project_id,
                               node_id=node.node_id,operation='task_design',outcome='semantic_support_not_proven')
@@ -258,7 +258,7 @@ def build_planner_messages(
             "不用填满总预算；参考planning_guidance按每节一至三次session分配分钟数，最后逐项相加核对总量。"
             "默认每节点一个具体学习目标和相应作答契约，确需独立证据时可增加，最多五个；全树仍须覆盖全部请求能力和主要知识分支。"
             "以本轮输出协议为准：若需要填写身份，node_id用n1、n2，objective_id用全树唯一短身份；程序负责的字段无需输出。不要输出schema或重复资料正文。"
-            "title简短，description一句话。新内容协议中learning_target表达具体学习目标，assessment_tasks另行设计提交物、要求、评价依据与资料摘录。"
+            "title简短，description一句话。新内容协议中learning_target表达具体学习目标，assessment_tasks另行设计提交物、要求与评价依据，通过资料槽位引用原文。"
             "文字作品名称开放，可以是演讲稿、提纲、提示词或其他作品，不受名称或动词允许名单限制。不能仅用task_form标签代替具体任务与评价依据。"
             "真实操作能力可作为学习愿景，但当前测评仅检查所提交的选择、数值或文字，不把文本测评当作真实操作认证。"
             "真实操作可作为自愿练习，正式目标不能声称已验证其实际完成；例如改为选出正确命令、解释给定输出或编写供文字量规检查的代码。"

@@ -29,9 +29,9 @@ from app.v3.contracts import (
 )
 
 
-from .planning_contract import OBSERVABLE as _OBSERVABLE, assessment_contract, validate_objective_tasks, validate_plan_coverage
+from .planning_contract import OBSERVABLE as _OBSERVABLE, assessment_contract, validate_objective_tasks, validate_plan_coverage, rejected_planning_data
 
-PLANNER_PROMPT_VERSION = "v3-garden-planner-10-coverage"
+PLANNER_PROMPT_VERSION = "v3-garden-planner-11-written-work"
 _EVIDENCE_CAPABILITIES = {
     "choice": "choice_exact", "numeric_result": "numeric_scalar", "text_excerpt": "text_rubric",
 }
@@ -252,6 +252,7 @@ def build_planner_messages(
             "以本轮输出协议为准：若需要填写身份，node_id用n1、n2，objective_id用全树唯一短身份；程序负责的字段无需输出。不要输出schema或重复资料正文。"
             "title简短，description一句话，observable_outcome只写具体可检查任务；有默认值且语义相同的可选字段可省略。"
             "observable_outcome须遵守assessment_contract：具体写出给定材料、要求提交的答案或文字产物以及知识规则。"
+            "文字作品可为提示词、邮件、摘要、代码等；写明包含哪些内容、格式或其他可检查要求。编写、撰写、拟定与写出含义一致，不能只加动词前缀。评分对象是提交的作品，不是认证软件实际安装、登录或执行成功。"
             "真实操作可作为自愿练习，正式目标不能声称已验证其实际完成；例如改为选出正确命令、解释给定输出或编写供文字量规检查的代码。"
             "选择题目标可写成‘从给定选项中选出/辨认具体规则或结果’，不要写成笼统知识点名称。"
             "固定身份及版本由服务端绑定；依赖只引用本计划节点，无自依赖、无环。"
@@ -281,6 +282,8 @@ def build_planner_messages(
         # Only the rejected-output diagnostic is summarized; the complete
         # profile, policy, teaching sources and schema above stay intact.
         def correction(details):
+            if repair_context.rejected_candidate_data:
+                details = {**details, 'rejected_candidate_data': repair_context.rejected_candidate_data}
             return HumanMessage(content=(
                 "上次候选计划未通过校验，只允许本次完整修复。保留学习范围、身份和服务端策略。\n"
                 + _json(details) + "\n请返回完整 LearningPlan JSON。"
@@ -344,7 +347,9 @@ def generate_plan(
         try:
             return structured.invoke(messages)
         except (ValidationError, OutputParserException) as exc:
-            raise ModelOutputValidationError("V3 Planner 结构化输出非法："+compact_parse_error(exc)) from exc
+            error=ModelOutputValidationError("V3 Planner 结构化输出非法："+compact_parse_error(exc))
+            error.repair_data=rejected_planning_data(exc)
+            raise error from exc
 
     def validate_output(raw: Any):
         try:
@@ -361,7 +366,9 @@ def generate_plan(
         except (ValidationError, ValueError) as exc:
             detail = compact_parse_error(exc) if isinstance(exc, ValidationError) or hasattr(exc, "errors") else str(exc)
             for short, real in aliases.items():detail = detail.replace(real, short)
-            raise ModelOutputValidationError("V3 Planner 输出校验失败："+detail) from exc
+            error=ModelOutputValidationError("V3 Planner 输出校验失败："+detail)
+            error.repair_data=rejected_planning_data(exc)
+            raise error from exc
 
     started = perf_counter()
     error_type = None

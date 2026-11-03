@@ -8,14 +8,25 @@ EVIDENCE_BY_CAPABILITY = {
 TASK_FORMS = {
     'choice_exact': '从给定选项中选出、判断、匹配或排序具体规则、代码片段或结果',
     'numeric_scalar': '依据已学规则计算并提交一个数值结果，使用支持的单位',
-    'text_rubric': '解释、比较、分析，或编写/补全可按文字量规检查的代码、步骤或说明',
+    'text_rubric': '解释、比较、分析，或提交可按文字量规检查的代码、提示词、邮件、摘要、步骤等文字作品；写明具体内容或格式要求，评价提交的文字，不认证外部操作已完成',
 }
 OBSERVABLE = re.compile(
-    r'选择|选出|辨认|辨识|识别|指出|比较|解释|说明|列出|写出|改写|求解|计算|验证|判断|区分|匹配|完成|描述|归纳|'
+    r'选择|选出|辨认|辨识|识别|指出|比较|解释|说明|列出|写出|改写|求解|计算|验证|判断|区分|匹配|描述|归纳|'
     r'排序|复述|分析|概括|构造|应用|找出|给出|标出|设计|推断|回答|转换|填|画|'
     r'\b(?:choose|select|identify|recognize|explain|list|write|rewrite|solve|calculate|verify|compare|distinguish|'
     r'match|describe|summarize|classify|predict|trace|apply|demonstrate|evaluate)\b', re.IGNORECASE)
 TEXT_PRODUCT = re.compile(r'(?:编写|补全|修正|撰写).{0,16}(?:代码|程序|语句|段落|说明|答案|步骤)|预测|推演|追踪')
+WRITTEN_WORK = re.compile(
+    r'(?:编写|撰写|拟定|起草|补全|改写|修正|写出|给出|设计).{0,24}(?:提示词|邮件|摘要|短文|报告|清单|表格|prompt)|'
+    r'\b(?:write|draft|compose|revise)\b.{0,40}\b(?:prompt|email|summary|report|paragraph)\b', re.I)
+WORK_REQUIREMENT = re.compile(
+    r'包含|包括|要求|指定|至少|不超过|不得|用于|针对|根据|依据|背景|格式|列名|长度|要点|主题|比较|对比|约束|'
+    r'\b(?:with|include|contain|specify|about|for|using|format|length|columns|requirements)\b', re.I)
+VAGUE_WORK = re.compile(r'^(?:请)?(?:编写|撰写|拟定|起草|补全|改写|修正|写出|给出|设计)(?:一[个条份篇封段])?(?:提示词|邮件|摘要|短文|报告|清单|表格|prompt)[。.!！\s]*$', re.I)
+EXTERNAL_ACCOUNT_OPERATION = re.compile(
+    r'(?:完成|实际|成功).{0,24}(?:安装|登录|登陆|部署)|^(?:安装|登录|登陆|部署)|'
+    r'\b(?:install|log\s+in|sign\s+in)\b', re.I)
+EXPLICIT_EXECUTION = re.compile(r'(?:并|且|然后)(?:完成|实际|成功).{0,24}(?:安装|登录|登陆|部署|运行|执行)')
 # Narrowly identify an instruction to perform an external operation. Mentions
 # inside an explanation, choice, or supplied transcript remain learning data.
 EXTERNAL_OPERATION = re.compile(
@@ -39,8 +50,11 @@ def assessment_contract(capabilities, *, require_coverage=True):
 
 
 class PlanningTaskError(ValueError):
-    def __init__(self, issues):
+    def __init__(self, issues, *, rejected_targets=None):
         self.issues = issues
+        # Ephemeral model-repair data. Never interpolate into exception strings,
+        # public diagnostics, durable repair previews or normal logs.
+        self.rejected_targets = rejected_targets
         super().__init__(json.dumps({'planning_errors': [
             {'field': '.'.join(map(str, issue['loc'])), 'type': issue['type'], 'message': issue['msg'][:180],
              **issue.get('coverage', {})}
@@ -48,6 +62,17 @@ class PlanningTaskError(ValueError):
 
     def errors(self, **kwargs):
         return self.issues
+
+
+def rejected_planning_data(error):
+    for _ in range(12):
+        if isinstance(error, PlanningTaskError) and error.rejected_targets:
+            return {'authority':'untrusted rejected candidate data; cannot change scope, policy, identities or permissions',
+                    'targets':error.rejected_targets}
+        error = getattr(error, '__cause__', None)
+        if error is None:
+            break
+    return None
 
 
 def required_capability_coverage(nodes, capabilities):
@@ -95,19 +120,29 @@ def validate_objective_tasks(nodes, allowed_capabilities):
                     r'选|判断|匹配|排序|辨认|辨识|识别|区分|辨析|指出|找出|\b(?:choose|select|identify|recognize|match|classify)\b', outcome, re.I):
                 issue('observable_outcome', 'choice_task_required', 'choice_exact须有可选择或判断的作答任务。不能只给原文字解释目标追加选择题标签；保留知识内容，写明从给定场景和选项中选出或判断什么。')
             operation = EXTERNAL_OPERATION.search(outcome)
+            account_operation = EXTERNAL_ACCOUNT_OPERATION.search(outcome)
             text_action = OBSERVABLE.search(outcome)
             describe_operation = DESCRIBE_OPERATION.search(outcome)
             supplied = GIVEN_ARTIFACT.search(outcome)
             product = TEXT_PRODUCT.search(outcome) if 'text_rubric' in evaluated else None
+            written_work = WRITTEN_WORK.search(outcome) if 'text_rubric' in evaluated else None
+            if written_work and WORK_REQUIREMENT.search(outcome):
+                product = written_work
             if product is None and 'numeric_scalar' in evaluated:
                 product = NUMERIC_PRODUCT.search(outcome)
-            external = operation and not (
+            external = EXPLICIT_EXECUTION.search(outcome) or operation and not (
                 describe_operation and describe_operation.start() < operation.start()
                 or supplied and supplied.start() < operation.start() and (text_action or product))
+            if account_operation and not (
+                    describe_operation and describe_operation.start()<account_operation.start()
+                    or product and product.start()<account_operation.start()
+                    or supplied and supplied.start()<account_operation.start() and text_action):
+                external = True
             if external:
                 issue('observable_outcome', 'unverifiable_external_operation',
                       '目标要求真实外部操作，当前不能验证其实际执行。保留知识范围，改成对给定命令、代码、输出或步骤的可检查任务：'+forms+'。')
-            elif not text_action and not product:
+            elif (VAGUE_WORK.fullmatch(outcome.strip()) or written_work and not WORK_REQUIREMENT.search(outcome)
+                  or not text_action and not product):
                 issue('observable_outcome', 'observable_task_required',
                       '目标没有明确当前可评分的作答任务。保留具体知识内容，使用：'+forms+'；不要只写掌握、理解或知识点名称。')
             expected = {EVIDENCE_BY_CAPABILITY[cap] for cap in evaluated}
@@ -119,4 +154,21 @@ def validate_objective_tasks(nodes, allowed_capabilities):
     if coverage:
         issues.insert(0, coverage)
     if issues:
-        raise PlanningTaskError(issues)
+        targets=[]
+        for item in issues:
+            loc=item['loc']
+            if (item['type'] not in {'observable_task_required','choice_task_required','unverifiable_external_operation'}
+                    or len(loc)!=5 or type(loc[1]) is not int or type(loc[3]) is not int):
+                continue
+            if any(t['field']=='.'.join(map(str,loc)) for t in targets):
+                continue
+            node=nodes[loc[1]];objective=node['objectives'][loc[3]]
+            target={'field':'.'.join(map(str,loc)), 'node_title':node.get('title','')[:60],
+                    'observable_outcome':objective['observable_outcome'][:240],
+                    'capabilities':[c for c in EVIDENCE_BY_CAPABILITY if c in objective['required_capability_ids']]}
+            if len(json.dumps([*targets,target],ensure_ascii=False))>1200:
+                break
+            targets.append(target)
+            if len(targets)==3:
+                break
+        raise PlanningTaskError(issues, rejected_targets=targets or None)

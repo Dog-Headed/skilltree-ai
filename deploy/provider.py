@@ -10,6 +10,18 @@ from app.services.json_syntax import complete_json
 from app.services.observability import log_event
 
 
+def _input_characters(messages):
+    """Transport accepts strings, PromptValue and message sequences; metrics cannot fail it."""
+    try:
+        if isinstance(messages, str):
+            return len(messages)
+        if callable(getattr(messages, 'to_string', None)):
+            return len(messages.to_string())
+        return sum(len(str(getattr(message, 'content', message))) for message in messages)
+    except Exception:
+        return None
+
+
 class _DuplicateContentField(ValueError):
     def __init__(self,key):
         self.key=key if re.fullmatch(r'[A-Za-z0-9_.]{1,80}',key) else 'invalid_field_name'
@@ -63,7 +75,7 @@ class StructuredReply:
         reason = getattr(raw, 'response_metadata', {}).get('finish_reason')
         log_event('structured_model_response', operation=self.schema_name,
                   elapsed_ms=round((perf_counter()-started)*1000, 3),
-                  input_characters=sum(len(str(m.content)) for m in messages),
+                  input_characters=_input_characters(messages),
                   output_characters=len(content) if isinstance(content, str) else None,
                   finish_reason=reason if reason in {'stop','length','tool_calls','function_call','content_filter'} else 'unknown')
         if getattr(raw, 'response_metadata', {}).get('finish_reason') == 'length':

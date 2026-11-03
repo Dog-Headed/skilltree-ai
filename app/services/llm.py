@@ -93,6 +93,7 @@ class ModelCallBudget:
 class RepairContext:
     previous_output: Any
     error_message: str
+    rejected_candidate_data: dict | None = None
 
 
 RETRYABLE_MODEL_ERRORS = (
@@ -239,6 +240,7 @@ def invoke_with_shared_budget(
             repair_context = RepairContext(
                 previous_output=None,
                 error_message=str(exc),
+                rejected_candidate_data=getattr(exc, 'repair_data', None),
             )
 
             continue
@@ -284,6 +286,7 @@ def invoke_with_shared_budget(
             repair_context = RepairContext(
                 previous_output=raw_output,
                 error_message=str(exc),
+                rejected_candidate_data=getattr(exc, 'repair_data', None),
             )
 
             continue

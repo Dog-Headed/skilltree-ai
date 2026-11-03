@@ -193,11 +193,13 @@ def test_scope_and_notes_receive_the_same_trusted_assessment_boundary_without_ch
     before=deepcopy(original)
     infer_scope(wire,ModelCallBudget(),original,generation_mode='content-v1')
     payload=json.loads(wire.messages[0][1].content)
-    assert payload['assessment_contract']==assessment_contract(['text_rubric'])
+    assert payload['assessment_contract']==assessment_contract(['text_rubric'], require_coverage=False)
     assert original==before
     notes=notes_payload();notes['profile']['requested_capabilities']=['text_rubric']
     data,headings=outline_request(notes)
-    assert data['assessment_contract']==payload['assessment_contract'] and len(headings)==2
+    assert data['assessment_contract']==assessment_contract(['text_rubric']) and len(headings)==2
+    assert not payload['assessment_contract']['required_plan_evaluation_capabilities']
+    assert data['assessment_contract']['required_plan_evaluation_capabilities']==['text_rubric']
 
 
 def test_scope_cannot_choose_an_evaluator_outside_this_request():

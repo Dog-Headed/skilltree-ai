@@ -193,6 +193,8 @@ def _plan(payload):
         '若包含代码或路径字面量，反斜杠必须按JSON规则双写转义。'
         '只从已请求能力中选择required_capability_ids；evidence_requirement由程序按评价器生成，禁止在任何目标中输出。'
         '目标须匹配assessment_contract中的作答形式；外部操作可作练习但不能成为无法验证的完成承诺。'
+        '整份计划的必要目标须覆盖required_plan_evaluation_capabilities全部能力；可选目标不计入，不要求每节点覆盖全部题型。'
+        '修复缺失能力时须同时改正作答任务语义，保留知识分支与已有文字目标，不能仅添加能力标签。'
         '修复时nodes.0.objectives.0等是本轮数组位置，改正全部列出的位置并返回完整计划，保留全部学习分支和所请求能力。'
         '项目身份、草稿和计划版本由程序绑定。', document)
 

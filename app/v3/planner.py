@@ -29,9 +29,9 @@ from app.v3.contracts import (
 )
 
 
-from .planning_contract import OBSERVABLE as _OBSERVABLE, assessment_contract, validate_objective_tasks
+from .planning_contract import OBSERVABLE as _OBSERVABLE, assessment_contract, validate_objective_tasks, validate_plan_coverage
 
-PLANNER_PROMPT_VERSION = "v3-garden-planner-9"
+PLANNER_PROMPT_VERSION = "v3-garden-planner-10-coverage"
 _EVIDENCE_CAPABILITIES = {
     "choice": "choice_exact", "numeric_result": "numeric_scalar", "text_excerpt": "text_rubric",
 }
@@ -158,7 +158,6 @@ def validate_learnability(
     if not any(objective.required for objective in objectives):
         raise ValueError("正式计划至少需要一个必要目标")
     validate_objective_tasks([node.model_dump() for node in plan.nodes], profile.requested_capabilities)
-    used_evaluation_capabilities: set[str] = set()
     for node in plan.nodes:
         if len(node.objectives) > SERVER_LIMITS.max_objectives_per_node:
             raise ValueError("节点目标数超过服务端上限")
@@ -175,8 +174,6 @@ def validate_learnability(
                 raise ValueError(f"目标 {objective.objective_id} 的证据形式与所需评价能力不一致")
             if not evaluation_capabilities <= evaluator_ids:
                 raise ValueError(f"目标 {objective.objective_id} 的评价器未列入服务端策略")
-            if objective.required:
-                used_evaluation_capabilities.update(evaluation_capabilities)
             if not objective.source_chunk_ids:
                 raise ValueError(f"目标 {objective.objective_id} 缺少教学资料覆盖")
             for chunk_id in objective.source_chunk_ids:
@@ -192,9 +189,7 @@ def validate_learnability(
                     raise ValueError("评价策略没有覆盖目标所需证据")
                 if rule.min_items > SERVER_LIMITS.max_questions_per_assessment or rule.min_evidence > SERVER_LIMITS.max_questions_per_assessment:
                     raise ValueError("目标证据或题目覆盖要求超过服务端单卷能力")
-    requested_evaluation_capabilities = {value for value in requested if get_capability(value).kind == "evaluation"}
-    if not requested_evaluation_capabilities <= used_evaluation_capabilities:
-        raise ValueError("计划遗漏了学习档案明确要求的评价能力，不能以缩小测量冒充完整目标")
+    validate_plan_coverage([node.model_dump() for node in plan.nodes], profile.requested_capabilities)
     return plan
 
 
@@ -264,6 +259,8 @@ def build_planner_messages(
             "能独立学习的知识形成并行分支，共用基础可以共享前置，综合应用应汇合实际需要的多个分支；真正线性的目标允许线性。"
             "先分析知识关系再选边，不为增加交错、分叉数量或装饰树形而添加依赖，不用多余的传递依赖凑边。"
             "每目标仅使用请求且正式可用的评价能力，证据形式必须匹配策略评价器。"
+            "required_plan_evaluation_capabilities不是任选列表：整份计划必须全部覆盖，每种至少出现在一个required=true的目标中，可选目标不计入。"
+            "不要求每个节点都有全部题型。缺选择能力时，保留文字目标，为适合辨析的知识增加有来源的必要选择任务，并同时写明选项作答语义；不能只追加标签。"
             "required_capability_ids只能从allowed_objective_capability_ids逐字选取；全局存在的其他能力不代表本项目已经请求。"
             "例如仅允许text_rubric时，所有目标只选该评价能力；证据类型若由本轮内容协议规定程序生成，不能重复输出。"
             "criterion_ids只用于text_rubric；纯choice_exact或numeric_scalar目标必须为空数组[]，不能编造量规标准。"

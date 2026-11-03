@@ -402,9 +402,12 @@ class PreparationService:
                                     return bound.invoke(messages)
                             return Bound()
                     return planner.generate_plan(profile,pid,revision,material_catalog,policy,llm=Adjusted(),budget=budget)
-                proposal=onboarding.run_preparation_task(self.paths,pid,operation_id,'guided_plan:'+state['preparation_event']['request_id'],
-                    {'profile':profile.model_dump(),'catalog':material_catalog,'policy':policy.model_dump(),'revision':revision,'feedback':feedback},
-                    LearningPlan,generate,llm=provider if provider is not None else planner.get_llm)
+                from .preparation_feedback import guarded_plan
+                task_key='guided_plan:'+state['preparation_event']['request_id']
+                inputs={'profile':profile.model_dump(),'catalog':material_catalog,'policy':policy.model_dump(),'revision':revision,'feedback':feedback}
+                proposal=guarded_plan(self.paths,pid,task_key,inputs,planner.PLANNER_PROMPT_VERSION,provider,
+                    lambda:onboarding.run_preparation_task(self.paths,pid,operation_id,task_key,inputs,
+                        LearningPlan,generate,llm=provider if provider is not None else planner.get_llm))
             else:proposal=planner.generate_plan(profile,pid,revision,material_catalog,policy,llm=model)
             frozen_policy=instantiate_policy(policy,proposal)
             with V3Repository(self.paths) as repo:
@@ -425,8 +428,9 @@ class PreparationService:
                     # retry. Return to an editable wait; a new explicit prepare
                     # command owns a new task, while old charges stay recorded.
                     with repo.transaction():
+                        from .preparation_feedback import failure_notice
                         repo.conn.execute('UPDATE guided_projects SET message=? WHERE project_id=?',
-                            ('这次 AI 准备没有完成，未确认任何计划。可检查模型服务后重新整理，或修改目标；已用请求不会清零。',state['project_id']))
+                            (failure_notice(exc),state['project_id']))
                         repo.conn.execute("UPDATE learning_projects SET lifecycle='profile_review',pending_input_id=?,error_type=? WHERE id=?",
                             ('profile_'+uuid4().hex,type(exc).__name__,state['project_id']))
                 return {}

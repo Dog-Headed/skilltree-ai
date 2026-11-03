@@ -13,6 +13,7 @@ _FIELDS = {
     "project_id", "node_id", "assessment_id", "node", "logical_call_id",
     "operation", "request_count", "network_retry_count", "output_repair_count",
     "elapsed_ms", "tool", "error_type", "outcome", "attempt",
+    "input_characters", "output_characters", "finish_reason",
 }
 
 

@@ -28,9 +28,12 @@ GIVEN_ARTIFACT = re.compile(r'给定|提供的|所给|阅读|以下|\b(?:given|p
 NUMERIC_PRODUCT = re.compile(r'求出|算出|手算|推算|推导|推演|追踪|预测|求值|\b(?:compute|evaluate|determine)\b', re.I)
 
 
-def assessment_contract(capabilities):
+def assessment_contract(capabilities, *, require_coverage=True):
     supported = [cap for cap in EVIDENCE_BY_CAPABILITY if cap in capabilities]
     return {'task_forms': {cap: TASK_FORMS[cap] for cap in supported},
+            'required_plan_evaluation_capabilities': supported if require_coverage else [],
+            'coverage_rule': ('整份计划的每种要求能力至少出现在一个required=true的目标中；可选目标不计入。不要求每个节点都有全部题型。作答任务须符合所选能力，不能只追加能力标签。'
+                              if require_coverage else '范围分析尚未选定题型。task_forms只列可用形式；按具体目标选择必要能力，不要求全部选择。选定后才约束整份计划覆盖。'),
             'execution_boundary': '只评价本次提交的选择、数值或文字证据；不验证真实程序运行、设备操作或其他外部实践已经完成。',
             'practice_boundary': '可以讲解实际操作和安排自愿练习；正式解锁目标须写成当前可评价的任务，不能以文字测评冒充真实操作认证。'}
 
@@ -39,11 +42,36 @@ class PlanningTaskError(ValueError):
     def __init__(self, issues):
         self.issues = issues
         super().__init__(json.dumps({'planning_errors': [
-            {'field': '.'.join(map(str, issue['loc'])), 'type': issue['type'], 'message': issue['msg']}
-            for issue in issues]}, ensure_ascii=False))
+            {'field': '.'.join(map(str, issue['loc'])), 'type': issue['type'], 'message': issue['msg'][:180],
+             **issue.get('coverage', {})}
+            for issue in issues[:12]]}, ensure_ascii=False))
 
     def errors(self, **kwargs):
         return self.issues
+
+
+def required_capability_coverage(nodes, capabilities):
+    """Shared by the content adapter and final confirmation guard; never mutate."""
+    required = [cap for cap in EVIDENCE_BY_CAPABILITY if cap in capabilities]
+    actual = {cap for node in nodes for objective in node['objectives'] if objective.get('required', True)
+              for cap in objective['required_capability_ids'] if cap in EVIDENCE_BY_CAPABILITY}
+    return {'required': required,
+            'actual_required': [cap for cap in EVIDENCE_BY_CAPABILITY if cap in actual],
+            'missing': [cap for cap in required if cap not in actual]}
+
+
+def coverage_issue(nodes, capabilities):
+    coverage = required_capability_coverage(nodes, capabilities)
+    if coverage['missing']:
+        return {'loc': ('nodes', '*', 'objectives', '*', 'required_capability_ids'),
+                'type': 'missing_required_plan_capability', 'coverage': coverage,
+                'msg': '计划遗漏了必要目标中的评价能力。保留知识范围和已有目标，为缺失能力增加或重写有资料依据的必要作答任务；不能只追加标签。'}
+
+
+def validate_plan_coverage(nodes, capabilities):
+    issue = coverage_issue(nodes, capabilities)
+    if issue:
+        raise PlanningTaskError([issue])
 
 
 def validate_objective_tasks(nodes, allowed_capabilities):
@@ -63,6 +91,9 @@ def validate_objective_tasks(nodes, allowed_capabilities):
                 issue('required_capability_ids', 'capability_not_requested', '只能选择本次档案已请求的评价能力，不能自行添加工具或执行能力。')
             if not evaluated:
                 issue('required_capability_ids', 'assessment_capability_required', '每个正式目标至少需要一种本次可用的评价能力。')
+            if 'choice_exact' in evaluated and re.search(r'解释|说明|列举|分析|描述', outcome) and not re.search(
+                    r'选|判断|匹配|排序|辨认|辨识|识别|区分|辨析|指出|找出|\b(?:choose|select|identify|recognize|match|classify)\b', outcome, re.I):
+                issue('observable_outcome', 'choice_task_required', 'choice_exact须有可选择或判断的作答任务。不能只给原文字解释目标追加选择题标签；保留知识内容，写明从给定场景和选项中选出或判断什么。')
             operation = EXTERNAL_OPERATION.search(outcome)
             text_action = OBSERVABLE.search(outcome)
             describe_operation = DESCRIBE_OPERATION.search(outcome)
@@ -84,5 +115,8 @@ def validate_objective_tasks(nodes, allowed_capabilities):
                 issue('evidence_requirement', 'evidence_capability_mismatch', '证据形式必须与所选评价能力一致：'+','.join(sorted(expected)))
             if 'text_rubric' not in evaluated and objective.get('criterion_ids'):
                 issue('criterion_ids', 'rubric_not_applicable', '确定性选择/数值评价不使用文字量规，criterion_ids必须为空。')
+    coverage = coverage_issue(nodes, allowed_capabilities)
+    if coverage:
+        issues.insert(0, coverage)
     if issues:
         raise PlanningTaskError(issues)

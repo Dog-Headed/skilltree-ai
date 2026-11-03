@@ -36,6 +36,9 @@ def compact_parse_error(error):
         if current is None:
             break
         if hasattr(current, 'errors'):
+            from app.v3.planning_contract import PlanningTaskError
+            if isinstance(current, PlanningTaskError):
+                return str(current)
             issues = current.errors(include_input=False, include_url=False)
             return json.dumps({'schema_errors': [
                 {'field': '.'.join(map(str, issue['loc'])), 'type': issue['type'], 'message': issue['msg'][:180]}

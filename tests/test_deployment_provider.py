@@ -9,6 +9,18 @@ from deploy.provider import StructuredReply
 from types import SimpleNamespace
 
 
+def test_response_metrics_never_log_raw_content_or_arbitrary_finish_metadata(caplog):
+    from langchain_core.messages import HumanMessage
+    raw=SimpleNamespace(content='{"score":0.8}',response_metadata={'finish_reason':'PRIVATE_SECRET'})
+    model=Model({'raw':raw,'parsed':RequiredScore(score=0.8),'parsing_error':None})
+    with caplog.at_level('INFO',logger='skilltree'):
+        StructuredReply(model,'RequiredScore').invoke([HumanMessage(content='PRIVATE_SOURCE')])
+    record=json.loads(next(r.message for r in caplog.records if 'structured_model_response' in r.message))
+    assert record['finish_reason']=='unknown' and record['input_characters']==14
+    assert record['output_characters']==len(raw.content) and record['elapsed_ms']>=0
+    assert 'PRIVATE_' not in json.dumps(record) and raw.content not in json.dumps(record)
+
+
 class RequiredScore(BaseModel):
     model_config = ConfigDict(strict=True)
     score: float

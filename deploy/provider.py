@@ -2,6 +2,7 @@
 import json
 import os
 import re
+from time import perf_counter
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import SystemMessage
 from app.services.llm import compact_parse_error
@@ -55,9 +56,16 @@ class StructuredReply:
             if callback is not None:
                 from langchain_core.runnables.config import merge_configs
                 kwargs['config']=merge_configs(kwargs.get('config'),{'callbacks':[callback]})
+        started = perf_counter()
         result = self.runnable.invoke(messages, *args, **kwargs)
         raw = result.get('raw')
         content = getattr(raw, 'content', None)
+        reason = getattr(raw, 'response_metadata', {}).get('finish_reason')
+        log_event('structured_model_response', operation=self.schema_name,
+                  elapsed_ms=round((perf_counter()-started)*1000, 3),
+                  input_characters=sum(len(str(m.content)) for m in messages),
+                  output_characters=len(content) if isinstance(content, str) else None,
+                  finish_reason=reason if reason in {'stop','length','tool_calls','function_call','content_filter'} else 'unknown')
         if getattr(raw, 'response_metadata', {}).get('finish_reason') == 'length':
             raise OutputParserException('Model output was cut off before completion. Return a concise complete JSON instance covering the entire requested scope.')
         if isinstance(content, str):

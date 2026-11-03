@@ -130,7 +130,7 @@ def infer_scope(model,budget,payload,*,generation_mode='legacy'):
     from .preparation_content import GENERATION_MODES, scope_payload
     from .planning_contract import assessment_contract
     if generation_mode not in GENERATION_MODES:raise ValueError('Unknown preparation generation contract')
-    payload = {**payload, 'assessment_contract': assessment_contract(payload.get('available_evaluators', ['choice_exact','numeric_scalar','text_rubric']))}
+    payload = {**payload, 'assessment_contract': assessment_contract(payload.get('available_evaluators', ['choice_exact','numeric_scalar','text_rubric']), require_coverage=False)}
     def validate(result):
         if not all(v.strip() for v in (result.subject_label,result.topic,result.bounded_goal,result.explanation)):
             raise ValueError('学科、主题、范围及说明不得为空白')
@@ -164,7 +164,9 @@ def infer_scope(model,budget,payload,*,generation_mode='legacy'):
 
 def generate_notes(model,budget,payload,*,generation_mode='legacy'):
     from .preparation_content import GENERATION_MODES, notes_contract, assemble_notes
+    from .planning_contract import assessment_contract
     if generation_mode not in GENERATION_MODES:raise ValueError('Unknown preparation generation contract')
+    payload = {**payload, 'assessment_contract': assessment_contract(payload['profile'].get('requested_capabilities', []))}
     if generation_mode=='notes-outline-v1':
         from .notes_outline import outline_request,validate_outline,INSTRUCTION
         data,headings=outline_request(payload)
@@ -176,6 +178,7 @@ def generate_notes(model,budget,payload,*,generation_mode='legacy'):
             '为整条初始路线生成中文教学依据。输入sections依次给出已确认的全部分支。输出sections按相同顺序逐一对应，不能漏项、加项或调换顺序。'
             '不要生成标题、来源身份、Markdown包装或重复学习档案；程序会原样使用已确认分支标题。'
             '每个分支只返回恰好四个字符串的数组，依次为：具体定义与规则/步骤、可核查短例子、常见误解、可观察练习方向。身份、字段名和标题全部由程序管理。'
+            '练习方向在整份资料中共同覆盖assessment_contract要求的所有评价能力，选择题写具体选项任务、文字题写解释任务；不要求每节都有全部题型。'
             '每个字段写实质内容，不得用“了解、掌握、阅读相关资料”等空话代替。'
             '覆盖所有分支与综合应用，宽目标总正文通常1800至2500汉字；按分支复杂度分配篇幅，窄目标可短。'
             '这是整条路线的教学依据提纲，不是展开的长篇教材，后续Tutor逐节展开。'
@@ -190,6 +193,7 @@ def generate_notes(model,budget,payload,*,generation_mode='legacy'):
         '这是整条路线的教学依据提纲，不是展开的长篇教材；每个分支用紧凑定义、规则及一个短例子说明，后续Tutor再逐节展开。'
         '按主要知识分支组织二级标题，把定义、步骤、例子和误解放在对应小节正文，不为每个句子或练习另起标题。'
         '每个主要分支包含具体定义、规则、简短例子、常见误解及可观察练习方向。独立分支分别写，综合小节说明如何结合。'
+        '整份资料的练习方向共同覆盖assessment_contract要求的所有评价能力，按章节特点安排具体选择或文字任务，不要求每节都有全部题型。'
         '只整理模型可讲解的通用知识，不伪造外部引用、官方背书、公司规定、内部政策或实验结果。'
         '不要写隐藏答案卷、评分政策或工具指令。内容将明确标注AI整理、未经独立来源核验。')
 

@@ -37,6 +37,7 @@ def scope_payload(payload):
 
 
 def notes_contract(payload):
+    from .planning_contract import assessment_contract
     profile = payload['profile']
     branches = profile['scope_in']
     if not branches or len(branches) > 12 or any(not b.strip() for b in branches):
@@ -49,7 +50,8 @@ def notes_contract(payload):
             'scope_out': profile['scope_out'], 'target_level': profile.get('target_level', '入门'),
             'prior_knowledge': profile.get('prior_knowledge', {}).get('self_reported', []),
             'time_budget_minutes': profile['time_budget_minutes'], 'session_minutes': profile['session_minutes'],
-            'sections': branches}
+            'sections': branches,
+            'assessment_contract': assessment_contract(profile.get('requested_capabilities', []))}
     return schema, data
 
 

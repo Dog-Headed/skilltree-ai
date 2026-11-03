@@ -140,8 +140,9 @@ class Binding:
 
 
 def _plan(payload):
-    from .contracts import LearningObjective
+    from .contracts import AssessmentTask
     from .planning_contract import EVIDENCE_BY_CAPABILITY, assessment_contract, validate_objective_tasks
+    from .task_design import TASK_CAPABILITIES, PROTOCOL, capabilities
     class PlanProjection(Projection):
         def data(self, value, field=''):
             if isinstance(value, dict):
@@ -150,21 +151,25 @@ def _plan(payload):
                     node_refs = {n['node_id']: 'n'+str(i+1) for i,n in enumerate(value['nodes']) if 'node_id' in n}
                     for n in value['nodes']:
                         n['prerequisite_ids'] = [node_refs.get(ref,ref) for ref in n.get('prerequisite_ids',[])]
-                value = {k: v for k, v in value.items() if k not in {'evidence_requirement','node_id','objective_id'}}
+                if 'observable_outcome' in value:
+                    value={**value,'learning_target':value['observable_outcome']}
+                value = {k: v for k, v in value.items() if k not in {
+                    'evidence_requirement','node_id','objective_id','observable_outcome','required_capability_ids','criterion_ids'}}
             return super().data(value, field)
     projection = PlanProjection()
-    # Evidence kind is determined entirely by the selected registered evaluator.
-    # Keep the stored LearningObjective contract unchanged for old records.
-    fields = {name: (field.annotation, deepcopy(field))
-              for name, field in LearningObjective.model_fields.items() if name not in {'evidence_requirement','objective_id'}}
-    objective = create_model('PlanObjectiveContent', __base__=ContractModel, **fields)
+    allowed = payload['profile']['requested_capabilities']
+    task_forms=[form for form,cap in TASK_CAPABILITIES.items() if cap in allowed]
+    task=create_model('PlanAssessmentTask',__base__=AssessmentTask,task_form=(_literal(task_forms),...))
+    objective = create_model('PlanObjectiveContent', __base__=ContractModel,
+        learning_target=(str,Field(min_length=2,max_length=160)),
+        assessment_tasks=(list[task],Field(min_length=1,max_length=3)),
+        required=(bool,True),source_chunk_ids=(list[str],Field(min_length=1,max_length=20)))
     node_fields = {name: (field.annotation, deepcopy(field)) for name,field in SkillNode.model_fields.items()
                    if name not in {'node_id','objectives'}}
     node = create_model('PlanNodeContent', __base__=ContractModel, **node_fields,
         objectives=(list[objective], Field(min_length=1, max_length=5)))
     schema = create_model('PlanContent', __base__=ContractModel,
         nodes=(list[node], Field(min_length=1, max_length=20)))
-    allowed = payload['profile']['requested_capabilities']
     def assemble(content):
         content = deepcopy(content)
         goal_index = 0
@@ -173,6 +178,9 @@ def _plan(payload):
             for o in n['objectives']:
                 goal_index += 1
                 o['objective_id'] = 'o'+str(goal_index)
+                o['observable_outcome'] = o.pop('learning_target')
+                o['required_capability_ids'] = capabilities(o['assessment_tasks'])
+                o['criterion_ids'] = []
                 o['evidence_requirement'] = [kind for cap, kind in EVIDENCE_BY_CAPABILITY.items()
                                              if cap in o['required_capability_ids']]
         validate_objective_tasks(content['nodes'], allowed)
@@ -180,20 +188,26 @@ def _plan(payload):
     document = schema.model_json_schema()
     old = payload['learning_plan_schema']['$defs']
     goal_fields = document['$defs']['PlanObjectiveContent']['properties']
-    for key in ('required_capability_ids', 'source_chunk_ids', 'observable_outcome'):
+    for key in ('source_chunk_ids',):
         goal_fields[key] = deepcopy(old['LearningObjective']['properties'][key])
+        goal_fields[key].pop('default',None)
+        goal_fields[key]['minItems']=1
     for key in ('estimated_minutes', 'title', 'description'):
         document['$defs']['PlanNodeContent']['properties'][key] = deepcopy(old['SkillNode']['properties'][key])
     data = projection.data(payload)
     data['assessment_contract'] = assessment_contract(allowed)
     return Binding(schema, data, assemble, projection,
-        '只输出nodes。节点编号由数组顺序自动生成n1、n2等；prerequisite_ids用这些位置编号表达真实依赖。'
+        f'本轮规划协议{PROTOCOL}。只输出nodes。节点编号由数组顺序自动生成n1、n2等；prerequisite_ids用这些位置编号表达真实依赖。'
         'node_id、objective_id全部由程序生成，禁止输出这两个字段。保留真实课程内容和全部学习分支。'
         '规划字段描述概念与作答任务，无需复制完整程序。可以用空字符、换行符等中文名称；'
         '若包含代码或路径字面量，反斜杠必须按JSON规则双写转义。'
-        '只从已请求能力中选择required_capability_ids；evidence_requirement由程序按评价器生成，禁止在任何目标中输出。'
-        '目标须匹配assessment_contract中的作答形式；外部操作可作练习但不能成为无法验证的完成承诺。'
-        '整份计划的必要目标须覆盖required_plan_evaluation_capabilities全部能力；可选目标不计入，不要求每节点覆盖全部题型。'
+        'learning_target只描述要学习的具体知识或能力，不必写成测评指令，不受动词或作品名称词表限制。'
+        'assessment_tasks另行设计如何收集证据：每种task_form最多一个，choice为选项作答、numeric为单数值、text为文字作品或解释。'
+        'submission是具体提交物名称，保持自由文本；requirements列出具体知识内容与作答要求，criteria列出可检查的评价依据。'
+        'support_quote逐字摘录本目标所选资料中的短句作为依据，通常8至50字即可，不抄整段；不能自称内容已审查通过，不生成隐藏答案或分数。'
+        '评价器、证据类型与criterion_ids由程序生成，不输出required_capability_ids、evidence_requirement、criterion_ids。'
+        '正式评价只检查提交的选项、数值和文字，不认证真实安装、登录、口头演讲或外部执行成功。'
+        '整份计划的必要目标的task_form须共同覆盖required_plan_evaluation_capabilities；可选目标不计入，不要求每节点全部题型。'
         '修复缺失能力时须同时改正作答任务语义，保留知识分支与已有文字目标，不能仅添加能力标签。'
         '修复时nodes.0.objectives.0等是本轮数组位置，改正全部列出的位置并返回完整计划，保留全部学习分支和所请求能力。'
         '项目身份、草稿和计划版本由程序绑定。', document)

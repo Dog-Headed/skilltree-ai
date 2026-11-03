@@ -43,7 +43,7 @@ def test_first_missing_choice_is_reported_in_model_slots_and_repaired_once():
     assert 'nodes.*.objectives.*.required_capability_ids' == issue['field']
     assert (budget.request_count, budget.output_repair_count, budget.network_retry_count) == (2,1,0)
     assert result.nodes[2].prerequisite_ids == ['n1','n2']
-    assert result.nodes[0].objectives[0].observable_outcome == text_only()['nodes'][0]['objectives'][0]['observable_outcome']
+    assert result.nodes[0].objectives[0].observable_outcome == text_only()['nodes'][0]['objectives'][0]['learning_target']
     assert all(o.source_chunk_ids == ['chunk_1'] for n in result.nodes for o in n.objectives)
     assert wire.calls[0][1]['assessment_contract']['required_plan_evaluation_capabilities'] == list(CAPS)
     assert not required_capability_coverage([n.model_dump() for n in result.nodes], CAPS)['missing']
@@ -70,7 +70,7 @@ def test_adding_choice_tag_without_choice_task_is_rejected():
     wire = Wire(tagged)
     with pytest.raises(ModelOutputValidationError):
         generate(wire, CAPS)
-    assert 'choice_task_required' in feedback(wire)['validation_error']
+    assert 'extra_forbidden' in feedback(wire)['validation_error']
 
 
 def test_no_per_node_all_capabilities_requirement_or_profile_mutation():
@@ -126,7 +126,9 @@ def test_retry_guard_allows_changed_input_or_model_and_success_breaks_failure_ru
     class Model:
         model_name='model-a'
     from app.v3.planning_contract import PlanningTaskError, coverage_issue
-    cause=PlanningTaskError([coverage_issue(text_only()['nodes'], CAPS)])
+    nodes=deepcopy(text_only()['nodes'])
+    nodes[0]['objectives'][0]['required_capability_ids']=['text_rubric']
+    cause=PlanningTaskError([coverage_issue(nodes, CAPS)])
     def fail():
         raise ModelOutputValidationError('wrapped') from cause
     def run(key, inputs=None, version='v1'):

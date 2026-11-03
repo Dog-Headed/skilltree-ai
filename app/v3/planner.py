@@ -29,9 +29,9 @@ from app.v3.contracts import (
 )
 
 
-from .planning_contract import OBSERVABLE as _OBSERVABLE, assessment_contract, validate_objective_tasks, validate_plan_coverage, rejected_planning_data
+from .planning_contract import assessment_contract, validate_objective_tasks, validate_plan_coverage, rejected_planning_data
 
-PLANNER_PROMPT_VERSION = "v3-garden-planner-12-compound-work"
+PLANNER_PROMPT_VERSION = "v3-garden-planner-13-task-design"
 _EVIDENCE_CAPABILITIES = {
     "choice": "choice_exact", "numeric_result": "numeric_scalar", "text_excerpt": "text_rubric",
 }
@@ -158,12 +158,12 @@ def validate_learnability(
     if not any(objective.required for objective in objectives):
         raise ValueError("正式计划至少需要一个必要目标")
     validate_objective_tasks([node.model_dump() for node in plan.nodes], profile.requested_capabilities)
-    for node in plan.nodes:
+    for ni,node in enumerate(plan.nodes):
         if len(node.objectives) > SERVER_LIMITS.max_objectives_per_node:
             raise ValueError("节点目标数超过服务端上限")
         if rules and sum(rules[objective.objective_id].min_items for objective in node.objectives if objective.required) > SERVER_LIMITS.max_questions_per_assessment:
             raise ValueError("节点必要目标覆盖无法容纳在服务端单卷题数上限内")
-        for objective in node.objectives:
+        for oi,objective in enumerate(node.objectives):
             required = set(objective.required_capability_ids)
             if not required <= requested:
                 raise ValueError(f"目标 {objective.objective_id} 超出学习档案请求的能力范围")
@@ -180,7 +180,15 @@ def validate_learnability(
                 if chunk_id not in chunks:
                     raise ValueError(f"目标 {objective.objective_id} 引用了不存在、未选中或不可见的教学片段：{chunk_id}")
                 if not source_is_relevant(objective.observable_outcome, chunks[chunk_id].content):
-                    raise ValueError(f"目标 {objective.objective_id} 与引用片段 {chunk_id} 未通过保守词汇相关性检查，请调整目标或补资料")
+                    if not objective.assessment_tasks:
+                        # Preserve old plan compatibility; new task contracts
+                        # use factual extracts instead of a lexical hard veto.
+                        raise ValueError(f"目标 {objective.objective_id} 与引用片段 {chunk_id} 未通过保守词汇相关性检查，请调整目标或补资料")
+                    log_event('planner_source_relevance_warning',project_id=plan.project_id,
+                              node_id=node.node_id,operation='task_design',outcome='semantic_support_not_proven')
+            if objective.assessment_tasks:
+                from .task_design import validate_quotes
+                validate_quotes(objective,chunks,('nodes',ni,'objectives',oi))
             if rules:
                 rule = rules[objective.objective_id]
                 if objective.required != rule.required:
@@ -246,15 +254,15 @@ def build_planner_messages(
             "覆盖scope_in的全部主要分支和综合应用，不得仅为了少生成内容而把不同知识塞入同一节点。"
             "把不同规则、操作和综合练习拆成可逐步学习的节点，不要把多项内容压成一个300至360分钟的大章节。"
             "session_minutes只影响每次学习的节奏，不限制整棵树的总时长；树的总时间限制是time_budget_minutes。"
-            "节点预计总分钟数不得超过项目预算。目标写明可观察行为及具体内容，不能只有掌握、理解。"
+            "节点预计总分钟数不得超过项目预算。区分要学的具体知识与如何测评，不要求学习目标句子包含某个作答动词。"
             "不用填满总预算；参考planning_guidance按每节一至三次session分配分钟数，最后逐项相加核对总量。"
-            "默认每节点一个可观察目标，确需独立证据时可增加，最多五个；全树仍须覆盖全部请求能力和主要知识分支。"
+            "默认每节点一个具体学习目标和相应作答契约，确需独立证据时可增加，最多五个；全树仍须覆盖全部请求能力和主要知识分支。"
             "以本轮输出协议为准：若需要填写身份，node_id用n1、n2，objective_id用全树唯一短身份；程序负责的字段无需输出。不要输出schema或重复资料正文。"
-            "title简短，description一句话，observable_outcome只写具体可检查任务；有默认值且语义相同的可选字段可省略。"
-            "observable_outcome须遵守assessment_contract：具体写出给定材料、要求提交的答案或文字产物以及知识规则。"
-            "文字作品可为提示词、邮件、摘要、代码等；写明包含哪些内容、格式或其他可检查要求，也可要求说明具体设计依据或检查方法。编写、撰写、拟定与写出含义一致，不能只加动词前缀。评分对象是提交的作品及其解释，不是认证软件实际安装、登录或执行成功。"
+            "title简短，description一句话。新内容协议中learning_target表达具体学习目标，assessment_tasks另行设计提交物、要求、评价依据与资料摘录。"
+            "文字作品名称开放，可以是演讲稿、提纲、提示词或其他作品，不受名称或动词允许名单限制。不能仅用task_form标签代替具体任务与评价依据。"
+            "真实操作能力可作为学习愿景，但当前测评仅检查所提交的选择、数值或文字，不把文本测评当作真实操作认证。"
             "真实操作可作为自愿练习，正式目标不能声称已验证其实际完成；例如改为选出正确命令、解释给定输出或编写供文字量规检查的代码。"
-            "选择题目标可写成‘从给定选项中选出/辨认具体规则或结果’，不要写成笼统知识点名称。"
+            "选择任务由现有选项接口收集答案，具体知识要求写在任务中；学习目标不必出现选择或排序等动词。"
             "固定身份及版本由服务端绑定；依赖只引用本计划节点，无自依赖、无环。"
             "prerequisite_ids只填掌握该节点所必需的直接前置，不是课程展示顺序，不要默认每节点依赖上一节点或所有早先节点。"
             "能独立学习的知识形成并行分支，共用基础可以共享前置，综合应用应汇合实际需要的多个分支；真正线性的目标允许线性。"
@@ -262,16 +270,14 @@ def build_planner_messages(
             "每目标仅使用请求且正式可用的评价能力，证据形式必须匹配策略评价器。"
             "required_plan_evaluation_capabilities不是任选列表：整份计划必须全部覆盖，每种至少出现在一个required=true的目标中，可选目标不计入。"
             "不要求每个节点都有全部题型。缺选择能力时，保留文字目标，为适合辨析的知识增加有来源的必要选择任务，并同时写明选项作答语义；不能只追加标签。"
-            "required_capability_ids只能从allowed_objective_capability_ids逐字选取；全局存在的其他能力不代表本项目已经请求。"
-            "例如仅允许text_rubric时，所有目标只选该评价能力；证据类型若由本轮内容协议规定程序生成，不能重复输出。"
-            "criterion_ids只用于text_rubric；纯choice_exact或numeric_scalar目标必须为空数组[]，不能编造量规标准。"
+            "新内容协议只在允许的task_form中选择，程序绑定required_capability_ids、evidence_requirement和criterion_ids，不生成这些字段。"
             "每目标引用目录内真实教学chunk_id，正文须与该目标相关，不引用私有答案或假造资料。"
             "本次目录的s1等短片段ID是服务端提供的有效引用，服务端会恢复正式身份；它们不是节点序号，必须按正文内容挑选。"
             "每目标默认仅引用一个直接支持该任务的正文片段，确需结合两段规则才引用两段；不要附加其他章节或只有标题的片段。"
             "引用前逐条核对片段正文，目标中写出该片段实际包含的知识术语，不要把目录第一段或章节标题误当成支持所有目标的正文。"
             "运算目标也要点明被考查的具体规则，例如依据去括号规则求解，不能只给算式或笼统作答要求。"
-            "用户自述基础仅调整起点，不产生已测通过或完成记录。"
-            "不输出或降低policy；policy已有objective_rules时复用其目标身份，否则自行生成稳定身份。"
+            "用户自述基础仅调整起点，不产生已测通过或完成记录。已会内容可简短衔接，不在scope_out排除详细复习后又把它安排成完整新章节；确需复习时说明原因。"
+            "不输出或降低policy，身份绑定遵守本轮内容协议，不能改变服务端提供的目标身份。"
             "不要用选择识别替代用户要求的数值求解或文字解释能力。"
         )),
         HumanMessage(content="以下 JSON 是规划所需的受约束数据：\n" + _json(payload)),
@@ -347,8 +353,12 @@ def generate_plan(
         try:
             return structured.invoke(messages)
         except (ValidationError, OutputParserException) as exc:
-            error=ModelOutputValidationError("V3 Planner 结构化输出非法："+compact_parse_error(exc))
-            error.repair_data=rejected_planning_data(exc)
+            fragment=rejected_planning_data(exc)
+            from .preparation_feedback import safe_summary
+            content_error=safe_summary(exc,'plan',0).get('category')=='content'
+            prefix='V3 Planner 任务内容需要修复：' if content_error else 'V3 Planner 结构化输出非法：'
+            error=ModelOutputValidationError(prefix+compact_parse_error(exc))
+            error.repair_data=fragment
             raise error from exc
 
     def validate_output(raw: Any):

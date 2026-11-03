@@ -372,7 +372,11 @@
       if (!compact) {
         li.append(el('p', { class: 'node-description', text: node.description || '' }));
         const objectives = el('ul', { class: 'objective-list' });
-        for (const obj of list(node.objectives)) objectives.append(el('li', {}, el('span', { text: obj.observable_outcome || obj.description || obj.title || obj.objective_id }), el('small', { text: obj.required === false ? '选修目标' : '必要目标' })));
+        for (const obj of list(node.objectives)) {
+          const item=el('li', {}, el('span', { text: obj.observable_outcome || obj.description || obj.title || obj.objective_id }), el('small', { text: obj.required === false ? '选修目标' : '必要目标' }));
+          for (const task of list(obj.assessment_tasks)) item.append(el('p', {class:'dim',text:`如何检验：${task.submission} · ${list(task.requirements).join('；')}`}));
+          objectives.append(item);
+        }
         if (objectives.childElementCount) li.append(objectives);
       }
       const prereqs = list(node.prerequisite_ids || node.prerequisites);

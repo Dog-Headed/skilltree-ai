@@ -501,6 +501,14 @@
             "maxItems": 20,
             "title": "Criterion Ids",
             "type": "array"
+          },
+          "assessment_tasks": {
+            "items": {
+              "$ref": "#/$defs/AssessmentTask"
+            },
+            "maxItems": 3,
+            "title": "Assessment Tasks",
+            "type": "array"
           }
         },
         "required": [
@@ -569,6 +577,64 @@
           "estimated_minutes"
         ],
         "title": "SkillNode",
+        "type": "object"
+      },
+      "AssessmentTask": {
+        "additionalProperties": false,
+        "description": "How this interface collects evidence; artifact names remain open text.",
+        "properties": {
+          "task_form": {
+            "enum": [
+              "choice",
+              "numeric",
+              "text"
+            ],
+            "title": "Task Form",
+            "type": "string"
+          },
+          "submission": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Submission",
+            "type": "string"
+          },
+          "requirements": {
+            "items": {
+              "maxLength": 160,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Requirements",
+            "type": "array"
+          },
+          "criteria": {
+            "items": {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Criteria",
+            "type": "array"
+          },
+          "support_quote": {
+            "maxLength": 180,
+            "minLength": 1,
+            "title": "Support Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_form",
+          "submission",
+          "requirements",
+          "criteria",
+          "support_quote"
+        ],
+        "title": "AssessmentTask",
         "type": "object"
       }
     },

@@ -64,7 +64,7 @@ def assessment_contract(capabilities, *, require_coverage=True):
             'coverage_rule': ('整份计划的每种要求能力至少出现在一个required=true的目标中；可选目标不计入。不要求每个节点都有全部题型。作答任务须符合所选能力，不能只追加能力标签。'
                               if require_coverage else '范围分析尚未选定题型。task_forms只列可用形式；按具体目标选择必要能力，不要求全部选择。选定后才约束整份计划覆盖。'),
             'execution_boundary': '只评价本次提交的选择、数值或文字证据；不验证真实程序运行、设备操作或其他外部实践已经完成。',
-            'practice_boundary': '可以讲解实际操作和安排自愿练习；正式解锁目标须写成当前可评价的任务，不能以文字测评冒充真实操作认证。'}
+            'practice_boundary': '可以讲解实际操作和安排自愿练习；正式解锁依据为测评任务收集的实际证据，不能以文字测评冒充真实操作认证。'}
 
 
 class PlanningTaskError(ValueError):
@@ -120,6 +120,7 @@ def validate_plan_coverage(nodes, capabilities):
 def validate_objective_tasks(nodes, allowed_capabilities):
     """Report all affected model slots without changing any proposed goal."""
     issues = []
+    design_targets = []
     allowed = set(allowed_capabilities)
     for ni, node in enumerate(nodes):
         for oi, objective in enumerate(node['objectives']):
@@ -134,36 +135,46 @@ def validate_objective_tasks(nodes, allowed_capabilities):
                 issue('required_capability_ids', 'capability_not_requested', '只能选择本次档案已请求的评价能力，不能自行添加工具或执行能力。')
             if not evaluated:
                 issue('required_capability_ids', 'assessment_capability_required', '每个正式目标至少需要一种本次可用的评价能力。')
-            if 'choice_exact' in evaluated and re.search(r'解释|说明|列举|分析|描述', outcome) and not re.search(
-                    r'选|判断|匹配|排序|辨认|辨识|识别|区分|辨析|指出|找出|\b(?:choose|select|identify|recognize|match|classify)\b', outcome, re.I):
-                issue('observable_outcome', 'choice_task_required', 'choice_exact须有可选择或判断的作答任务。不能只给原文字解释目标追加选择题标签；保留知识内容，写明从给定场景和选项中选出或判断什么。')
-            operation = EXTERNAL_OPERATION.search(outcome)
-            account_operation = EXTERNAL_ACCOUNT_OPERATION.search(outcome)
-            text_action = OBSERVABLE.search(outcome)
-            describe_operation = DESCRIBE_OPERATION.search(outcome)
-            supplied = GIVEN_ARTIFACT.search(outcome)
-            product = TEXT_PRODUCT.search(outcome) if 'text_rubric' in evaluated else None
-            written_work = WRITTEN_WORK.search(outcome) if 'text_rubric' in evaluated else None
-            work_requirements = written_work and _has_work_requirements(outcome, written_work)
-            if work_requirements:
-                product = written_work
-            if product is None and 'numeric_scalar' in evaluated:
-                product = NUMERIC_PRODUCT.search(outcome)
-            external = EXPLICIT_EXECUTION.search(outcome) or operation and not (
-                describe_operation and describe_operation.start() < operation.start()
-                or supplied and supplied.start() < operation.start() and (text_action or product))
-            if account_operation and not (
-                    describe_operation and describe_operation.start()<account_operation.start()
-                    or product and product.start()<account_operation.start()
-                    or supplied and supplied.start()<account_operation.start() and text_action):
-                external = True
-            if external:
-                issue('observable_outcome', 'unverifiable_external_operation',
-                      '目标要求真实外部操作，当前不能验证其实际执行。保留知识范围，改成对给定命令、代码、输出或步骤的可检查任务：'+forms+'。')
-            elif (VAGUE_WORK.fullmatch(outcome.strip()) or written_work and not work_requirements
-                  or not text_action and not product):
-                issue('observable_outcome', 'observable_task_required',
-                      '目标没有明确当前可评分的作答任务。保留具体知识内容，使用：'+forms+'；不要只写掌握、理解或知识点名称。')
+            if objective.get('assessment_tasks'):
+                from .task_design import validate_design
+                try:
+                    validate_design(objective, path)
+                except PlanningTaskError as exc:
+                    issues.extend(exc.issues)
+                    design_targets.extend(exc.rejected_targets or [])
+            else:
+                # Compatibility only for plans generated before task separation.
+                # Every new model-facing plan must supply assessment_tasks.
+                if 'choice_exact' in evaluated and re.search(r'解释|说明|列举|分析|描述', outcome) and not re.search(
+                        r'选|判断|匹配|排序|辨认|辨识|识别|区分|辨析|指出|找出|\b(?:choose|select|identify|recognize|match|classify)\b', outcome, re.I):
+                    issue('observable_outcome', 'choice_task_required', 'choice_exact须有可选择或判断的作答任务。不能只给原文字解释目标追加选择题标签；保留知识内容，写明从给定场景和选项中选出或判断什么。')
+                operation = EXTERNAL_OPERATION.search(outcome)
+                account_operation = EXTERNAL_ACCOUNT_OPERATION.search(outcome)
+                text_action = OBSERVABLE.search(outcome)
+                describe_operation = DESCRIBE_OPERATION.search(outcome)
+                supplied = GIVEN_ARTIFACT.search(outcome)
+                product = TEXT_PRODUCT.search(outcome) if 'text_rubric' in evaluated else None
+                written_work = WRITTEN_WORK.search(outcome) if 'text_rubric' in evaluated else None
+                work_requirements = written_work and _has_work_requirements(outcome, written_work)
+                if work_requirements:
+                    product = written_work
+                if product is None and 'numeric_scalar' in evaluated:
+                    product = NUMERIC_PRODUCT.search(outcome)
+                external = EXPLICIT_EXECUTION.search(outcome) or operation and not (
+                    describe_operation and describe_operation.start() < operation.start()
+                    or supplied and supplied.start() < operation.start() and (text_action or product))
+                if account_operation and not (
+                        describe_operation and describe_operation.start()<account_operation.start()
+                        or product and product.start()<account_operation.start()
+                        or supplied and supplied.start()<account_operation.start() and text_action):
+                    external = True
+                if external:
+                    issue('observable_outcome', 'unverifiable_external_operation',
+                          '目标要求真实外部操作，当前不能验证其实际执行。保留知识范围，改成对给定命令、代码、输出或步骤的可检查任务：'+forms+'。')
+                elif (VAGUE_WORK.fullmatch(outcome.strip()) or written_work and not work_requirements
+                      or not text_action and not product):
+                    issue('observable_outcome', 'observable_task_required',
+                          '目标没有明确当前可评分的作答任务。保留具体知识内容，使用：'+forms+'；不要只写掌握、理解或知识点名称。')
             expected = {EVIDENCE_BY_CAPABILITY[cap] for cap in evaluated}
             if set(objective['evidence_requirement']) != expected:
                 issue('evidence_requirement', 'evidence_capability_mismatch', '证据形式必须与所选评价能力一致：'+','.join(sorted(expected)))
@@ -174,6 +185,9 @@ def validate_objective_tasks(nodes, allowed_capabilities):
         issues.insert(0, coverage)
     if issues:
         targets=[]
+        for target in design_targets:
+            if len(targets)==3 or len(json.dumps([*targets,target],ensure_ascii=False))>1200:break
+            targets.append(target)
         for item in issues:
             loc=item['loc']
             if (item['type'] not in {'observable_task_required','choice_task_required','unverifiable_external_operation'}

@@ -114,7 +114,7 @@ class StructuredReply:
             raise OutputParserException(compact_parse_error(error)) from error
         if result.get('parsed') is None:
             raise OutputParserException('A complete schema-valid JSON object is required.')
-        if self.schema_name in {'LearningPlan', 'PlanContent'}:
+        if self.schema_name == 'LearningPlan':
             for ni, node in enumerate(result['parsed'].nodes):
                 for oi, objective in enumerate(node.objectives):
                     if 'text_rubric' not in objective.required_capability_ids and objective.criterion_ids:

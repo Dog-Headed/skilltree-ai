@@ -22,7 +22,7 @@ from .model_tasks import run_model_task
 from .repository import ConflictError, V3Repository, encode
 from app.services.observability import log_event
 
-PROMPT_VERSION = 'guided-garden-5'
+PROMPT_VERSION = 'guided-garden-6-prior-scope'
 TABLE_SQL = '''CREATE TABLE IF NOT EXISTS guided_projects (
  project_id TEXT PRIMARY KEY REFERENCES learning_projects(id),
  intent_json TEXT NOT NULL, generated_source_id TEXT NOT NULL,
@@ -138,14 +138,17 @@ def infer_scope(model,budget,payload,*,generation_mode='legacy'):
         if result.basis in {'general_knowledge','provided_material'} and not set(result.evaluation_capabilities)<=set(payload.get('available_evaluators',['choice_exact','numeric_scalar','text_rubric'])):
             raise ValueError('evaluation_capabilities只能选择本次available_evaluators，不能扩展当前评价能力。')
         if any(not s.strip() for s in result.scope_in+result.scope_out):raise ValueError('范围不得包含空白项')
+        if {s.strip() for s in result.scope_in} & {s.strip() for s in result.scope_out}:raise ValueError('scope_in与scope_out不能包含同一完整范围项；明确新学内容与仅作背景的内容。')
         if payload['user_material_catalog'] and result.basis=='general_knowledge':raise ValueError('已有上传资料时须围绕资料判断，不得改用无资料通识路线')
         if not payload['user_material_catalog'] and result.basis=='provided_material':raise ValueError('不能声称存在未提供的资料')
     instruction=(
         '用户种下的是一棵围绕长期目标持续学习的技能树。根据目标、自述基础和时间，识别学科与主题，规划可分多次学习的初始路线。'
         '基础只是自述，不能产生测评证据。不要要求用户先知道学科目录。'
+        '自述已会的时期、章节和技能应作为起点与简短背景衔接，不默认重学；若必须复习，明确列出理由和有限范围。'
+        'scope_in是本轮需要新学或明确复习的内容，scope_out不能同时排除已经排进scope_in的完整章节。'
         'topic是稳定简洁的树名，例如“日语·N3到N2”“Python编程入门”“心理学基础”，不要命名成“30分钟第一课”。'
         'time_budget_minutes是整条初始路线的总时间；session_minutes只是每次学习节奏，绝不能把整棵树缩减为一次session。'
-        '对跨章节、等级进阶或学科入门目标，在总预算内保留主要知识分支与综合应用，通常规划6至12个有意义的节点，必要时可至20个。'
+        '对跨章节、等级进阶或学科入门目标，在总预算内保留主要知识分支与综合应用，scope_in通常列6至12个主要分支，最多12项。后续Planner可再细分为最多20个节点，不把每个事件都拆成范围项。'
         '只有目标确实很窄、资料仅支持局部知识或用户明确限定很短的总时间时，才使用1至5节点；不要为了数量拆碎目标。'
         'scope_in要覆盖用户明确列出的主要内容，不能仅因每次30分钟而删除乘除、多步解等后续内容。'
         '若总预算或支持能力不足以覆盖最终目标，明确这是一条什么范围的初始路线，在scope_out和explanation说明尚未覆盖的部分；不得声称完整达成考试等级或实际技能。'
@@ -155,6 +158,7 @@ def infer_scope(model,budget,payload,*,generation_mode='legacy'):
         '大目标包含无法验证的实践时，保留有意义的文字或理论学习路线，在scope_out和说明中标出无法验证的实践，不冒称已完成整个大目标。'
         '遵守assessment_contract，区分讲解操作步骤与认证实际操作：编程可学习代码阅读、命令含义及文字代码作答，不承诺系统执行或验证真实运行。'
         '若本课必须实际验证听说、实验、代码执行等尚未支持能力，选unsupported，说明当前边界。'
+        '学习目标与测评任务分开：能讲清某段历史可以训练讲解稿和文字问答，不能声称已评价真实口头表现。'
         '根据具体目标挑选已实现评价能力，解释步骤选text_rubric；不要默认要求所有题型。')
     if generation_mode=='content-v1':
         return _structured(model,budget,LearningPreparation,scope_payload(payload),instruction,

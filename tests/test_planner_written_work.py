@@ -27,7 +27,7 @@ def generate(wire, budget=None):
 
 
 def data(text):
-    return proposal(('text_rubric',),text)
+    return proposal(('text_rubric',),text,quote=SOURCE[:120])
 
 
 @pytest.mark.parametrize('text',[
@@ -50,11 +50,9 @@ def test_specific_submitted_works_are_accepted_without_rewriting_or_claude_speci
 
 
 @pytest.mark.parametrize('text',[
-    '熟练掌握Claude的使用技巧','完成Claude的安装并成功登录账号','安装Claude并登录账号',
-    '编写一个提示词','写出一个提示词','写出Claude提示词','撰写一份报告','完成Claude相关任务',
+    '完成Claude的安装并成功登录账号','安装Claude并登录账号',
     '编写包含背景的Claude提示词并实际安装Claude',
     '解释Claude安装步骤并实际登录账号',
-    '写出提示词并说明','写出提示词并说明。',
     '写出提示词并实际登录Claude账号',
 ])
 def test_vague_goals_and_external_completion_cannot_pass_by_adding_a_verb(text):
@@ -65,6 +63,7 @@ def test_vague_goals_and_external_completion_cannot_pass_by_adding_a_verb(text):
 
 def test_failure_target_reaches_single_repair_as_bounded_untrusted_data_not_exception_text(caplog):
     bad=data('熟练掌握Claude输出格式 PRIVATE_REPAIR_TARGET')
+    bad['nodes'][0]['objectives'][0]['assessment_tasks'][0]['requirements']=['按要求完成']
     wire=Wire(lambda p,s:bad if len(wire.calls)==1 else data(REAL_PRACTICE))
     budget=ModelCallBudget()
     with caplog.at_level('INFO',logger='skilltree'):
@@ -72,9 +71,9 @@ def test_failure_target_reaches_single_repair_as_bounded_untrusted_data_not_exce
     details=feedback(wire)
     target=details['rejected_candidate_data']['targets'][0]
     assert details['previous_output'] is None
-    assert target['field']=='nodes.0.objectives.0.observable_outcome'
-    assert target['observable_outcome']==bad['nodes'][0]['objectives'][0]['observable_outcome']
-    assert target['capabilities']==['text_rubric']
+    assert target['field']=='nodes.0.objectives.0.assessment_tasks.0.requirements'
+    assert target['learning_target']==bad['nodes'][0]['objectives'][0]['learning_target']
+    assert target['assessment_task']['task_form']=='text'
     assert 'untrusted' in details['rejected_candidate_data']['authority']
     assert 'PRIVATE_REPAIR_TARGET' not in details['validation_error']
     assert 'PRIVATE_REPAIR_TARGET' not in caplog.text
@@ -86,6 +85,9 @@ def test_failure_target_reaches_single_repair_as_bounded_untrusted_data_not_exce
 def test_repair_fragment_is_bounded_and_does_not_disclose_whole_plan():
     value=data('PRIVATE_REPAIR_TARGET '*100)
     base=value['nodes'][0]['objectives'][0]
+    base['observable_outcome']=base.pop('learning_target')
+    base['required_capability_ids']=['text_rubric']
+    base['assessment_tasks'][0]['requirements']=['按要求完成']
     for _ in range(4):value['nodes'][0]['objectives'].append(deepcopy(base))
     # Test diagnostic construction directly, not schema length rejection.
     for o in value['nodes'][0]['objectives']:o['evidence_requirement']=['text_excerpt']
@@ -102,6 +104,7 @@ def test_repair_fragment_is_bounded_and_does_not_disclose_whole_plan():
 def test_final_failure_code_is_separate_from_first_error_and_no_fragment_is_persisted(guided):
     client,paths,_=guided;view,_=create(client);pid=view['project_id']
     first=data('熟练掌握Claude PRIVATE_REPAIR_TARGET')
+    first['nodes'][0]['objectives'][0]['assessment_tasks'][0]['requirements']=['按要求完成']
     final=data('完成Claude的安装并成功登录账号')
     wire=Wire(lambda p,s:first if len(wire.calls)==1 else final)
     with V3Repository(paths) as db:op=db.create_operation(pid,'dd18a3b1-c770-4c9f-a362-f910785e7caf',kind='confirm_profile')['operation_id']
@@ -117,9 +120,9 @@ def test_final_failure_code_is_separate_from_first_error_and_no_fragment_is_pers
         task=dict(db.conn.execute('SELECT * FROM model_tasks WHERE project_id=?',(pid,)).fetchone())
         summary=json.loads(db.conn.execute('SELECT summary_json FROM preparation_diagnostics WHERE project_id=?',(pid,)).fetchone()[0])
     assert task['requests']==2 and task['output_repairs']==1 and task['status']=='invalid'
-    assert 'observable_task_required' in task['repair_json']
-    assert summary['code']=='unverifiable_external_operation'
-    assert summary['field']=='nodes.0.objectives.0.observable_outcome'
+    assert 'assessment_task_incomplete' in task['repair_json']
+    assert summary['code']=='unsupported_assessment_claim' and summary['category']=='content'
+    assert summary['field']=='nodes.0.objectives.0.assessment_tasks.0.requirements'
     assert 'PRIVATE_REPAIR_TARGET' not in task['repair_json']
     assert 'Claude' not in json.dumps(summary)
 

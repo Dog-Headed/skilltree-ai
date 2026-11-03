@@ -197,7 +197,11 @@ def content_payload(contract,node,policy,bound,previous_question_prompts):
             for block in bound[goal_id]['blocks']:
                 c=block['citation'];ref=lookup[(c['source_id'],c['source_version'],c['chunk_id'])]
                 refs.append(ref);blocks[ref]=block['content']
-            goals.append({'outcome':objectives[goal_id].observable_outcome,'source_refs':refs})
+            goal={'outcome':objectives[goal_id].observable_outcome,'source_refs':refs}
+            if objectives[goal_id].assessment_tasks:
+                from .task_design import task_payload
+                goal['assessment_tasks']=task_payload(objectives[goal_id],slot.question_type)
+            goals.append(goal)
         slots[slot.key]={'question_type':slot.question_type,'goals':goals,'source_blocks':blocks,
             'output_fields':list(contract.schema.model_fields[slot.key].annotation.model_fields)}
         if slot.criterion_ids:

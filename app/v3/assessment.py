@@ -222,6 +222,7 @@ def quiz_generation_messages(*, project_id, node, assessment_id, snapshot, polic
         "逐条核对required_coverage：choice用选择题，numeric_result用数值题，text_excerpt用文字题。"
         "一个目标有多种证据时要分别提供相应题型；min_items只是总题数下限，不能用一道题替代不同证据。"
         "每题明确有效答案、允许变体和来源。文字题私有answer_key非空，分项量规满分之和等于本题满分。"
+        "目标中的assessment_tasks与本题型对应：按submission、requirements、criteria设计具体任务和量规，评价学习目标，不照抄抽象目标充当题目。support_quote是教学依据，不是隐藏答案或通过证明。"
         "如果题目涉及的node.objectives含有criterion_ids，逐字保留这些冻结标准身份作为rubric.criterion_id，不得重新命名或自行发明替代ID。"
         "每道文字题必须覆盖其每个对应冻结目标所需的全部criterion_ids；多目标题须使用已有目标到标准映射。"
         "同一道题的rubric按criterion_id去重后设计，每个冻结ID只有一条评分项；一个标准含多个检查点时写在同一条description中，不重复ID或发明后缀ID。"

@@ -87,7 +87,6 @@ class RawModel:
 
 def test_real_planner_adapter_validates_recovered_content_with_one_request():
     content = proposal(('text_rubric',), r'解释C代码中 \0 的含义')
-    content['nodes'][0]['objectives'][0]['criterion_ids'] = ['r1']
     text = json.dumps(content, ensure_ascii=False).replace('"nodes":', '"nodes"', 1).replace(r'\\0', r'\0')
     model = RawModel(text)
     budget = ModelCallBudget()

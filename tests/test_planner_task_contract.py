@@ -32,14 +32,17 @@ def test_json_escape_feedback_locates_token_without_exposing_completion(token):
         json.loads(raw)
 
 
-def proposal(caps=('choice_exact',), outcome='从给定选项中选出C程序的正确编译顺序'):
+def proposal(caps=('choice_exact',), outcome='从给定选项中选出C程序的正确编译顺序', *, quote=MATERIAL[:70]):
     nodes = deepcopy(case.plan()['nodes'])
     goal = nodes[0]['objectives'][0]
-    goal.update(required_capability_ids=list(caps), observable_outcome=outcome, source_chunk_ids=['s1'])
-    goal.pop('evidence_requirement')
+    goal.clear()
+    forms={'choice_exact':'choice','numeric_scalar':'numeric','text_rubric':'text'}
+    goal.update(learning_target=outcome,source_chunk_ids=['s1'],assessment_tasks=[{
+        'task_form':forms[cap],'submission':{'choice':'选项作答','numeric':'一个数值结果','text':'文字解释或作品'}[forms[cap]],
+        'requirements':[outcome],'criteria':['依据资料准确说明所学知识与推理'],'support_quote':quote} for cap in caps])
     for node in nodes:
         node.pop('node_id')
-        for item in node['objectives']: item.pop('objective_id')
+        for item in node['objectives']: item.pop('objective_id',None)
     return {'nodes': nodes}
 
 
@@ -66,25 +69,26 @@ def test_real_execution_goal_gets_precise_slot_feedback_and_one_successful_repai
     budget = ModelCallBudget()
     result = generate(wire, budget=budget)
     error = feedback(wire)['validation_error']
-    assert 'nodes.0.objectives.0.observable_outcome' in error
-    assert 'unverifiable_external_operation' in error and '当前不能验证' in error
+    assert 'nodes.0.objectives.0.assessment_tasks.0.requirements' in error
+    assert 'unsupported_assessment_claim' in error
     assert '只有笼统' not in error and feedback(wire)['previous_output'] is None
     assert (budget.request_count, budget.output_repair_count) == (2, 1)
-    assert result.nodes[0].objectives[0].observable_outcome == good['nodes'][0]['objectives'][0]['observable_outcome']
+    assert result.nodes[0].objectives[0].observable_outcome == good['nodes'][0]['objectives'][0]['learning_target']
     assert result.nodes[0].objectives[0].evidence_requirement == ['choice']
     assert result.nodes[0].objectives[0].source_chunk_ids == ['chunk_1']
 
 
 def test_all_invalid_objectives_are_reported_together_before_fixed_metadata_is_bound():
     bad = proposal(outcome='熟练掌握C编译过程')
+    bad['nodes'][0]['objectives'][0]['assessment_tasks'][0]['requirements']=['按要求完成']
     second = deepcopy(bad['nodes'][0]['objectives'][0])
-    second['observable_outcome']='深入理解C循环规则'
+    second['learning_target']='深入理解C循环规则'
     bad['nodes'][0]['objectives'].append(second)
     wire = Wire(lambda p,s: bad if len(wire.calls)==1 else proposal())
     generate(wire)
     error = feedback(wire)['validation_error']
-    assert all(f'nodes.0.objectives.{i}.observable_outcome' in error for i in (0,1))
-    assert 'observable_task_required' in error
+    assert all(f'nodes.0.objectives.{i}.assessment_tasks.0.requirements' in error for i in (0,1))
+    assert 'assessment_task_incomplete' in error
 
 
 @pytest.mark.parametrize('caps', [
@@ -120,7 +124,7 @@ def test_writing_code_does_not_grant_permission_to_certify_external_execution():
     wire=Wire(value);budget=ModelCallBudget()
     with pytest.raises(ModelOutputValidationError):generate(wire,('text_rubric',),budget)
     assert (budget.request_count,budget.output_repair_count)==(2,1)
-    assert 'unverifiable_external_operation' in feedback(wire)['validation_error']
+    assert 'unsupported_assessment_claim' in feedback(wire)['validation_error']
 
 
 def test_late_budget_repair_projects_previous_output_back_to_the_same_model_contract():

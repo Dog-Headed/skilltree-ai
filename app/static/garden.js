@@ -255,6 +255,8 @@ window.SkillTreeGarden = function (ctx) {
     const row=(label,value)=>rows.append(el('dt',{text:label}),el('dd',{},value));
     row('生长条件',prereqs.length ? prereqs.map(id=>nodes.find(n=>idOf(n)===id)?.title || id).join(' / ') : '从你的现有基础出发');
     row('学会后能',el('ul',{},list(node.objectives).map(o=>el('li',{text:o.observable_outcome || o.description || o.objective_id}))));
+    const tasks=list(node.objectives).flatMap(o=>list(o.assessment_tasks));
+    if(tasks.length)row('如何检验',el('ul',{},tasks.map(t=>el('li',{text:`${t.submission} · ${list(t.requirements).join('；')}`}))));
     row('预计',`约 ${node.estimated_minutes || '—'} 分钟`);
     inner.append(rows);
     const current = idOf(node)===view.current_node_id;

@@ -16,10 +16,13 @@ SAFE_PLANNING_CODES = frozenset({
     'missing_required_plan_capability', 'observable_task_required', 'choice_task_required',
     'unverifiable_external_operation', 'capability_not_requested', 'assessment_capability_required',
     'evidence_capability_mismatch', 'rubric_not_applicable',
+    'assessment_task_incomplete','unsupported_assessment_claim',
+    'assessment_task_capability_mismatch','assessment_source_quote_missing',
 })
 SAFE_PLANNING_PATH = re.compile(
     r'nodes\.(?:\*|[0-9]|1[0-9])\.objectives\.(?:\*|[0-4])\.'
-    r'(?:observable_outcome|required_capability_ids|evidence_requirement|criterion_ids)\Z')
+    r'(?:observable_outcome|required_capability_ids|evidence_requirement|criterion_ids|'
+    r'assessment_tasks\.[0-2]\.(?:submission|requirements|criteria|support_quote))\Z')
 
 
 class RepeatedPlanFailure(ModelOutputValidationError):
@@ -38,6 +41,8 @@ def safe_summary(error, stage, elapsed_ms):
                 if issue['type'] not in SAFE_PLANNING_CODES or not SAFE_PLANNING_PATH.fullmatch(field):
                     continue
                 item={'code':issue['type'],'field':field}
+                if issue['type'] in {'assessment_task_incomplete','unsupported_assessment_claim','assessment_source_quote_missing'}:
+                    item['category']='content'
                 if issue['type']=='missing_required_plan_capability':
                     item.update(field='nodes[*].objectives[*].required_capability_ids')
                     item.update({k: [c for c in EVIDENCE_BY_CAPABILITY if c in issue['coverage'][k]]
@@ -100,6 +105,8 @@ def failure_notice(error):
         return f'学习计划未覆盖必要的{missing}目标，自动修复未成功，未确认任何计划。请修改目标或补充资料后重新整理；相同输入连续失败后会停止重复调用。已用请求不会清零。'
     if summary['code'] in {'observable_task_required','choice_task_required','unverifiable_external_operation'}:
         return '学习计划中的作答任务未通过检查，自动修复未成功，未确认任何计划。请明确要提交的选择、数值或文字作品及具体要求；系统不能认证外部操作已完成。已用请求不会清零。'
+    if summary['code'] in {'assessment_task_incomplete','unsupported_assessment_claim','assessment_source_quote_missing'}:
+        return '学习目标已保留，但测评任务的具体要求、评价依据或资料摘录仍不完整，内容修复未成功。请补充任务或资料后再整理；已用请求不会清零。'
     if isinstance(error, ModelOutputValidationError):
         return '这次 AI 准备内容未通过校验，自动修复未成功，未确认任何计划。请检查目标或资料后重新整理；已用请求不会清零。'
     return '这次 AI 准备请求未完成，未确认任何计划。请稍后检查模型服务再重试；已用请求不会清零。'

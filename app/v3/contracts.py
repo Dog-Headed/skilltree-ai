@@ -9,7 +9,7 @@ actual project context before persistence or use.
 from hashlib import sha256
 from typing import Annotated, Literal, Mapping
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, model_serializer
 
 from app.v3.config import CONTRACT_VERSION, DB_SCHEMA_VERSION, GRAPH_VERSION, SERVER_LIMITS
 
@@ -219,6 +219,23 @@ class NodeMaterialLink(ContractModel):
     purpose: MaterialPurpose
 
 
+class AssessmentTask(ContractModel):
+    """How this interface collects evidence; artifact names remain open text."""
+    task_form: Literal['choice', 'numeric', 'text']
+    submission: str = Field(min_length=1, max_length=100)
+    requirements: list[Annotated[str, Field(min_length=1, max_length=160)]] = Field(min_length=1, max_length=4)
+    criteria: list[Annotated[str, Field(min_length=1, max_length=120)]] = Field(min_length=1, max_length=4)
+    support_quote: str = Field(min_length=1, max_length=180)
+
+    @model_validator(mode='after')
+    def nonempty_content(self):
+        if any(not s.strip() for s in [self.submission, self.support_quote, *self.requirements, *self.criteria]):
+            raise ValueError('提交物、任务要求、评价依据和资料摘录不能为空白')
+        _unique(self.requirements, '任务要求')
+        _unique(self.criteria, '评价依据')
+        return self
+
+
 class LearningObjective(ContractModel):
     objective_id: Identity
     observable_outcome: Text
@@ -227,6 +244,15 @@ class LearningObjective(ContractModel):
     required: bool = True
     source_chunk_ids: list[Identity] = Field(default_factory=list, max_length=20)
     criterion_ids: list[Identity] = Field(default_factory=list, max_length=20)
+    assessment_tasks: list[AssessmentTask] = Field(default_factory=list, max_length=3)
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy_bytes(self, handler):
+        data = handler(self)
+        # Old frozen plans retain their original JSON shape on round trips.
+        if not self.assessment_tasks:
+            data.pop('assessment_tasks', None)
+        return data
 
     @model_validator(mode="after")
     def validate_objective(self):
@@ -235,6 +261,7 @@ class LearningObjective(ContractModel):
         _unique(self.required_capability_ids, "目标所需能力")
         _unique(self.source_chunk_ids, "目标来源片段")
         _unique(self.criterion_ids, "量规标准")
+        _unique([task.task_form for task in self.assessment_tasks], '目标作答形式')
         return self
 
 

@@ -38,6 +38,9 @@ def data(text):
     '撰写一份摘要，要求包含结论及依据',
     'Draft an email with a subject and three points',
     'Write a prompt with table columns and length requirements',
+    '为“写一封请假邮件”和“总结一段新闻”分别设计提示词，并说明期望输出。',
+    '规划一个三步任务（如总结、提问、改写），写出每步的提示词，并说明如何利用上下文连接各步骤。',
+    '说明如何利用上下文连接各步骤，并写出每步的提示词。',
 ])
 def test_specific_submitted_works_are_accepted_without_rewriting_or_claude_special_case(text):
     value=data(text);before=deepcopy(value);wire=Wire(value)
@@ -51,6 +54,8 @@ def test_specific_submitted_works_are_accepted_without_rewriting_or_claude_speci
     '编写一个提示词','写出一个提示词','写出Claude提示词','撰写一份报告','完成Claude相关任务',
     '编写包含背景的Claude提示词并实际安装Claude',
     '解释Claude安装步骤并实际登录账号',
+    '写出提示词并说明','写出提示词并说明。',
+    '写出提示词并实际登录Claude账号',
 ])
 def test_vague_goals_and_external_completion_cannot_pass_by_adding_a_verb(text):
     wire=Wire(data(text));budget=ModelCallBudget()

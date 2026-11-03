@@ -8,7 +8,7 @@ EVIDENCE_BY_CAPABILITY = {
 TASK_FORMS = {
     'choice_exact': '从给定选项中选出、判断、匹配或排序具体规则、代码片段或结果',
     'numeric_scalar': '依据已学规则计算并提交一个数值结果，使用支持的单位',
-    'text_rubric': '解释、比较、分析，或提交可按文字量规检查的代码、提示词、邮件、摘要、步骤等文字作品；写明具体内容或格式要求，评价提交的文字，不认证外部操作已完成',
+    'text_rubric': '解释、比较、分析，或提交可按文字量规检查的代码、提示词、邮件、摘要、步骤等文字作品；写明具体内容、格式要求或需说明的设计依据与检查方法，评价提交的文字，不认证外部操作已完成',
 }
 OBSERVABLE = re.compile(
     r'选择|选出|辨认|辨识|识别|指出|比较|解释|说明|列出|写出|改写|求解|计算|验证|判断|区分|匹配|描述|归纳|'
@@ -37,6 +37,24 @@ DESCRIBE_OPERATION = re.compile(
     r'\b(?:choose|select|identify|explain|describe|compare|analy[sz]e|classify|match)\b', re.I)
 GIVEN_ARTIFACT = re.compile(r'给定|提供的|所给|阅读|以下|\b(?:given|provided|read)\b', re.IGNORECASE)
 NUMERIC_PRODUCT = re.compile(r'求出|算出|手算|推算|推导|推演|追踪|预测|求值|\b(?:compute|evaluate|determine)\b', re.I)
+
+
+def _has_work_requirements(outcome, work):
+    if WORK_REQUIREMENT.search(outcome):
+        return True
+    # A compound task may specify what to explain/check separately from writing
+    # the artifact. Do not veto that already-observable clause merely because
+    # the writing clause lacks a particular requirement word.
+    for action in DESCRIBE_OPERATION.finditer(outcome):
+        if action.end() <= work.start():
+            subject = outcome[action.end():work.start()]
+        elif action.start() >= work.end():
+            subject = outcome[action.end():]
+        else:
+            continue
+        if re.search(r'[\w\u4e00-\u9fff]{2,}', subject):
+            return True
+    return False
 
 
 def assessment_contract(capabilities, *, require_coverage=True):
@@ -126,7 +144,8 @@ def validate_objective_tasks(nodes, allowed_capabilities):
             supplied = GIVEN_ARTIFACT.search(outcome)
             product = TEXT_PRODUCT.search(outcome) if 'text_rubric' in evaluated else None
             written_work = WRITTEN_WORK.search(outcome) if 'text_rubric' in evaluated else None
-            if written_work and WORK_REQUIREMENT.search(outcome):
+            work_requirements = written_work and _has_work_requirements(outcome, written_work)
+            if work_requirements:
                 product = written_work
             if product is None and 'numeric_scalar' in evaluated:
                 product = NUMERIC_PRODUCT.search(outcome)
@@ -141,7 +160,7 @@ def validate_objective_tasks(nodes, allowed_capabilities):
             if external:
                 issue('observable_outcome', 'unverifiable_external_operation',
                       '目标要求真实外部操作，当前不能验证其实际执行。保留知识范围，改成对给定命令、代码、输出或步骤的可检查任务：'+forms+'。')
-            elif (VAGUE_WORK.fullmatch(outcome.strip()) or written_work and not WORK_REQUIREMENT.search(outcome)
+            elif (VAGUE_WORK.fullmatch(outcome.strip()) or written_work and not work_requirements
                   or not text_action and not product):
                 issue('observable_outcome', 'observable_task_required',
                       '目标没有明确当前可评分的作答任务。保留具体知识内容，使用：'+forms+'；不要只写掌握、理解或知识点名称。')

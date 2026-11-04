@@ -169,6 +169,13 @@ def main():
     parser.add_argument('--data-root', type=Path, default=None)
     parser.add_argument('--init-only', action='store_true')
     args = parser.parse_args()
+    # .env may still describe the earlier production release; report this checkout.
+    import subprocess
+    try:
+        os.environ['SKILLTREE_COMMIT'] = subprocess.check_output(
+            ['git', 'rev-parse', 'HEAD'], cwd=PROJECT_ROOT, text=True, stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.CalledProcessError):
+        pass
     if not 18780 <= args.port <= 18879:
         parser.error('请使用 18780–18879 内的独立演示端口。')
     listener = None

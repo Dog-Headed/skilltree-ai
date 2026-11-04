@@ -1,0 +1,33 @@
+{
+  "origin": "http://127.0.0.1:18780",
+  "date": "2026-11-04T10:55:11.855Z",
+  "model": "real configured provider",
+  "roles": [
+    "admin@example.test",
+    "employee.b@example.test",
+    "employee.c@example.test",
+    "employee.a@example.test",
+    "employee.b@example.test",
+    "employee.a@example.test",
+    "employee.b@example.test"
+  ],
+  "errors": [],
+  "storage_isolation": true,
+  "employee_admin_rejected": true,
+  "project_id": "v3_a017bd17643347c7b34f03e00dfcc683",
+  "created_state": "profile_review",
+  "elapsed_seconds": 36.427,
+  "plan_state": "plan_review",
+  "nodes": 8,
+  "node_titles": [
+    "百分比的定义与表示方法",
+    "百分数与小数、分数的互化",
+    "求一个数的百分之几",
+    "已知部分和百分比求整体",
+    "增长百分比的计算",
+    "百分点的定义与计算",
+    "增长百分比与百分点的区别",
+    "综合应用：折扣、税率、利率等常见场景"
+  ],
+  "passed": true
+}

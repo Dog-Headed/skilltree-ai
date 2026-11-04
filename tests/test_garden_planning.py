@@ -31,10 +31,10 @@ class BranchingFake(GuidedFake):
         return plan
 
 
-def test_new_tree_default_is_multisession_and_explicit_short_budget_is_preserved():
+def test_new_tree_has_no_time_allocation_and_legacy_metadata_is_preserved():
     growth = LearningIntent(goal='从零开始学习Python').as_profile()
-    assert growth.time_budget_minutes == 1440
-    assert growth.session_minutes == 30
+    assert 'time_budget_minutes' not in growth.model_dump()
+    assert 'session_minutes' not in growth.model_dump()
     short = LearningIntent(goal='只学一个运算规则', time_budget_minutes=45, session_minutes=15).as_profile()
     assert short.time_budget_minutes == 45
     assert short.session_minutes == 15
@@ -55,7 +55,7 @@ def test_branching_tree_survives_confirmation_and_reload_without_becoming_a_sing
     count = len(model.calls)
     reloaded = client.get('/projects/' + tree['project_id']).json()
     assert len(reloaded['nodes']) == 8
-    assert reloaded['profile']['session_minutes'] == 30
+    assert 'session_minutes' not in reloaded['profile']
     assert model.calls and len(model.calls) == count
 
 

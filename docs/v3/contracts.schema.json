@@ -144,18 +144,32 @@
         "$ref": "#/$defs/LanguagePreference"
       },
       "time_budget_minutes": {
-        "default": 120,
-        "exclusiveMinimum": 0,
-        "maximum": 10080,
-        "title": "Time Budget Minutes",
-        "type": "integer"
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "maximum": 10080,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Time Budget Minutes"
       },
       "session_minutes": {
-        "default": 30,
-        "exclusiveMinimum": 0,
-        "maximum": 480,
-        "title": "Session Minutes",
-        "type": "integer"
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "maximum": 480,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Session Minutes"
       },
       "scope_in": {
         "items": {
@@ -356,6 +370,19 @@
         "title": "Total Pass Threshold",
         "type": "number"
       },
+      "numeric_abs_tolerance": {
+        "default": 0.0,
+        "minimum": 0,
+        "title": "Numeric Abs Tolerance",
+        "type": "number"
+      },
+      "numeric_rel_tolerance": {
+        "default": 0.0,
+        "maximum": 1,
+        "minimum": 0,
+        "title": "Numeric Rel Tolerance",
+        "type": "number"
+      },
       "critical_severities": {
         "items": {
           "enum": [
@@ -433,6 +460,71 @@
   },
   "LearningPlan": {
     "$defs": {
+      "AssessmentTask": {
+        "additionalProperties": false,
+        "description": "How this interface collects evidence; artifact names remain open text.",
+        "properties": {
+          "task_form": {
+            "enum": [
+              "choice",
+              "numeric",
+              "text"
+            ],
+            "title": "Task Form",
+            "type": "string"
+          },
+          "submission": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Submission",
+            "type": "string"
+          },
+          "requirements": {
+            "items": {
+              "maxLength": 160,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Requirements",
+            "type": "array"
+          },
+          "criteria": {
+            "items": {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Criteria",
+            "type": "array"
+          },
+          "support_quote": {
+            "anyOf": [
+              {
+                "maxLength": 180,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Support Quote"
+          }
+        },
+        "required": [
+          "task_form",
+          "submission",
+          "requirements",
+          "criteria"
+        ],
+        "title": "AssessmentTask",
+        "type": "object"
+      },
       "LearningObjective": {
         "additionalProperties": false,
         "properties": {
@@ -563,85 +655,27 @@
             "type": "array"
           },
           "estimated_minutes": {
-            "exclusiveMinimum": 0,
-            "maximum": 480,
-            "title": "Estimated Minutes",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "node_id",
-          "title",
-          "description",
-          "objectives",
-          "estimated_minutes"
-        ],
-        "title": "SkillNode",
-        "type": "object"
-      },
-      "AssessmentTask": {
-        "additionalProperties": false,
-        "description": "How this interface collects evidence; artifact names remain open text.",
-        "properties": {
-          "task_form": {
-            "enum": [
-              "choice",
-              "numeric",
-              "text"
-            ],
-            "title": "Task Form",
-            "type": "string"
-          },
-          "submission": {
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Submission",
-            "type": "string"
-          },
-          "requirements": {
-            "items": {
-              "maxLength": 160,
-              "minLength": 1,
-              "type": "string"
-            },
-            "maxItems": 4,
-            "minItems": 1,
-            "title": "Requirements",
-            "type": "array"
-          },
-          "criteria": {
-            "items": {
-              "maxLength": 120,
-              "minLength": 1,
-              "type": "string"
-            },
-            "maxItems": 4,
-            "minItems": 1,
-            "title": "Criteria",
-            "type": "array"
-          },
-          "support_quote": {
             "anyOf": [
               {
-                "maxLength": 180,
-                "minLength": 1,
-                "type": "string"
+                "exclusiveMinimum": 0,
+                "maximum": 480,
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
             "default": null,
-            "title": "Support Quote"
+            "title": "Estimated Minutes"
           }
         },
         "required": [
-          "task_form",
-          "submission",
-          "requirements",
-          "criteria"
+          "node_id",
+          "title",
+          "description",
+          "objectives"
         ],
-        "title": "AssessmentTask",
+        "title": "SkillNode",
         "type": "object"
       }
     },
@@ -1317,6 +1351,11 @@
             "maxItems": 20,
             "title": "Acceptable Alternatives",
             "type": "array"
+          },
+          "critical": {
+            "default": false,
+            "title": "Critical",
+            "type": "boolean"
           }
         },
         "required": [
@@ -2035,18 +2074,32 @@
             "$ref": "#/$defs/LanguagePreference"
           },
           "time_budget_minutes": {
-            "default": 120,
-            "exclusiveMinimum": 0,
-            "maximum": 10080,
-            "title": "Time Budget Minutes",
-            "type": "integer"
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 10080,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Time Budget Minutes"
           },
           "session_minutes": {
-            "default": 30,
-            "exclusiveMinimum": 0,
-            "maximum": 480,
-            "title": "Session Minutes",
-            "type": "integer"
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 480,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Session Minutes"
           },
           "scope_in": {
             "items": {
@@ -2312,6 +2365,7 @@
       "allowed_actions": {
         "items": {
           "enum": [
+            "begin",
             "confirm_profile",
             "update_profile",
             "import_material",

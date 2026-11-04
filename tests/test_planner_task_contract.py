@@ -42,6 +42,7 @@ def proposal(caps=('choice_exact',), outcome='从给定选项中选出C程序的
         'requirements':[outcome],'criteria':['依据资料准确说明所学知识与推理']} for cap in caps])
     for node in nodes:
         node.pop('node_id')
+        node.pop('estimated_minutes')
         for item in node['objectives']: item.pop('objective_id',None)
     return {'nodes': nodes}
 
@@ -127,14 +128,13 @@ def test_writing_code_does_not_grant_permission_to_certify_external_execution():
     assert 'unsupported_assessment_claim' in feedback(wire)['validation_error']
 
 
-def test_late_budget_repair_projects_previous_output_back_to_the_same_model_contract():
-    bad=proposal();bad['nodes'][0]['estimated_minutes']=121
+def test_late_source_repair_projects_previous_output_back_to_the_same_model_contract():
+    bad=proposal();bad['nodes'][0]['objectives'][0]['source_chunk_ids']=['s999']
     wire=Wire(lambda p,s:bad if len(wire.calls)==1 else proposal())
     generate(wire)
     previous=feedback(wire)['previous_output']
-    assert previous['nodes'][0]['estimated_minutes']==121
     goal=previous['nodes'][0]['objectives'][0]
-    assert 'evidence_requirement' not in goal and goal['source_chunk_ids']==['s1']
+    assert 'evidence_requirement' not in goal and goal['source_chunk_ids']==['s999']
     assert not {'project_id','draft_revision','plan_version'} & previous.keys()
     assert 'node_id' not in previous['nodes'][0] and 'objective_id' not in goal
 
@@ -157,7 +157,6 @@ def branching_proposal():
     first=value['nodes'][0]
     value['nodes']=[deepcopy(first) for _ in range(3)]
     for index,node in enumerate(value['nodes']):
-        node['estimated_minutes']=20
         node['prerequisite_ids']=[] if index==0 else ['n1']
     return value
 

@@ -16,7 +16,7 @@ class LearningRepository(V3Repository):
     def node(self,project_id,node_id=None):
         p=self.get_project(project_id);profile=LearningProfile.model_validate(p['profile'])
         if profile.learning_mode=='exploration':
-            return SkillNode(node_id='exploration_node',title=profile.topic,description=profile.goal,estimated_minutes=profile.session_minutes,
+            return SkillNode(node_id='exploration_node',title=profile.topic,description=profile.goal,
                 objectives=[{'objective_id':'exploration_goal','observable_outcome':'探索并说明'+profile.goal,'required':False,
                     'required_capability_ids':['text_explanation'],'evidence_requirement':['text_excerpt']}])
         plan=LearningPlan.model_validate(p['candidate_plan'])

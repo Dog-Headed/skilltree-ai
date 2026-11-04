@@ -193,7 +193,7 @@ class EvaluationGateway:
                         pid = 'v3_' + UUID(payload['request_id']).hex
                     except (ValueError, TypeError, KeyError, AttributeError):
                         raise AdmissionError('invalid_input', '请求身份无效。', 422) from None
-                await asyncio.to_thread(self.jobs.reserve_fast, user, project, pid)
+                await asyncio.to_thread(self.jobs.reserve_fast, user, project, pid, charge=method!='DELETE')
                 delivered = False
                 async def replay():
                     nonlocal delivered
@@ -276,7 +276,8 @@ class EvaluationGateway:
             except Exception:
                 return await self.reply(send, 503, {'status': 'unhealthy'})
         allowed = path in {'/', '/login', '/capabilities'} or path.startswith('/assets/') or path == '/projects' or path.startswith('/projects/') or path == '/material-packs' or path.startswith('/material-packs/')
-        if not allowed or method not in {'GET', 'HEAD', 'POST', 'PATCH'}:
+        own_delete = bool(self.auth and self.jobs and method == 'DELETE' and re.fullmatch(r'/projects/[^/]+', path))
+        if not allowed or (method not in {'GET', 'HEAD', 'POST', 'PATCH'} and not own_delete):
             return await self.reply(send, 403, {'error': {'code': 'evaluation_restricted', 'message': '评审环境不开放此操作。'}})
         length = headers.get(b'content-length', b'0')
         if not length.isdigit() or int(length) > 262144:
@@ -302,7 +303,7 @@ class EvaluationGateway:
             if status == 200:
                 value = [p for p in value if p.get('project_id') in owned]
             return await self.reply(send, status, value)
-        if method in {'POST', 'PATCH'}:
+        if method in {'POST', 'PATCH'} or own_delete:
             if self.jobs:
                 return await self.queued_write(scope, receive, send, user, match[1] if match else None)
             if self.active_writes >= 2:

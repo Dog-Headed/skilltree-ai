@@ -180,6 +180,7 @@ def test_plan_binds_versions_and_preserves_original_dag_and_source_validation():
     wire_nodes = deepcopy(value['nodes'])
     for n in wire_nodes:
         n.pop('node_id')
+        n.pop('estimated_minutes')
         for o in n['objectives']:
             target=o['observable_outcome'];o.clear()
             o.update(learning_target=target,source_chunk_ids=['s1'],assessment_tasks=[{

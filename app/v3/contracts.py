@@ -93,13 +93,21 @@ class LearningProfile(ContractModel):
     prior_knowledge: PriorKnowledge = Field(default_factory=PriorKnowledge)
     target_level: str = Field(default="入门", min_length=1, max_length=128)
     language: LanguagePreference = Field(default_factory=LanguagePreference)
-    time_budget_minutes: int = Field(default=120, gt=0, le=10080)
-    session_minutes: int = Field(default=30, gt=0, le=480)
+    # Legacy metadata remains readable; new courses have no time allocation.
+    time_budget_minutes: int | None = Field(default=None, gt=0, le=10080)
+    session_minutes: int | None = Field(default=None, gt=0, le=480)
     scope_in: list[Text] = Field(default_factory=list, max_length=20)
     scope_out: list[Text] = Field(default_factory=list, max_length=20)
     learning_mode: Literal["formal", "exploration"] = "formal"
     requested_capabilities: list[Identity] = Field(default_factory=list, max_length=20)
     profile_version: int = Field(default=1, ge=1)
+
+    @model_serializer(mode='wrap')
+    def omit_absent_legacy_time(self, handler):
+        data = handler(self)
+        for key in ('time_budget_minutes', 'session_minutes'):
+            if getattr(self, key) is None:data.pop(key, None)
+        return data
 
     @model_validator(mode="after")
     def validate_profile(self):
@@ -107,8 +115,6 @@ class LearningProfile(ContractModel):
             raise ValueError("学习主题和目标不能只包含空白")
         if self.bounded_goal is not None and not self.bounded_goal.strip():
             raise ValueError("确认范围不能只包含空白")
-        if self.session_minutes > self.time_budget_minutes:
-            raise ValueError("单次时长不得大于项目总预算")
         _unique(self.requested_capabilities, "请求能力")
         return self
 
@@ -279,7 +285,13 @@ class SkillNode(ContractModel):
     description: Text
     objectives: list[LearningObjective] = Field(min_length=1, max_length=5)
     prerequisite_ids: list[Identity] = Field(default_factory=list, max_length=19)
-    estimated_minutes: int = Field(gt=0, le=480)
+    estimated_minutes: int | None = Field(default=None, gt=0, le=480)
+
+    @model_serializer(mode='wrap')
+    def omit_absent_legacy_estimate(self, handler):
+        data = handler(self)
+        if self.estimated_minutes is None:data.pop('estimated_minutes', None)
+        return data
 
     @model_validator(mode="after")
     def validate_node(self):

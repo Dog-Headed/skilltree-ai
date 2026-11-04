@@ -49,7 +49,6 @@ def notes_contract(payload):
     data = {'goal': profile['goal'], 'bounded_goal': profile['bounded_goal'],
             'scope_out': profile['scope_out'], 'target_level': profile.get('target_level', '入门'),
             'prior_knowledge': profile.get('prior_knowledge', {}).get('self_reported', []),
-            'time_budget_minutes': profile['time_budget_minutes'], 'session_minutes': profile['session_minutes'],
             'sections': branches,
             'assessment_contract': assessment_contract(profile.get('requested_capabilities', []))}
     return schema, data

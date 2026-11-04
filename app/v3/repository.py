@@ -280,8 +280,6 @@ class V3Repository:
             rules = {rule.objective_id:rule for rule in policy.objective_rules}
             if rules.keys() != objective_ids:
                 raise ValueError("Policy must cover exactly the confirmed plan objectives")
-            if sum(node.estimated_minutes for node in plan.nodes) > profile.time_budget_minutes:
-                raise ValueError("Plan exceeds confirmed time budget")
             evaluator_ids = {ref.evaluator_id for ref in policy.evaluators}
             # Freeze only explicitly referenced source versions, including private
             # sources only through validated assessment/grading bindings.

@@ -120,7 +120,7 @@ def test_server_boundary_accepts_twenty_nodes_and_five_objectives_without_v2_siz
     assert len(result.nodes) == 20 and len(result.nodes[0].objectives) == 5
 
 
-@pytest.mark.parametrize("defect", ["project", "revision", "plan_version", "ghost", "cycle", "time", "missing_source", "irrelevant_source", "vague", "no_action", "unknown_capability", "evidence_mismatch", "optional_only", "scope", "extra_policy"])
+@pytest.mark.parametrize("defect", ["project", "revision", "plan_version", "ghost", "cycle", "missing_source", "irrelevant_source", "vague", "no_action", "unknown_capability", "evidence_mismatch", "optional_only", "scope", "extra_policy"])
 def test_invalid_output_gets_exactly_one_complete_repair(defect):
     bad = plan()
     objective = bad["nodes"][0]["objectives"][0]
@@ -164,7 +164,7 @@ def test_repeated_invalid_outputs_stop_after_two_requests():
 
 
 def test_network_and_output_failures_share_three_requests():
-    bad = plan(); bad["nodes"][0]["estimated_minutes"] = 121
+    bad = plan(); bad["nodes"][0]["objectives"][0]["source_chunk_ids"] = ["ghost"]
     model = FakeModel(TimeoutError("timeout"), bad, plan())
     budget = ModelCallBudget()
     assert generate(model, budget=budget).project_id == "project_1"

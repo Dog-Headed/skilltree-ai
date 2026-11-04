@@ -327,120 +327,135 @@
         "title": "LanguagePreference"
       },
       "LearningProfile": {
+        "additionalProperties": false,
         "properties": {
           "subject_label": {
-            "type": "string",
             "maxLength": 128,
             "minLength": 1,
-            "title": "Subject Label"
+            "title": "Subject Label",
+            "type": "string"
           },
           "topic": {
-            "type": "string",
             "maxLength": 256,
             "minLength": 1,
-            "title": "Topic"
+            "title": "Topic",
+            "type": "string"
           },
           "goal": {
-            "type": "string",
             "maxLength": 4000,
             "minLength": 1,
-            "title": "Goal"
+            "title": "Goal",
+            "type": "string"
           },
           "bounded_goal": {
             "anyOf": [
               {
-                "type": "string",
                 "maxLength": 4000,
-                "minLength": 1
+                "minLength": 1,
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Bounded Goal"
           },
           "prior_knowledge": {
             "$ref": "#/components/schemas/PriorKnowledge"
           },
           "target_level": {
-            "type": "string",
+            "default": "入门",
             "maxLength": 128,
             "minLength": 1,
             "title": "Target Level",
-            "default": "入门"
+            "type": "string"
           },
           "language": {
             "$ref": "#/components/schemas/LanguagePreference"
           },
           "time_budget_minutes": {
-            "type": "integer",
-            "maximum": 10080.0,
-            "exclusiveMinimum": 0.0,
-            "title": "Time Budget Minutes",
-            "default": 120
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 10080,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Time Budget Minutes"
           },
           "session_minutes": {
-            "type": "integer",
-            "maximum": 480.0,
-            "exclusiveMinimum": 0.0,
-            "title": "Session Minutes",
-            "default": 30
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 480,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Session Minutes"
           },
           "scope_in": {
             "items": {
-              "type": "string",
               "maxLength": 4000,
-              "minLength": 1
+              "minLength": 1,
+              "type": "string"
             },
-            "type": "array",
             "maxItems": 20,
-            "title": "Scope In"
+            "title": "Scope In",
+            "type": "array"
           },
           "scope_out": {
             "items": {
-              "type": "string",
               "maxLength": 4000,
-              "minLength": 1
+              "minLength": 1,
+              "type": "string"
             },
-            "type": "array",
             "maxItems": 20,
-            "title": "Scope Out"
+            "title": "Scope Out",
+            "type": "array"
           },
           "learning_mode": {
-            "type": "string",
+            "default": "formal",
             "enum": [
               "formal",
               "exploration"
             ],
             "title": "Learning Mode",
-            "default": "formal"
+            "type": "string"
           },
           "requested_capabilities": {
             "items": {
-              "type": "string",
               "maxLength": 128,
               "minLength": 1,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
             },
-            "type": "array",
             "maxItems": 20,
-            "title": "Requested Capabilities"
+            "title": "Requested Capabilities",
+            "type": "array"
           },
           "profile_version": {
-            "type": "integer",
-            "minimum": 1.0,
+            "default": 1,
+            "minimum": 1,
             "title": "Profile Version",
-            "default": 1
+            "type": "integer"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
         "required": [
           "subject_label",
           "topic",
           "goal"
         ],
-        "title": "LearningProfile"
+        "title": "LearningProfile",
+        "type": "object"
       },
       "PreparationInput": {
         "properties": {

@@ -12,7 +12,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import HumanMessage, SystemMessage
-from pydantic import Field, ValidationError
+from pydantic import Field, ValidationError, model_serializer
 
 from app.services.llm import ModelOutputValidationError, invoke_with_shared_budget, compact_parse_error
 from .config import SERVER_LIMITS
@@ -22,7 +22,7 @@ from .model_tasks import run_model_task
 from .repository import ConflictError, V3Repository, encode
 from app.services.observability import log_event
 
-PROMPT_VERSION = 'guided-garden-6-prior-scope'
+PROMPT_VERSION = 'guided-garden-7-no-study-time'
 TABLE_SQL = '''CREATE TABLE IF NOT EXISTS guided_projects (
  project_id TEXT PRIMARY KEY REFERENCES learning_projects(id),
  intent_json TEXT NOT NULL, generated_source_id TEXT NOT NULL,
@@ -33,10 +33,16 @@ TABLE_SQL = '''CREATE TABLE IF NOT EXISTS guided_projects (
 class LearningIntent(ContractModel):
     goal: Text
     prior_knowledge: str = Field(default='', max_length=4000)
-    # A new tree is a multi-session route. Explicit short budgets still win;
-    # profiles already persisted by older versions are never rewritten.
-    time_budget_minutes: int = Field(default=1440, ge=1, le=10080)
-    session_minutes: int = Field(default=30, ge=1, le=480)
+    # Accepted for old clients only; never constrain scope or new planning.
+    time_budget_minutes: int | None = Field(default=None, ge=1, le=10080)
+    session_minutes: int | None = Field(default=None, ge=1, le=480)
+
+    @model_serializer(mode='wrap')
+    def omit_absent_legacy_time(self, handler):
+        data = handler(self)
+        for key in ('time_budget_minutes', 'session_minutes'):
+            if getattr(self, key) is None:data.pop(key, None)
+        return data
 
     def as_profile(self):
         return LearningProfile(subject_label='AI待整理', topic=self.goal.strip()[:256], goal=self.goal.strip(),
@@ -130,7 +136,8 @@ def infer_scope(model,budget,payload,*,generation_mode='legacy'):
     from .preparation_content import GENERATION_MODES, scope_payload
     from .planning_contract import assessment_contract
     if generation_mode not in GENERATION_MODES:raise ValueError('Unknown preparation generation contract')
-    payload = {**payload, 'assessment_contract': assessment_contract(payload.get('available_evaluators', ['choice_exact','numeric_scalar','text_rubric']), require_coverage=False)}
+    payload = {**payload, 'intent': {k:v for k,v in payload['intent'].items() if k not in {'time_budget_minutes','session_minutes'}},
+               'assessment_contract': assessment_contract(payload.get('available_evaluators', ['choice_exact','numeric_scalar','text_rubric']), require_coverage=False)}
     def validate(result):
         if not all(v.strip() for v in (result.subject_label,result.topic,result.bounded_goal,result.explanation)):
             raise ValueError('学科、主题、范围及说明不得为空白')
@@ -142,16 +149,15 @@ def infer_scope(model,budget,payload,*,generation_mode='legacy'):
         if payload['user_material_catalog'] and result.basis=='general_knowledge':raise ValueError('已有上传资料时须围绕资料判断，不得改用无资料通识路线')
         if not payload['user_material_catalog'] and result.basis=='provided_material':raise ValueError('不能声称存在未提供的资料')
     instruction=(
-        '用户种下的是一棵围绕长期目标持续学习的技能树。根据目标、自述基础和时间，识别学科与主题，规划可分多次学习的初始路线。'
+        '用户种下的是一棵围绕目标持续学习的技能树。根据目标、自述基础和资料，识别学科与主题，规划可分多次学习的初始路线。'
         '基础只是自述，不能产生测评证据。不要要求用户先知道学科目录。'
         '自述已会的时期、章节和技能应作为起点与简短背景衔接，不默认重学；若必须复习，明确列出理由和有限范围。'
         'scope_in是本轮需要新学或明确复习的内容，scope_out不能同时排除已经排进scope_in的完整章节。'
         'topic是稳定简洁的树名，例如“日语·N3到N2”“Python编程入门”“心理学基础”，不要命名成“30分钟第一课”。'
-        'time_budget_minutes是整条初始路线的总时间；session_minutes只是每次学习节奏，绝不能把整棵树缩减为一次session。'
-        '对跨章节、等级进阶或学科入门目标，在总预算内保留主要知识分支与综合应用，scope_in通常列6至12个主要分支，最多12项。后续Planner可再细分为最多20个节点，不把每个事件都拆成范围项。'
-        '只有目标确实很窄、资料仅支持局部知识或用户明确限定很短的总时间时，才使用1至5节点；不要为了数量拆碎目标。'
-        'scope_in要覆盖用户明确列出的主要内容，不能仅因每次30分钟而删除乘除、多步解等后续内容。'
-        '若总预算或支持能力不足以覆盖最终目标，明确这是一条什么范围的初始路线，在scope_out和explanation说明尚未覆盖的部分；不得声称完整达成考试等级或实际技能。'
+        '对跨章节、等级进阶或学科入门目标，保留主要知识分支与综合应用，scope_in通常列6至12个主要分支，最多12项。后续Planner可再细分为最多20个节点，不把每个事件都拆成范围项。'
+        '目标确实很窄或资料仅支持局部知识时，可使用1至5节点；不要为了数量拆碎目标。'
+        'scope_in要覆盖用户明确列出的主要内容。按知识范围与基础安排内容，不分配学习分钟数，不用旧版时间字段缩减课程。'
+        '若资料或支持能力不足以覆盖最终目标，明确初始路线范围，在scope_out和explanation说明尚未覆盖的部分；不得声称完整达成考试等级或实际技能。'
         '区分独立可学的分支与真正的前置条件，保留适合汇合练习的综合目标；不为了树形好看而虚构依赖。'
         '已有用户教学资料时以真实内容限定范围；不能补造公司政策、制度条款、材料缺失的专用事实。'
         '只有通用文字知识可选general_knowledge；依赖指定文件却缺失或资料不相关时选requires_material并解释缺什么。'
@@ -170,7 +176,8 @@ def generate_notes(model,budget,payload,*,generation_mode='legacy'):
     from .preparation_content import GENERATION_MODES, notes_contract, assemble_notes
     from .planning_contract import assessment_contract
     if generation_mode not in GENERATION_MODES:raise ValueError('Unknown preparation generation contract')
-    payload = {**payload, 'assessment_contract': assessment_contract(payload['profile'].get('requested_capabilities', []))}
+    payload = {**payload, 'profile': {k:v for k,v in payload['profile'].items() if k not in {'time_budget_minutes','session_minutes'}},
+               'assessment_contract': assessment_contract(payload['profile'].get('requested_capabilities', []))}
     if generation_mode=='notes-outline-v1':
         from .notes_outline import outline_request,validate_outline,INSTRUCTION
         data,headings=outline_request(payload)

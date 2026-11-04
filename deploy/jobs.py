@@ -99,7 +99,7 @@ class JobStore:
             raise AdmissionError('rate_limited', '操作有点频繁，请稍后再试。')
         conn.execute('INSERT INTO deployment_write_ticks VALUES (?,?)', (account, at))
 
-    def reserve_fast(self, account, project=None, creation_id=None):
+    def reserve_fast(self, account, project=None, creation_id=None, *, charge=True):
         with self.connect() as conn:
             conn.execute('BEGIN IMMEDIATE')
             if project and conn.execute("SELECT 1 FROM deployment_jobs WHERE project_id=? AND state IN ('queued','running')", (project,)).fetchone():
@@ -110,7 +110,7 @@ class JobStore:
                 if owner and owner['account'] != account:
                     raise AdmissionError('not_found', '项目或记录不存在。', 404)
             self._rate(conn, account)
-            reserve_quota(conn, account)
+            if charge:reserve_quota(conn, account)
             if creation_id:
                 conn.execute('INSERT OR IGNORE INTO project_owners(project_id,account) VALUES (?,?)', (creation_id, account))
 

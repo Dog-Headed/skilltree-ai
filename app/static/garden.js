@@ -257,7 +257,6 @@ window.SkillTreeGarden = function (ctx) {
     row('学会后能',el('ul',{},list(node.objectives).map(o=>el('li',{text:o.observable_outcome || o.description || o.objective_id}))));
     const tasks=list(node.objectives).flatMap(o=>list(o.assessment_tasks));
     if(tasks.length)row('如何检验',el('ul',{},tasks.map(t=>el('li',{text:`${t.submission} · ${list(t.requirements).join('；')}`}))));
-    row('预计',`约 ${node.estimated_minutes || '—'} 分钟`);
     inner.append(rows);
     const current = idOf(node)===view.current_node_id;
     const preparing=!view.learning_runtime_ready&&screen!=='tree';
@@ -385,11 +384,11 @@ window.SkillTreeGarden = function (ctx) {
   function summary(view) {
     const nodes=nodesFor(view),done=new Set(list(view.completed_node_ids)),finished=new Map(list(view.progress).map(r=>[r.node_id,r.completed_at]));
     const grown=nodes.filter(n=>done.has(idOf(n)));
-    const goals=grown.reduce((s,n)=>s+list(n.objectives).length,0),minutes=grown.reduce((s,n)=>s+(Number(n.estimated_minutes)||0),0);
+    const goals=grown.reduce((s,n)=>s+list(n.objectives).length,0);
     const day=value=>{const d=new Date(value);return Number.isNaN(d.getTime())?'':`${d.getMonth()+1} 月 ${d.getDate()} 日长成`;};
     const stat=(value,label)=>el('div',{class:'summary-stat'},el('strong',{text:String(value)}),el('span',{text:label}));
     const card=el('section',{class:'card learning-summary'},el('div',{class:'card-header'},el('h2',{text:'学习小结'}),chip(`${grown.length} / ${nodes.length} 节已长成`,'green')),
-      el('div',{class:'summary-stats'},stat(grown.length,'节已完成'),stat(goals,'个目标已达标'),stat(minutes,'分钟计划学习量')));
+      el('div',{class:'summary-stats'},stat(grown.length,'节已完成'),stat(goals,'个目标已达标')));
     const rows=el('ol',{class:'summary-list'});
     nodes.forEach((n,i)=>rows.append(el('li',{class:done.has(idOf(n))?'done':''},el('span',{class:'summary-index',text:String(i+1).padStart(2,'0')}),
       el('div',{},el('strong',{text:n.title}),el('ul',{},list(n.objectives).map(o=>el('li',{text:o.observable_outcome||o.objective_id})))),

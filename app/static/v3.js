@@ -250,25 +250,18 @@
     const prior = textArea('prior', priorValue, { maxlength: 4000, rows: 2, placeholder: '可以写“零基础”“不确定”，或简单说说已经会什么。' });
     const grid = el('div', { class: 'form-grid' }, field('你想学会什么？', goal, '日语、Python、心理学……写下想长期探索的方向，或一个具体目标。', true), field('已有基础', prior, '可不填；让这棵树从适合你的地方开始。', true));
     window.SkillTreeControls?.seedMeter(goal);
-    const total = input('time_budget_minutes', p.time_budget_minutes || 1440, { type: 'number', min: 1, max: 10080, required: true });
-    const session = input('session_minutes', p.session_minutes || 30, { type: 'number', min: 1, max: 480, required: true });
-    const rhythm = el('summary');
-    const describeRhythm = () => { rhythm.textContent = `生长节奏 · 每次 ${session.value} 分钟，初始路线总预算 ${Number(total.value) >= 60 ? (Math.round(Number(total.value) / 60 * 10) / 10) + ' 小时' : total.value + ' 分钟'}（可调整）`; };
-    total.addEventListener('input', describeRhythm); session.addEventListener('input', describeRhythm); describeRhythm();
-    const advanced = el('details', { class: 'section-details' }, rhythm, el('div', { class: 'form-grid' }, field('初始路线总预算（分钟）', total, '分多次完成，不要求一天学完。调整总预算会影响路线范围。'), field('每次学习（分钟）', session, '控制每次的节奏，不会把整棵树缩成一课。')));
-    form.append(grid, advanced, el('p', { class: 'muted-line', text: '创建后可直接让 AI 准备，也可以先上传讲义或内部培训文件。没有资料时整理通用知识；具体公司制度以实际文件为准。' }));
+    form.append(grid, el('p', { class: 'muted-line', text: '创建后可直接让 AI 准备，也可以先上传讲义或内部培训文件。没有资料时整理通用知识；具体公司制度以实际文件为准。' }));
     if (pack) form.append(el('p', { class: 'welcome-note', text: '已填入示例目标，可继续编辑。示例资料可在创建后按需导入。' }));
     form.append(el('div', { class: 'actions' }, el('button', { type: 'submit', class: 'btn primary', text: editing ? '保存学习档案' : '种下这棵树', disabled: state.busy })));
     function collect() {
-      return { goal: goal.value.trim(), prior_knowledge: prior.value.trim(), time_budget_minutes: Number(total.value), session_minutes: Number(session.value) };
+      return { goal: goal.value.trim(), prior_knowledge: prior.value.trim() };
     }
     if (!editing) form.addEventListener('input', () => storage.write('create-draft', collect()));
     form.addEventListener('submit', async event => {
       event.preventDefault(); if (state.busy || !form.reportValidity()) return;
       const intent = collect();
-      if (intent.session_minutes > intent.time_budget_minutes) { showMessage('单次学习时间不能超过总学习时间。', 'warn'); session.focus(); return; }
       if (editing) {
-        const updated = { ...p, goal: intent.goal, prior_knowledge: { self_reported: intent.prior_knowledge ? [intent.prior_knowledge] : [], assessed_evidence: list(p.prior_knowledge?.assessed_evidence) }, time_budget_minutes: intent.time_budget_minutes, session_minutes: intent.session_minutes,
+        const updated = { ...p, goal: intent.goal, prior_knowledge: { self_reported: intent.prior_knowledge ? [intent.prior_knowledge] : [], assessed_evidence: list(p.prior_knowledge?.assessed_evidence) },
           bounded_goal: guided ? null : p.goal === intent.goal ? p.bounded_goal : intent.goal };
         await command(action, { profile: updated });
       } else {
@@ -335,11 +328,6 @@
     const details = [], scope = list(p.scope_in).filter(s => ![p.goal, p.bounded_goal, target].map(same).includes(same(s)));
     if (scope.length) details.push('会讲到：' + scope.join('、') + '。');
     else if (p.bounded_goal && ![p.goal, target].map(same).includes(same(p.bounded_goal))) details.push('AI 建议的范围：' + same(p.bounded_goal) + '。');
-    const total = Number(p.time_budget_minutes), session = Number(p.session_minutes);
-    if (total && session) {
-      const times = Math.ceil(total / session), span = total >= 60 ? Math.round(total / 6) / 10 + ' 小时' : total + ' 分钟';
-      details.push(times <= 12 ? `大约分 ${times} 次学完，每次 ${session} 分钟。` : `每次 ${session} 分钟，按自己的节奏分多次学完，总共约 ${span}。`);
-    }
     if (p.learning_mode === 'exploration') details.push('这门课只讲解和讨论，不考试。');
     else {
       const kinds = [...new Set(list(p.requested_capabilities).map(c => quizKinds[c]).filter(Boolean))];
@@ -353,11 +341,9 @@
   function profileSummary(view) {
     const p = view.profile || {}; const dl = el('dl', { class: 'profile-summary' });
     const rows = view.guided ? [['学习目标', p.goal], ['已有基础', list(p.prior_knowledge?.self_reported).join('；') || '零基础 / 暂未自述'],
-      ...(p.bounded_goal ? [['AI 建议范围', p.bounded_goal]] : []),
-      ['时间安排', `${p.time_budget_minutes} 分钟 / 每次 ${p.session_minutes} 分钟`]] : [['学习主题', p.topic], ['目标范围', p.bounded_goal || p.goal], ['已有基础', list(p.prior_knowledge?.self_reported).join('；') || '暂未自述'],
+      ...(p.bounded_goal ? [['AI 建议范围', p.bounded_goal]] : [])] : [['学习主题', p.topic], ['目标范围', p.bounded_goal || p.goal], ['已有基础', list(p.prior_knowledge?.self_reported).join('；') || '暂未自述'],
       ['本次包含', list(p.scope_in).join('；') || '以确认的目标范围为准'], ['本次不包含', list(p.scope_out).join('；') || '暂未填写'],
-      ['学习方式', p.learning_mode === 'exploration' ? '探索讨论，不产生正式通过' : '正式学习与测评'], ['评价方式', list(p.requested_capabilities).map(s => capabilityNames[s] || s).join('、')],
-      ['时间安排', p.time_budget_minutes ? `${p.time_budget_minutes} 分钟 / 每次 ${p.session_minutes} 分钟` : '—']];
+      ['学习方式', p.learning_mode === 'exploration' ? '探索讨论，不产生正式通过' : '正式学习与测评'], ['评价方式', list(p.requested_capabilities).map(s => capabilityNames[s] || s).join('、')]];
     for (const [key, value] of rows) dl.append(el('dt', { text: key }), el('dd', { text: value || '—' }));
     return dl;
   }
@@ -380,7 +366,7 @@
         if (objectives.childElementCount) li.append(objectives);
       }
       const prereqs = list(node.prerequisite_ids || node.prerequisites);
-      li.append(el('p', { class: 'node-meta', text: (node.estimated_minutes ? `约 ${node.estimated_minutes} 分钟` : '') + (prereqs.length ? ' · 先修：' + prereqs.map(id => names.get(id) || id).join('、') : ' · 起始节点') }));
+      li.append(el('p', { class: 'node-meta', text: prereqs.length ? '先修：' + prereqs.map(id => names.get(id) || id).join('、') : '起始节点' }));
       ol.append(li);
     });
     if (!nodes.length) ol.append(el('p', { class: 'muted', text: 'AI 将根据目标、基础和可用资料整理起步计划。' }));

@@ -21,6 +21,7 @@ PRIVATE_METADATA = {'project_id', 'assessment_id', 'previous_assessment_id', 'sn
                     'policy_id', 'policy_version', 'profile_version', 'plan_version',
                     'draft_revision', 'contract_version', 'content_hash', 'source_content_hash',
                     'schema', 'output_schema', 'learning_plan_schema', 'tutor_reply_schema'}
+PRIVATE_METADATA |= {'time_budget_minutes', 'session_minutes', 'estimated_minutes'}
 
 
 def _dump(value):
@@ -167,7 +168,7 @@ def _plan(payload):
         assessment_tasks=(list[task],Field(min_length=1,max_length=3)),
         required=(bool,True),source_chunk_ids=(list[str],Field(min_length=1,max_length=20)))
     node_fields = {name: (field.annotation, deepcopy(field)) for name,field in SkillNode.model_fields.items()
-                   if name not in {'node_id','objectives'}}
+                   if name not in {'node_id','objectives','estimated_minutes'}}
     node = create_model('PlanNodeContent', __base__=ContractModel, **node_fields,
         objectives=(list[objective], Field(min_length=1, max_length=5)))
     schema = create_model('PlanContent', __base__=ContractModel,
@@ -194,13 +195,14 @@ def _plan(payload):
         goal_fields[key] = deepcopy(old['LearningObjective']['properties'][key])
         goal_fields[key].pop('default',None)
         goal_fields[key]['minItems']=1
-    for key in ('estimated_minutes', 'title', 'description'):
+    for key in ('title', 'description'):
         document['$defs']['PlanNodeContent']['properties'][key] = deepcopy(old['SkillNode']['properties'][key])
     data = projection.data(payload)
     data['assessment_contract'] = assessment_contract(allowed)
     return Binding(schema, data, assemble, projection,
         f'本轮规划协议{PROTOCOL}。只输出nodes。节点编号由数组顺序自动生成n1、n2等；prerequisite_ids用这些位置编号表达真实依赖。'
         'node_id、objective_id全部由程序生成，禁止输出这两个字段。保留真实课程内容和全部学习分支。'
+        '不分配或输出学习时长，不输出estimated_minutes。'
         '规划字段描述概念与作答任务，无需复制完整程序。可以用空字符、换行符等中文名称；'
         '若包含代码或路径字面量，反斜杠必须按JSON规则双写转义。'
         'learning_target只描述要学习的具体知识或能力，不必写成测评指令，不受动词或作品名称词表限制。'

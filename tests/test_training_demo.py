@@ -1,5 +1,6 @@
 """Real auth/store/queue boundary with explicitly Fake planning content."""
 import json
+import base64
 import sqlite3
 import time
 from uuid import uuid4
@@ -9,12 +10,29 @@ import pytest
 
 from deploy import training_demo as demo
 from tests.test_v3_notes_outline import OutlineFake as GuidedFake
+from tests.day11_support import learning_event, private_quiz, answers_for_quiz
+
+
+class GuestFlowFake(GuidedFake):
+    """Fake content for the production content-v1 path; no permission overrides."""
+    def _invoke(self, schema, messages):
+        if schema != 'QuizContent':
+            return super()._invoke(schema, messages)
+        self.calls.append({'schema': schema})
+        payload = json.loads(messages[1].content.split('\n', 1)[1])
+        return {key: {
+            'prompt': 'Fake流程验收：解释资料中的规则 ' + key,
+            'source_refs': list(slot['source_blocks']),
+            'reference_answer': 'Fake参考说明 ' + next(iter(slot['source_blocks'].values()))[:150],
+            'rubric': {name: {'description': 'Fake检查资料说明', 'max_score': 1.0}
+                       for name in slot['rubric_slots']}
+        } for key, slot in payload['slots'].items()}
 
 
 @pytest.fixture
 def runtime(tmp_path, monkeypatch):
     monkeypatch.setattr(demo, 'TRAINING_WORK', tmp_path)
-    model = GuidedFake()
+    model = GuestFlowFake()
     gateway = demo.create_app(root=tmp_path/'instance', llm=model)
     with TestClient(gateway, base_url='http://127.0.0.1:18780') as client:
         yield client, gateway, model
@@ -28,11 +46,116 @@ def login(client, index=0):
     return {'Cookie': result.headers['set-cookie'].split(';')[0], 'X-CSRF-Token': result.json()['csrf_token']}
 
 
+def visit(client):
+    client.cookies.clear()
+    response = client.get('/', follow_redirects=False)
+    assert response.status_code == 303 and response.headers['location'] == '/training/home'
+    cookie = response.headers['set-cookie']
+    assert 'HttpOnly' in cookie and 'Max-Age=31536000' in cookie
+    session = client.get('/session').json()
+    assert session['guest'] and not session['logout']
+    assert session['training']['role'] == 'guest' and session['training']['unit_id'] is None
+    return {'Cookie': cookie.split(';')[0], 'X-CSRF-Token': session['csrf_token']}, session['account']
+
+
+def finish_request(client, headers, path, payload):
+    response = client.post(path, headers=headers, json=payload)
+    assert response.status_code in {200, 202}, response.text
+    if response.status_code == 200:
+        return response.json()
+    job_id = response.json()['job']['id']
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        job = client.get('/jobs/' + job_id, headers=headers).json()['job']
+        if job['state'] not in {'queued', 'running'}:
+            break
+        time.sleep(.05)
+    assert job['state'] == 'completed', job
+    return job['result']
+
+
+def test_guest_isolation_unit_denial_and_login_keeps_personal_course(runtime):
+    client, gateway, model = runtime
+    assert 'id="guest-entry"' in client.get('/login').text
+    guest, account = visit(client)
+    assert client.get('/training/home', headers=guest).status_code == 200
+    assert client.get('/training/materials', headers=guest).status_code == 200
+    assert client.get('/learn', headers=guest).status_code == 200
+    forged = {**guest, 'X-Role': 'admin', 'X-Evaluation-User': demo.ACCOUNTS[0][0]}
+    for path in ('/training/admin', '/training/api/admin/overview', '/training/tasks', '/training/api/my-tasks'):
+        assert client.get(path + '?role=admin', headers=forged).status_code == 403
+    payload = {'request_id': str(uuid4()), 'intent': {'goal': '比较整数大小'}}
+    assert client.post('/projects', json=payload, headers={'Cookie': guest['Cookie']}).status_code == 403
+    created = client.post('/projects', json=payload, headers=guest)
+    assert created.status_code == 201, created.text
+    pid = created.json()['project_id']
+    assert 'set-cookie' not in client.get('/', headers=guest).headers
+    other, other_account = visit(client)
+    assert account != other_account
+    for headers in (other, login(client, 1), login(client, 0)):
+        assert client.get('/projects/' + pid, headers=headers).status_code == 404
+    assert gateway.training.store.member(account) is None
+    assert len(gateway.training.store.overview(demo.UNIT_ID)['members']) == 4
+    # Login from the guest cookie must adopt, not discard, the personal course.
+    response = client.post('/auth/login', headers={**guest, 'X-SkillTree-Login': '1'},
+        json={'account': demo.ACCOUNTS[1][0], 'password': demo.DEMO_PASSWORD})
+    assert response.status_code == 200, response.text
+    member = {'Cookie': response.headers['set-cookie'].split(';')[0]}
+    assert client.get('/session', headers=member).json()['training']['role'] == 'employee'
+    assert client.get('/projects/' + pid, headers=member).status_code == 200
+    assert gateway.ownership.owned(account) == set()
+    assert client.get('/session', headers=guest).status_code == 401
+    assert model.calls == []
+
+
+@pytest.mark.parametrize('filename', [None, 'guest-material.md', 'guest-material.txt'])
+def test_guest_complete_learning_with_or_without_uploaded_material(runtime, filename):
+    client, gateway, model = runtime
+    headers, account = visit(client)
+    response = client.post('/projects', headers=headers, json={
+        'request_id': str(uuid4()), 'intent': {'goal': '学习整数大小比较', 'prior_knowledge': '零基础'}})
+    assert response.status_code == 201, response.text
+    view = response.json()
+    pid = view['project_id']
+    if filename:
+        response = client.post('/projects/' + pid + '/sources', headers=headers, json={
+            'request_id': str(uuid4()), 'title': '游客自己的资料',
+            'source_description': '明确标记的合成流程验收资料', 'filename': filename,
+            'data_base64': base64.b64encode('# 整数比较\n数轴上右侧的整数比左侧的大。\n例如 3 大于 1。'.encode()).decode()})
+        assert response.status_code == 200, response.text
+        view = client.get('/projects/' + pid, headers=headers).json()
+    view = finish_request(client, headers, '/projects/' + pid + '/resume', learning_event(view, 'confirm_profile'))
+    assert view['page_state'] == 'plan_review', view
+    assert view['learning_basis'] == ('provided_material' if filename else 'ai_generated')
+    assert model.call_counts['StudyNotes'] == (0 if filename else 1)
+    view = finish_request(client, headers, '/projects/' + pid + '/resume',
+                          learning_event(view, 'confirm_plan', private_references=[]))
+    view = finish_request(client, headers, '/projects/' + pid + '/begin', {'request_id': str(uuid4())})
+    assert view['page_state'] == 'learning' and view['tutor']['citations']
+    view = finish_request(client, headers, '/projects/' + pid + '/resume', learning_event(view, 'start_quiz'))
+    assert view['page_state'] == 'quiz', view
+    assert 'answer_key' not in json.dumps(view['quiz'])
+    quiz = private_quiz(gateway.paths, pid, view['assessment_id'])
+    view = finish_request(client, headers, '/projects/' + pid + '/resume',
+                          learning_event(view, 'submit_answer', answers=answers_for_quiz(quiz)))
+    assert view['page_state'] == 'completed' and view['guard']['passed'], view
+    assert len(view['completed_node_ids']) == 1
+    calls = len(model.calls)
+    assert client.get('/projects/' + pid, headers=headers).json()['page_state'] == 'completed'
+    fresh = demo.create_app(root=gateway.paths.root.parent, llm=GuestFlowFake())
+    with TestClient(fresh.application) as direct:
+        assert direct.get('/projects/' + pid).json()['page_state'] == 'completed'
+    assert fresh.auth.session(headers['Cookie'].split('=', 1)[1]) == account
+    assert fresh.ownership.owned(account) == {pid}
+    assert len(model.calls) == calls
+
+
 def test_all_roles_server_auth_and_no_parameter_escalation(runtime):
     client, gateway, model = runtime
-    assert client.get('/', follow_redirects=False).status_code == 303
-    assert client.get('/training/home', follow_redirects=False).headers['location'] == '/login'
+    assert client.get('/training/home', follow_redirects=False).headers['location'] == '/'
     assert client.get('/session', headers={'X-Evaluation-User': demo.ACCOUNTS[0][0]}).status_code == 401
+    assert client.get('/', follow_redirects=False).headers['location'] == '/training/home'
+    assert client.get('/session').json()['guest'] is True
     assert client.post('/auth/register', json={}).status_code == 403
     for i in range(4):
         headers = login(client, i)

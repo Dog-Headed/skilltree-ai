@@ -41,4 +41,6 @@ class Ownership:
                 return False
             if conn.execute("SELECT 1 FROM sqlite_master WHERE name='project_owners'").fetchone():
                 conn.execute('UPDATE project_owners SET account=? WHERE account=?', (target, source))
+            if conn.execute("SELECT 1 FROM sqlite_master WHERE name='training_assets'").fetchone():
+                conn.execute("UPDATE training_assets SET account=? WHERE account=? AND scope='private'", (target, source))
         return True

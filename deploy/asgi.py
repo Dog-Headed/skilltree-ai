@@ -171,7 +171,7 @@ class EvaluationGateway:
 
     async def queued_write(self, scope, receive, send, user, project):
         try:
-            raw = await self.body(receive)
+            raw = await self.body(receive, 11250000 if re.fullmatch(r'/projects/[^/]+/sources',scope['path']) else 262144)
             payload = json.loads(raw)
             if not isinstance(payload, dict):
                 raise ValueError()
@@ -283,7 +283,8 @@ class EvaluationGateway:
         if not allowed or (method not in {'GET', 'HEAD', 'POST', 'PATCH'} and not own_delete):
             return await self.reply(send, 403, {'error': {'code': 'evaluation_restricted', 'message': '评审环境不开放此操作。'}})
         length = headers.get(b'content-length', b'0')
-        if not length.isdigit() or int(length) > 262144:
+        request_limit = 11250000 if re.fullmatch(r'/projects/[^/]+/sources',path) else 262144
+        if not length.isdigit() or int(length) > request_limit:
             return await self.reply(send, 413, {'error': {'code': 'request_too_large', 'message': '请求超过大小限制。'}})
         match = re.match(r'^/projects/([^/]+)(?:/|$)', path)
         if match and match[1] not in await asyncio.to_thread(self.ownership.owned, user):

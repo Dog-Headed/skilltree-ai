@@ -14,7 +14,7 @@ from .contracts import ContractModel, Identity
 from .execution import project_execution
 from .learning import LearningService, LearningInput
 from .learning_repository import LearningRepository
-from .materials import ContextBudgetExceeded, MaterialService
+from .materials import ContextBudgetExceeded, MaterialInputError, MaterialService
 from .preparation import PreparationService
 from .preparation_api import CreateDraft, PreparationInput, SourceUpload, RetryInput
 from .repository import ConflictError
@@ -105,6 +105,10 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
     @app.exception_handler(ValueError)
     async def invalid(request,exc):
         return JSONResponse(status_code=422,content={'error':{'code':'invalid_input','message':'当前状态或输入不允许此操作。'}})
+
+    @app.exception_handler(MaterialInputError)
+    async def invalid_material(request,exc):
+        return JSONResponse(status_code=422,content={'error':{'code':'invalid_material','message':str(exc)}})
 
     @app.exception_handler(RequestValidationError)
     async def validation(request,exc):
@@ -225,6 +229,15 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
     @app.get('/projects/{project_id}/sources/{source_id}/versions/{version}')
     def source(project_id:str,source_id:str,version:int):
         with LearningRepository(paths) as repo:return source_detail(repo,project_id,source_id,version)
+
+    @app.get('/projects/{project_id}/sources/{source_id}/versions/{version}/original')
+    def original(project_id:str,source_id:str,version:int):
+        from .file_sources import file_link, original_path
+        with LearningRepository(paths) as repo:
+            source_detail(repo,project_id,source_id,version)  # Also denies assessment-private sources.
+            record=file_link(repo,project_id,source_id,version)
+            if not record:raise KeyError(source_id)
+            return FileResponse(original_path(repo,record),filename=record['metadata']['filename'],media_type='application/octet-stream')
 
     @app.get('/capabilities')
     def capabilities():

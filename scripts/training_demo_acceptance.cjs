@@ -19,7 +19,7 @@ const accounts=['admin@example.test','employee.a@example.test','employee.b@examp
   assert.equal(await page.locator('.member').count(),4);
   await page.setViewportSize({width:390,height:844});await screenshot('admin-mobile');assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.setViewportSize({width:1440,height:1000});
   await page.goto(origin+'/training/admin/courses');await page.getByRole('heading',{name:'功能建设中'}).waitFor();await screenshot('course-empty');
-  for(const i of [2,3]){await login(i);await page.getByRole('link',{name:/查看我的任务/}).click();await page.getByRole('heading',{name:'暂时没有分配给你的培训'}).waitFor();assert.equal((await requestGet(origin+'/projects').then(r=>r.json())).length,0);}
+  for(const i of [2,3]){await login(i);await page.getByRole('link',{name:/查看我的任务/}).click();await page.getByRole('heading',{name:'暂时没有分配给你的学习任务'}).waitFor();assert.equal((await requestGet(origin+'/projects').then(r=>r.json())).length,0);}
   await login(1);await page.getByRole('link',{name:/开始自由学习/}).click();await page.locator('#current-account').waitFor();await page.locator('#garden-home').click();
   await page.locator('#create-form textarea[name=goal]').fill('理解百分比的含义，能计算一个数的百分之几，并区分增长百分比与百分点');
   await page.locator('#create-form textarea[name=prior]').fill('会四则运算，不熟悉百分比');
@@ -45,7 +45,7 @@ const accounts=['admin@example.test','employee.a@example.test','employee.b@examp
   await fs.writeFile(path.join(dir,'real-model-route.json'),JSON.stringify(view,null,2));
   assert.equal(view.page_state,'plan_review',JSON.stringify({state:view.page_state,error:view.error,actions:view.allowed_actions}));assert(view.nodes.length>0);
   await page.getByText('预览生长路线',{exact:true}).waitFor({timeout:30000});await screenshot('real-model-route');
-  await page.goto(origin+'/training/materials');await page.getByRole('heading',{name:'功能建设中'}).waitFor();await screenshot('materials-empty');
+  await page.goto(origin+'/training/materials');await page.getByRole('heading',{name:'从自己的资料开始学习'}).waitFor();await page.locator('input[name=file]').waitFor();await screenshot('materials-entry');
   await login(2);assert.equal((await requestGet(origin+'/projects').then(r=>r.json())).length,0);assert.equal((await requestGet(origin+'/projects/'+result.project_id)).status(),404);
   assert.deepEqual(errors,[]);report.passed=true;
  }catch(e){report.passed=false;report.failure=e.stack;await screenshot('failure').catch(()=>{});throw e;}

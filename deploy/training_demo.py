@@ -21,7 +21,7 @@ from app.v3.learning_api import create_learning_app, STATIC
 TRAINING_WORK = PROJECT_ROOT / 'work' / 'training-demo'
 UNIT_ID = 'demo-qinghe'
 ACCOUNTS = (
-    ('admin@example.test', '培训管理员', 'admin'),
+    ('admin@example.test', '学习管理员', 'admin'),
     ('employee.a@example.test', '员工甲', 'employee'),
     ('employee.b@example.test', '员工乙', 'employee'),
     ('employee.c@example.test', '员工丙', 'employee'),
@@ -60,8 +60,19 @@ def seed(auth, store, password=DEMO_PASSWORD):
 
 
 class TrainingSurface:
-    def __init__(self, store):
+    def __init__(self, store, materials):
         self.store = store
+        self.materials = materials
+
+    async def identity(self, account, auth):
+        member = await asyncio.to_thread(self.store.member, account)
+        if member:
+            return member
+        if account and await asyncio.to_thread(auth.is_guest, account):
+            # Visitors own personal projects, but are never unit members.
+            return {'account': account, 'display_name': '游客', 'role': 'guest',
+                    'unit_id': None, 'unit_name': '个人学习空间'}
+        return None
 
     async def handle(self, scope, receive, send, user, token, gateway):
         path, method = scope['path'], scope['method']
@@ -70,20 +81,27 @@ class TrainingSurface:
             return True
         if path not in {'/', '/learn', '/session'} and not path.startswith('/training'):
             return False
-        member = await asyncio.to_thread(self.store.member, user)
+        member = await self.identity(user, gateway.auth)
         if not member:
             await gateway.reply(send, 403, {'error': {'code': 'not_a_member', 'message': '请使用预置演示账号登录。'}})
             return True
         admin_path = path.startswith('/training/admin') or path.startswith('/training/api/admin')
         if admin_path and member['role'] != 'admin':
-            await gateway.reply(send, 403, {'error': {'code': 'admin_required', 'message': '此入口仅向本单位培训管理员开放。'}})
+            await gateway.reply(send, 403, {'error': {'code': 'admin_required', 'message': '此入口仅向本单位学习管理员开放。'}})
+            return True
+        guest = member['role'] == 'guest'
+        if guest and path in {'/training/tasks', '/training/api/my-tasks'}:
+            await gateway.reply(send, 403, {'error': {'code': 'member_required',
+                'message': '单位学习任务仅向所属成员开放，游客可以继续自主学习。'}})
+            return True
+        if await self.materials.handle(scope, receive, send, gateway, member):
             return True
         if method not in {'GET', 'HEAD'}:
             await gateway.reply(send, 405, {'error': {'code': 'not_implemented', 'message': 'Day 1 尚未开放发布和下发操作。'}})
             return True
         if path == '/session':
             await gateway.reply(send, 200, {'account': user, 'login': await asyncio.to_thread(gateway.auth.login_name, user),
-                'csrf_token': csrf_token(token), 'guest': False, 'logout': True, 'training': member})
+                'csrf_token': csrf_token(token), 'guest': guest, 'logout': not guest, 'training': member})
         elif path == '/learn':
             await gateway.application({**scope, 'path': '/', 'raw_path': b'/'}, receive, send)
         elif path == '/':
@@ -119,10 +137,11 @@ class TrainingGateway(EvaluationGateway):
             except Exception:
                 token = ''
             if not await asyncio.to_thread(self.auth.session, token):
-                await self.reply(send, 303, {}, [(b'location', b'/login')])
+                # Root reuses the existing bounded guest-session creation flow.
+                await self.reply(send, 303, {}, [(b'location', b'/')])
                 return None, token
         user, token = await super().authenticated(scope, receive, send)
-        if user and not await asyncio.to_thread(self.training.store.member, user):
+        if user and not await self.training.identity(user, self.auth):
             await self.reply(send, 403, {'error': {'code': 'not_a_member', 'message': '请使用预置演示账号。'}})
             return None, token
         return user, token
@@ -137,7 +156,7 @@ def create_app(*, root=None, port=18780, llm=None, public_origin=None, seed_pass
     paths = initialize_learning_storage(initialize_storage(V3Paths(root/'learning')))
     auth, store = AuthStore(root/'auth.sqlite'), TrainingStore(root/'training.sqlite')
     if public_origin and (not public_origin.startswith('https://') or seed_password == DEMO_PASSWORD or len(seed_password) < 16):
-        raise ValueError('公网培训必须使用 HTTPS 和独立的至少 16 位初始密码。')
+        raise ValueError('公网学习必须使用 HTTPS 和独立的至少 16 位初始密码。')
     seed(auth, store, seed_password)
     settings = None
     if llm is None:
@@ -148,23 +167,25 @@ def create_app(*, root=None, port=18780, llm=None, public_origin=None, seed_pass
         preparation_generation_mode='notes-outline-v1')
     if settings:
         application = ModelScopedApplication(application, settings)
+    from .training_materials import TrainingMaterials
+    materials = TrainingMaterials(root, root/'gateway.sqlite', store)
     gateway = TrainingGateway(application, paths, root/'gateway.sqlite', auth_store=auth, queued=True,
-        origin=public_origin or f'http://127.0.0.1:{port}', cookie_secure=bool(public_origin), guest_access=False,
+        origin=public_origin or f'http://127.0.0.1:{port}', cookie_secure=bool(public_origin), guest_access=True,
         cookie_name='__Host-skilltree_training_session' if public_origin else f'skilltree_training_{port}_session',
-        model_settings=settings, training=TrainingSurface(store))
+        model_settings=settings, training=TrainingSurface(store, materials))
     return gateway
 
 
 def create_production_app():
     password = os.environ.get('SKILLTREE_TRAINING_PASSWORD', '')
     if len(password) < 16:
-        raise ValueError('先在服务器私有配置中设置培训初始密码。')
+        raise ValueError('先在服务器私有配置中设置学习初始密码。')
     return create_app(root=os.getenv('SKILLTREE_TRAINING_ROOT', str(TRAINING_WORK/'production')),
         public_origin=os.getenv('SKILLTREE_PUBLIC_ORIGIN', 'https://skilltree.goutouren.work'), seed_password=password)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='SkillTree 单位培训本地演示（保留已有演示进度）')
+    parser = argparse.ArgumentParser(description='SkillTree 单位学习本地演示（保留已有演示进度）')
     parser.add_argument('--port', type=int, default=18780)
     parser.add_argument('--data-root', type=Path, default=None)
     parser.add_argument('--init-only', action='store_true')

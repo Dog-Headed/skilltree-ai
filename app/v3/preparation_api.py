@@ -59,7 +59,7 @@ class SourceUpload(ContractModel):
     visibility: Literal['teaching','assessment_private'] = 'teaching'
     content: str | None = Field(default=None,max_length=131072)
     filename: str | None = Field(default=None,max_length=255)
-    data_base64: str | None = Field(default=None,max_length=174764)
+    data_base64: str | None = Field(default=None,max_length=11184812)
 
     @model_validator(mode='after')
     def one_source(self):

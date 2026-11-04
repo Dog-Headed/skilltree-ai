@@ -250,7 +250,7 @@
     const prior = textArea('prior', priorValue, { maxlength: 4000, rows: 2, placeholder: '可以写“零基础”“不确定”，或简单说说已经会什么。' });
     const grid = el('div', { class: 'form-grid' }, field('你想学会什么？', goal, '日语、Python、心理学……写下想长期探索的方向，或一个具体目标。', true), field('已有基础', prior, '可不填；让这棵树从适合你的地方开始。', true));
     window.SkillTreeControls?.seedMeter(goal);
-    form.append(grid, el('p', { class: 'muted-line', text: '创建后可直接让 AI 准备，也可以先上传讲义或内部培训文件。没有资料时整理通用知识；具体公司制度以实际文件为准。' }));
+    form.append(grid, el('p', { class: 'muted-line', text: '创建后可直接让 AI 准备，也可以先上传讲义或内部学习文件。没有资料时整理通用知识；具体公司制度以实际文件为准。' }));
     if (pack) form.append(el('p', { class: 'welcome-note', text: '已填入示例目标，可继续编辑。示例资料可在创建后按需导入。' }));
     form.append(el('div', { class: 'actions' }, el('button', { type: 'submit', class: 'btn primary', text: editing ? '保存学习档案' : '种下这棵树', disabled: state.busy })));
     function collect() {
@@ -455,12 +455,12 @@
     const form = el('form'); const title = input('title', '', { required: true, maxlength: 256, placeholder: '例如：第一单元 · 循环基础' });
     const description = textArea('source_description', '', { required: true, maxlength: 4000, placeholder: '作者 / 链接 / 章节 / 使用范围等', rows: 2 });
     const content = textArea('content', '', { maxlength: 131072, rows: 8, placeholder: '粘贴资料原文，或在下方选择 UTF-8 文件' });
-    const file = input('file', '', { type: 'file', accept: '.txt,.md,.markdown,text/plain,text/markdown' });
+    const file = input('file', '', { type: 'file', accept: '.pdf,.docx,.xlsx,.pptx,.txt,.md,.markdown' });
     const visibility = el('select', { name: 'visibility' }, el('option', { value: 'teaching', text: '教学资料 · 可用于讲解与公开引用' }), el('option', { value: 'assessment_private', text: '私有测评资料 · 仅供出题与评分' }));
     const replace = el('select', { name: 'source_id' }, el('option', { value: '', text: '作为新资料导入' }), ...list(view.sources).map(s => el('option', { value: s.source_id, text: '更新版本：' + s.title })));
     const submit = el('button', { type: 'submit', class: 'btn primary', text: '导入资料', disabled: state.busy });
-    form.append(el('div', { class: 'form-grid' }, field('资料标题', title, '', true), field('来源说明', description, '请保留可复查的作者、章节或链接。', true), field('原文', content, '文件和粘贴二选一。资料中的脚本只会作为文字显示。', true), field('选择文件', file, 'UTF-8 TXT / Markdown，单文件最多 128 KB。', true), field('可见性', visibility), field('导入方式', replace)), el('div', { class: 'notice blue', text: '资料不能修改权限、评分策略、工具或调用上限。私有参考的正文与答案不进入教学或公开来源；确认计划时需选择适用节点。' }), el('div', { class: 'actions' }, submit));
-    file.addEventListener('change', () => { if (file.files[0] && !title.value) title.value = file.files[0].name.replace(/\.(?:txt|md|markdown)$/i, ''); });
+    form.append(el('div', { class: 'form-grid' }, field('资料标题', title, '', true), field('来源说明', description, '请保留可复查的作者、章节或链接。', true), field('原文', content, '文件和粘贴二选一。资料中的脚本只会作为文字显示。', true), field('选择文件', file, '文字 PDF / DOCX / XLSX / PPTX 最多 8 MiB，正文最多 12,000 字符；UTF-8 TXT / Markdown 最多 128 KiB。', true), field('可见性', visibility), field('导入方式', replace)), el('div', { class: 'notice blue', text: '资料不能修改权限、评分策略、工具或调用上限。私有参考的正文与答案不进入教学或公开来源；确认计划时需选择适用节点。' }), el('div', { class: 'actions' }, submit));
+    file.addEventListener('change', () => { if (file.files[0] && !title.value) title.value = file.files[0].name.replace(/\.(?:pdf|docx|xlsx|pptx|txt|md|markdown)$/i, ''); });
     form.addEventListener('submit', async event => {
       event.preventDefault(); if (state.busy || !form.reportValidity()) return;
       if (Boolean(file.files[0]) === Boolean(content.value.trim())) { showMessage('请选择一个文件，或粘贴原文，两者保留一种。', 'warn'); return; }
@@ -468,9 +468,9 @@
       if (replace.value) body.source_id = replace.value;
       try {
         if (file.files[0]) {
-          const selected = file.files[0]; if (!/\.(txt|md|markdown)$/i.test(selected.name)) throw new Error('仅支持 TXT / Markdown 文件。');
-          const bytes = new Uint8Array(await selected.arrayBuffer()); if (bytes.length > 131072) throw new Error('文件超过 128 KB，请拆分或缩减范围。');
-          new TextDecoder('utf-8', { fatal: true }).decode(bytes); let binary = ''; for (const byte of bytes) binary += String.fromCharCode(byte);
+          const selected = file.files[0]; if (!/\.(pdf|docx|xlsx|pptx|txt|md|markdown)$/i.test(selected.name)) throw new Error('支持 PDF、DOCX、XLSX、PPTX、TXT / Markdown 文件。');
+          const bytes = new Uint8Array(await selected.arrayBuffer()); if (bytes.length > (/\.(txt|md|markdown)$/i.test(selected.name)?131072:8388608)) throw new Error('文件超过大小限制，请拆分或缩减范围。');
+          if (/\.(txt|md|markdown)$/i.test(selected.name)) new TextDecoder('utf-8', { fatal: true }).decode(bytes); let binary = ''; for (const byte of bytes) binary += String.fromCharCode(byte);
           body.filename = selected.name; body.data_base64 = btoa(binary);
         } else body.content = content.value;
       } catch (error) { showMessage(error.message || '文件必须采用 UTF-8 编码。', 'error'); return; }
@@ -513,10 +513,11 @@
       const data = await get('/projects/' + encodeURIComponent(state.id) + '/sources/' + encodeURIComponent(sourceId) + '/versions/' + encodeURIComponent(version));
       const root = el('div', {}, el('p', { class: 'muted', text: data.source_description || '' }), chip('版本 ' + (data.source_version || version)), el('p', { class: 'muted-line', text: data.trust_note || '用户提供，未独立核验。引用定位不等同于内容已被人工核实。' }));
       const chunks = list(data.chunks);
+      if(data.file){root.append(el('p',{class:'muted',text:data.file.filename+' · 原件可供核对'}),el('a',{href:'/projects/'+encodeURIComponent(state.id)+'/sources/'+encodeURIComponent(sourceId)+'/versions/'+encodeURIComponent(version)+'/original',text:'下载原件',class:'btn subtle'}));for(const warning of data.file.warnings)root.append(el('p',{class:'notice',text:warning}));}
       if (chunks.length) for (const chunk of chunks) {
         const lines = el('div', { class: 'source-content' });
         String(chunk.content || '').split('\n').forEach((line, index) => lines.append(el('span', { class: 'source-line' }, el('span', { class: 'source-line-number', 'aria-hidden': 'true', text: Number(chunk.line_start || 1) + index }), line)));
-        root.append(el('section', { class: 'source-chunk' + (chunk.chunk_id === chunkId ? ' highlighted' : ''), id: 'source-' + chunk.chunk_id }, el('small', { text: `第 ${chunk.line_start}–${chunk.line_end} 行` + (chunk.heading ? ' · ' + chunk.heading : '') }), lines));
+        root.append(el('section', { class: 'source-chunk' + (chunk.chunk_id === chunkId ? ' highlighted' : ''), id: 'source-' + chunk.chunk_id }, el('small', { text: `第 ${chunk.line_start}–${chunk.line_end} 行` + (chunk.heading ? ' · ' + chunk.heading : '') }), ...list(chunk.locations).map(b=>el('p',{class:'muted',text:b.label})), lines));
       }
       else root.append(el('pre', { class: 'source-content', text: data.content || '' }));
       openModal(data.title || '来源原文', root);
@@ -903,8 +904,8 @@
       const session = await get('/session');
       authSession = session;
       if (session.training) {
-        document.querySelector('.top-tools').prepend(el('a', {class:'btn subtle',href:'/',text:'培训首页'}));
-        document.querySelector('.brand small').textContent = '自由学习 · ' + session.training.display_name;
+        document.querySelector('.top-tools').prepend(el('a', {class:'btn subtle',href:'/',text:'学习首页'}));
+        document.querySelector('.brand small').textContent = '自由学习 · ' + (session.training.display_name === '\u57f9\u8bad管理员' ? '学习管理员' : session.training.display_name);
       }
       if (session?.account) {
         accountStoragePrefix = encodeURIComponent(session.account) + '.';
@@ -912,9 +913,9 @@
         if (session.guest) {
           // Visitors learn right away; signing up is offered, never required.
           $('new-project').before(el('div', { class: 'guest-note', id: 'current-account' }, el('strong', { text: '访客模式' }),
-            el('span', { text: '学习记录保存在这台设备上。注册后可以换设备继续，课程会原样保留。' }),
-            el('a', { class: 'btn subtle', href: '/login?mode=register&next=' + here, text: '注册，保存进度' })));
-          $('theme-toggle').before(el('a', { class: 'btn subtle account-link', href: '/login?next=' + here, text: '登录 / 注册' }));
+            el('span', { text: session.training ? '学习记录与当前浏览器的游客身份关联，请保留浏览器数据。登录已有账号后，课程会保留。' : '学习记录保存在这台设备上。注册后可以换设备继续，课程会原样保留。' }),
+            el('a', { class: 'btn subtle', href: (session.training ? '/login?next=' : '/login?mode=register&next=') + here, text: session.training ? '登录，保留进度' : '注册，保存进度' })));
+          $('theme-toggle').before(el('a', { class: 'btn subtle account-link', href: '/login?next=' + here, text: session.training ? '登录账号' : '登录 / 注册' }));
         } else $('new-project').before(el('span', { class: 'chip', text: '当前账号：' + (session.login || session.account), id: 'current-account' }));
         const account = $('current-account');
         if (session.logout) {

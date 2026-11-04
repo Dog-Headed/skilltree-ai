@@ -185,7 +185,7 @@ class V3Repository:
             AND (? OR d.visibility='teaching') ORDER BY c.chunk_id""",(project_id,source_id,source_version,int(include_private)))]
         return sorted(chunks,key=lambda c:(c['line_start'],c['line_end'],c['chunk_id']))
 
-    def import_source_version(self, document_kwargs, chunks_factory, *, request_id):
+    def import_source_version(self, document_kwargs, chunks_factory, *, request_id, file_record=None):
         from .contracts import SourceDocument, SourceChunk
         key=request_key(request_id)
         proposed=SourceDocument.model_validate({**document_kwargs,"source_version":1})
@@ -197,6 +197,8 @@ class V3Repository:
                 if replay["fingerprint"] != fingerprint:raise ConflictError("Import request reused with changed content")
                 version=replay["source_version"]
                 row=self.conn.execute("SELECT document_json FROM source_documents WHERE project_id=? AND source_id=? AND source_version=?",(project_id,replay["source_id"],version)).fetchone()
+                from .file_sources import save_link
+                save_link(self.conn, json.loads(row[0]), file_record)
                 return {"document":json.loads(row[0]),"chunks":self.list_source_chunks(project_id,replay["source_id"],version,include_private=True),"reused":True,"draft_revision":self.get_project(project_id)["draft_revision"]}
             self._draft(project_id)
             latest=self.conn.execute("SELECT document_json FROM source_documents WHERE project_id=? AND source_id=? ORDER BY source_version DESC LIMIT 1",(project_id,proposed.source_id)).fetchone()
@@ -224,6 +226,8 @@ class V3Repository:
                 self.conn.executemany("INSERT INTO source_chunks VALUES (?,?,?,?,?)",((c.project_id,c.chunk_id,c.source_id,c.source_version,encode(c)) for c in chunks))
                 self.conn.execute("UPDATE learning_projects SET draft_revision=draft_revision+1 WHERE id=?",(project_id,))
             self.conn.execute("INSERT INTO source_import_requests VALUES (?,?,?,?,?)",(project_id,key,fingerprint,document.source_id,version))
+            from .file_sources import save_link
+            save_link(self.conn, document.model_dump(), file_record)
             return {"document":document.model_dump(),"chunks":[c.model_dump() for c in chunks],"reused":reused,"draft_revision":self.get_project(project_id)["draft_revision"]}
 
     def get_bound_chunks(self, project_id, node_id, objective_id, purpose):

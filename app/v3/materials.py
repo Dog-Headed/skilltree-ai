@@ -106,7 +106,7 @@ class MaterialService:
     def import_text(self, project_id: str, *, content: str, title: str,
                     source_description: str, request_id: UUID | str,
                     source_id: str | None = None, visibility: str = "teaching",
-                    trust_note: str = "用户提供，未独立核验") -> MaterialImportResult:
+                    trust_note: str = "用户提供，未独立核验", file_record=None) -> MaterialImportResult:
         if not isinstance(content, str) or not content.strip("\ufeff \t\r\n"):
             raise MaterialInputError("请提供非空文字资料")
         if not isinstance(title, str) or not title.strip() or not isinstance(source_description, str) or not source_description.strip():
@@ -132,7 +132,7 @@ class MaterialService:
             content_hash=sha256(raw).hexdigest(), visibility=visibility, trust_note=trust_note,
         )
         document_kwargs = proposed.model_dump(exclude={"source_version"})
-        saved = self.repository.import_source_version(document_kwargs, chunk_document, request_id=key)
+        saved = self.repository.import_source_version(document_kwargs, chunk_document, request_id=key, file_record=file_record)
         document = SourceDocument.model_validate(saved["document"])
         chunks = tuple(SourceChunk.model_validate(chunk) for chunk in saved["chunks"])
         if document.model_dump(exclude={"source_version"}) != document_kwargs:
@@ -148,22 +148,15 @@ class MaterialService:
     def import_upload(self, project_id: str, *, data: bytes, filename: str,
                       title: str, source_description: str, request_id: UUID | str,
                       source_id: str | None = None, visibility: str = "teaching") -> MaterialImportResult:
-        if type(data) is not bytes:
-            raise MaterialInputError("上传入口只接受文件字节，不接受本机路径")
-        if not isinstance(filename, str) or not filename or any(char in filename for char in "/\\:\x00"):
-            raise MaterialInputError("文件名必须是名称，不能是本机路径")
-        if len(filename) > 255 or filename.rsplit(".", 1)[-1].lower() not in {"txt", "md", "markdown"} or "." not in filename:
-            raise MaterialInputError("首版仅支持 UTF-8 TXT 或 Markdown")
-        if len(data) > self.limits.max_file_bytes:
-            raise MaterialInputError("上传超过服务端单文件字节上限")
-        try:
-            # Preserve a UTF-8 BOM and CRLF in the original document/hash.
-            content = data.decode("utf-8", errors="strict")
-        except UnicodeError as exc:
-            raise MaterialInputError("上传文件不是合法 UTF-8") from exc
-        return self.import_text(project_id, content=content, title=title,
+        from .office_files import parse_file
+        from .file_sources import retain
+        parsed = parse_file(data, filename)
+        record = retain(self.repository.paths.root, data, parsed)
+        return self.import_text(project_id, content=parsed['content'], title=title,
                                 source_description=source_description, request_id=request_id,
-                                source_id=source_id, visibility=visibility)
+                                source_id=source_id, visibility=visibility, file_record=record,
+                                trust_note=('用户提供，未独立核验' if parsed['format'] in {'txt','md','markdown'}
+                                            else '用户提供，未独立核验；原件 SHA256 ' + parsed['original_sha256']))
 
     def catalog(self, project_id: str, *, exclude_source_ids=()) -> list[dict]:
         """Latest selected public sources, never answer-only/private material.

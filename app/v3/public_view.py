@@ -23,9 +23,17 @@ def source_detail(repo,pid,source_id,version):
     require_visible(repo,pid)
     doc=next((d for d in repo.list_sources(pid) if (d['source_id'],d['source_version'])==(source_id,version)),None)
     if not doc:raise KeyError(source_id)
-    return {**PublicSource.from_document(SourceDocument.model_validate(doc)).model_dump(),
+    result = {**PublicSource.from_document(SourceDocument.model_validate(doc)).model_dump(),
             'content':doc['content'],'content_hash':doc['content_hash'],
             'chunks':repo.list_source_chunks(pid,source_id,version)}
+    from .file_sources import file_link
+    record=file_link(repo,pid,source_id,version)
+    if record:
+        result['file']=record['metadata']
+        for chunk in result['chunks']:
+            chunk['locations']=[b for b in record['metadata']['blocks']
+                if b['line_start']<=chunk['line_end'] and b['line_end']>=chunk['line_start']]
+    return result
 
 
 def project_view(repo,base):

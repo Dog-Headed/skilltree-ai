@@ -22,7 +22,7 @@ from .jobs import AdmissionError, JobStore, JobRunner
 class EvaluationGateway:
     def __init__(self, application, paths, quota_path, *, auth_store=None, queued=False,
                  origin='https://skilltree.goutouren.work', cookie_secure=True, queue_capacity=10, cookie_name=None,
-                 guest_access=True, model_settings=None):
+                 guest_access=True, model_settings=None, training=None):
         self.application = application
         self.paths = paths
         self.quota_path = Path(quota_path).resolve()
@@ -30,6 +30,7 @@ class EvaluationGateway:
         self.active_writes = 0
         self.auth = auth_store
         self.model_settings = model_settings
+        self.training = training
         self.origin = origin.rstrip('/')
         self.cookie_secure = cookie_secure
         self.cookie_name = cookie_name or ('__Host-skilltree_session' if cookie_secure else 'skilltree_session')
@@ -240,6 +241,8 @@ class EvaluationGateway:
         if not self.auth and not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', user):
             return await self.reply(send, 401, {'error': {'code': 'invalid_account', 'message': '请重新登录。'}})
         scope['skilltree_account'] = user
+        if self.training and await self.training.handle(scope, receive, send, user, token, self):
+            return
         if path == '/model-settings' and self.model_settings:
             if method not in {'GET', 'POST'}:
                 return await self.reply(send, 405, {'error': {'code': 'method_not_allowed', 'message': '请使用模型设置窗口。'}})
@@ -345,6 +348,9 @@ class EvaluationGateway:
 
 
 def create_app():
+    if os.getenv('SKILLTREE_TRAINING_ENABLED') == '1':
+        from .training_demo import create_production_app
+        return create_production_app()
     from .model_settings import AccountModel, ModelSettings, ModelScopedApplication
     paths = V3Paths(Path(os.environ.get('SKILLTREE_DATA_ROOT', 'data/v3')))
     quota = os.environ.get('SKILLTREE_QUOTA_DB', 'data/deployment-quota.sqlite')

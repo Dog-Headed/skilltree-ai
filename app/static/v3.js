@@ -902,6 +902,10 @@
     try {
       const session = await get('/session');
       authSession = session;
+      if (session.training) {
+        document.querySelector('.top-tools').prepend(el('a', {class:'btn subtle',href:'/',text:'培训首页'}));
+        document.querySelector('.brand small').textContent = '自由学习 · ' + session.training.display_name;
+      }
       if (session?.account) {
         accountStoragePrefix = encodeURIComponent(session.account) + '.';
         const here = encodeURIComponent(location.pathname + location.search + location.hash);

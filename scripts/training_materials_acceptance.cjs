@@ -36,7 +36,7 @@ const report={origin,date:new Date().toISOString(),model:'real configured provid
   await page.locator('textarea[name=goal]').fill('依据上传的《'+asset.title+'》，学习文中的核心要求、适用条件、重点任务与责任分工。仅按资料原文规划，不补造内部规定。');
   const create=page.waitForResponse(r=>r.request().method()==='POST'&&new URL(r.url()).pathname==='/projects');
   await page.getByRole('button',{name:'用这份资料准备课程',exact:true}).click();const created=await(await create).json();report.project_id=created.project_id;
-  await page.waitForURL('**/learn#/p/'+created.project_id+'/learn');await page.getByRole('button',{name:'AI 整理学习计划',exact:true}).waitFor();
+  await page.waitForURL('**/learn#/p/'+created.project_id+'/learn',{waitUntil:'commit'});await page.getByRole('button',{name:'AI 整理学习计划',exact:true}).waitFor({timeout:120000});
   let view=(await get('/projects/'+created.project_id)).value;assert(view.sources.length>0);report.initial_state=view.page_state;
   const started=Date.now();await page.getByRole('button',{name:'AI 整理学习计划',exact:true}).click();view=await waitProject(created.project_id,['plan_review']);
   report.route_seconds=(Date.now()-started)/1000;report.node_titles=view.nodes.map(n=>n.title);assert(view.nodes.length>0);
@@ -47,11 +47,11 @@ const report={origin,date:new Date().toISOString(),model:'real configured provid
   view=await waitProject(created.project_id,['learning']);
   assert(view.tutor?.citations?.length>0,'Teaching must cite actual source chunks');
   await fs.writeFile(path.join(out,'teaching.json'),JSON.stringify(view,null,2));report.teaching_state=view.page_state;
-  await page.reload({waitUntil:'domcontentloaded'});await page.waitForTimeout(1500);await shot('real-teaching');
-  const second=await browser.newContext(),other=await second.newPage();await other.goto(origin+'/');
+  await page.reload({waitUntil:'commit'});await page.getByRole('button',{name:/· v1/}).first().waitFor({timeout:120000});await shot('real-teaching');
+  const second=await browser.newContext(),other=await second.newPage();await other.goto(origin+'/',{waitUntil:'domcontentloaded'});
   const denied=await other.evaluate(async({pid,aid})=>({project:(await fetch('/projects/'+pid)).status,asset:(await fetch('/training/api/materials/'+aid)).status}),{pid:created.project_id,aid:asset.id});assert.deepEqual(denied,{project:404,asset:404});report.other_guest=denied;await second.close();
   await fs.writeFile(path.join(out,'storage-state.json'),JSON.stringify(await ctx.storageState()));
   assert.deepEqual(report.errors,[]);report.passed=true;
  }catch(e){report.passed=false;report.failure=e.stack;await shot('failure').catch(()=>{});throw e;}
- finally{await fs.writeFile(path.join(out,'result.json'),JSON.stringify(report,null,2));await browser.close();}
+ finally{await fs.writeFile(path.join(out,'storage-state.json'),JSON.stringify(await ctx.storageState()));await fs.writeFile(path.join(out,'result.json'),JSON.stringify(report,null,2));await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});

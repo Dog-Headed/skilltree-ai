@@ -40,3 +40,8 @@ Updated: 2026-11-05 (Asia/Shanghai). Owner: Grok Bot continuous implementation.
 1. Finish live model evidence → `day02/FIX_REPORT.md`
 2. Commit on `grokbot/day2-fidelity` from box; sync carefully to GitHub when credentials available
 3. Start 4A (registration + TrainingGateway)
+
+## Commits (box)
+
+- Branch `grokbot/docs-sync-and-day2` @ `a96a752` (base `80d53f4`)
+- `git push` blocked: GitHub HTTPS credentials not available to this bot (`could not read Username`). Connect GitHub / provide push access; **no force-push used**.

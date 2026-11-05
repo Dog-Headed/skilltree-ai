@@ -39,7 +39,7 @@
 
 | 方法／地址 | 当前行为与权限 |
 |---|---|
-| `GET /` | 未登录自动建立限速保护的游客身份 → `/training/home`；管理员 → `/training/admin`，员工 → `/training/home` |
+| `GET /` | 未登录自动建立限速保护的游客身份，然后 303 到原生长图谱 `/learn#/garden`。管理员、员工、个人账号与游客相同，不再按角色进入培训卡片页 |
 | `GET /login` / `POST /auth/login` | 学习登录页；沿用 account/password/remember、`X-SkillTree-Login: 1`；设置 HttpOnly 会话 |
 | `POST /auth/logout` | 必须有效会话 + `X-CSRF-Token`；撤销当前会话 |
 | `POST /auth/register` | 开放个人注册；忽略客户端 role/unit_id；游客升级保留进度；返回个人账号会话 |
@@ -52,9 +52,9 @@
 | `GET /training/admin/members` | 仅管理员：成员管理页 |
 | `GET /training/api/my-tasks` | 当前成员的员工任务列表；learning_available=false；游客/个人账号 403 |
 | `GET /training/admin[/materials\|/courses\|/tasks\|/dashboard]` | 仅管理员；`/materials` 已可上传／预览／下载单位资料；`/courses`、`/tasks`、`/dashboard` 已接通（无数据时为空状态） |
-| `GET /training/home`、`/training/materials` | 员工、游客或个人账号首页、个人资料学习入口（含办公四格式上传／预览） |
+| `GET /training/home`、`/training/materials` | 培训卡片与个人资料学习入口仍可直接打开（含办公四格式上传／预览）；不是默认进入页 |
 | `GET /training/tasks` | 成员真实空任务页；游客 403 |
-| `GET /learn` | 复用现有知识树与学习台页面；新增返回学习首页导航 |
+| `GET /learn` | 原知识树与生长图谱。`#/garden` 为我的花园，`#/p/...` 项目路由不变；页面上的「学习首页」回到 `/`，再进入同一花园 |
 | `GET/POST /projects`、`GET /projects/{id}` | 原有个人课程列表／目标创建／准备详情，执行所有权检查 |
 | `POST /projects/{id}/resume` | 原准备和学习动作；confirm_profile 等慢操作进入现有持久队列，响应 202；返回稳定 job ID |
 | `POST /projects/{id}/begin`、`/retry` | 原学习／恢复入口，不改变评价规则 |

@@ -2,30 +2,30 @@
 
 Updated: 2026-11-05 (Asia/Shanghai). Owner: Grok Bot continuous implementation.
 
-## GitHub `main` (pre-Day3-start merge)
+## GitHub `main`
 
 | Item | Result |
 |---|---|
-| Day2 merge | PR #2 → `cebaa7f` |
-| 4A merge | PR #3 → `736da87` |
+| Day2 | PR #2 |
+| 4A | PR #3 |
 | Day3 publish/assign | PR #4 → `a40004d` |
-| Production | still on `80d53f4`; **not deployed** this run |
+| Day3 employee start | PR #5 → `f2998f3` |
+| Production | still on `80d53f4`; **not deployed** |
 
 ## Status
 
-- [x] Day 2 fidelity offline + docs (merged)
+- [x] Day 2 fidelity offline + docs
 - [ ] Day 2 live model DOCX recheck
-- [x] 4A registration + members + QA admin script (merged)
-- [x] Day 3 publish/assign + **employee start** (this branch)
-- [ ] Day 4 Dashboard
+- [x] 4A registration + members
+- [x] Day 3 publish/assign + employee start
+- [x] Day 4 Dashboard (this branch)
 - [ ] Day 5 Full demo rehearsal
 
 ## Tests
 
-- Day3 start + publish/assign + 4A + Day1 demo: **16 passed**
+- Day4 + Day3 start: **3 passed** in focused run; prior Day3 suite **16 passed**
 
 ## Next
 
-1. Day 4 admin dashboard from real learning facts
-2. Day 5 isolated rehearsal + docs
-3. Production deploy only after live checks + backup + explicit approval
+1. Day 5 isolated rehearsal + DEMO_SCRIPT / LIMITATIONS
+2. Production deploy only after backup + explicit approval

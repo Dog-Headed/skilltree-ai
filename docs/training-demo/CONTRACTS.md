@@ -76,6 +76,15 @@
 
 发布后的课程版本与资料关联不可更新／删除。员工项目的 SourceChunk 在本项目内新建，不复制其他员工或管理员执行快照。
 
+## Day 4 看板（2026-11-05）
+
+| 方法／地址 | 行为 |
+|---|---|
+| `GET /training/api/admin/dashboard` | 仅管理员；任务级下发/开始/完成计数与逾期标记 |
+| `GET /training/api/admin/tasks/{id}/board` | 仅管理员；员工明细（状态、必学进度、最近测评摘要、待补弱、更新时间） |
+
+进度只统计任务课程必学节点的真实达标事实；个人自主学习不计入。逾期为独立布尔标记。
+
 ## Day 2 资料契约（2026-11-05）
 
 `gateway.sqlite.training_assets` 保存账号所有者、private/unit 范围、单位、请求 UUID、内容指纹、标题、文件名和 processing/ready/failed 状态。上传在同一 HTTP 请求中完成解析，页面真实显示上传解析中；失败持久保存原因。重启将未完成的 processing 标记为 failed，不伪造成功。相同账号、范围和请求 UUID 重放复用原记录，变更内容 409。

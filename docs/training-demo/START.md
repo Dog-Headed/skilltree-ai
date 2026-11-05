@@ -62,7 +62,7 @@ Set-Location D:\SkillTree_AI\skilltree
 - 管理员首页：`/training/admin`；员工与游客首页：`/training/home`。游客只显示个人学习入口。
 - 个人学习：`/learn`，项目哈希路由继续可用。
 - 资料学习：`/training/materials` → 开始资料学习 → 创建课程 → “粘贴 / 上传资料”。当前支持 UTF-8 TXT/Markdown，以及 PDF/DOCX/XLSX/PPTX（见下方 Day 2）。
-- 单位资料、成员管理、课程发布、任务下发与员工「开始学习」已可用；进度看板见 Day 4。
+- 单位资料、成员管理、课程发布、任务下发与员工「开始学习」已可用；进度看板已接通（/training/admin/dashboard）。
 
 ## 公网
 

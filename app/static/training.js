@@ -108,11 +108,45 @@
       const data=await get('/training/api/my-tasks');hero('单位安排','我的学习任务','这里只显示分配给当前账号的单位学习。开始后会按已发布课程初始化你自己的独立项目。');
       if(!data.tasks.length)empty('暂时没有分配给你的学习任务','管理员下发后，这里会显示真实任务和截止时间。');
       else{const list=node('div',null,'members');for(const task of data.tasks){const e=node('div',null,'member');const status=task.status==='completed'?'已完成':(task.project_id?'进行中':'未开始');const progress=task.progress?('必学 '+task.progress.required_passed+'/'+task.progress.required_total):'';e.append(node('strong',task.title),node('small',task.due_at||'无截止时间'),node('small',status+(progress?' · '+progress:'')),node('small',task.course_version_id));const go=node('button',task.project_id?'继续学习':'开始学习','button');go.type='button';go.addEventListener('click',async()=>{go.disabled=true;try{let projectId=task.project_id;if(!projectId){const started=await post('/training/api/my-tasks/'+encodeURIComponent(task.id)+'/start',{request_id:crypto.randomUUID()});projectId=started.project_id;}location.assign('/learn#/p/'+encodeURIComponent(projectId)+'/learn');}catch(err){go.disabled=false;alert(err.message);}});e.append(go);list.append(e);}$('content').append(list);}
+    }else if(path==='/training/admin/dashboard'){
+      const data=await get('/training/api/admin/dashboard');
+      hero('学习看板','让成长有迹可循','进度只统计任务范围内已达标的必学节点，来自真实学习事实，不把打开页面或提交次数当成完成。');
+      if(data.empty){empty('还没有可统计的学习任务','发布课程并下发给员工后，这里会显示下发、已开始与已完成人数。');}
+      else{
+        for(const task of data.tasks){
+          const panel=node('section',null,'member');
+          const counts=task.counts||{};
+          panel.append(node('strong',task.title),
+            node('small','下发 '+(counts.assigned||0)+' · 已开始 '+(counts.started||0)+' · 已完成 '+(counts.completed||0)+(task.overdue?' · 已逾期':'')),
+            node('small',task.due_at||'无截止时间'));
+          const open=node('button','查看员工明细','button secondary');open.type='button';
+          open.addEventListener('click',async()=>{
+            open.disabled=true;
+            try{
+              const board=await get('/training/api/admin/tasks/'+encodeURIComponent(task.id)+'/board');
+              const box=node('div',null,'members');
+              box.append(node('p','进度口径：已达标必学节点 / 课程全部必学节点。逾期单独标记，不覆盖学习状态。','notice'));
+              if(!board.employees.length)box.append(node('p','此任务还没有指派员工。'));
+              for(const emp of board.employees){
+                const row=node('div',null,'member');
+                const prog=emp.progress||{};
+                const label=(emp.status==='completed'?'已完成':emp.status==='in_progress'?'进行中':'未开始')+(emp.overdue?' · 逾期':'');
+                row.append(node('strong',emp.account),node('small',label),
+                  node('small','必学 '+(prog.required_passed||0)+'/'+(prog.required_total||0)),
+                  node('small',emp.updated_at||emp.started_at||'尚未开始'));
+                if(emp.recent_assessment)row.append(node('small','最近测评：'+(emp.recent_assessment.passed?'通过':'未通过')+' · '+(emp.recent_assessment.effective_action||'')));
+                if(emp.remediation_targets&&emp.remediation_targets.length)row.append(node('small','待补弱：'+emp.remediation_targets.join(', ')));
+                box.append(row);
+              }
+              panel.append(box);open.remove();
+            }catch(err){open.disabled=false;alert(err.message);}
+          });
+          panel.append(open);$('content').append(panel);
+        }
+      }
     }else{
-      const details={
-        '/training/admin/dashboard':['学习看板','让成长有迹可循','学习进度看板将在 Day 4 接通。当前没有学习事实，不展示成绩或统计。']
-      };const d=details[path];if(!d){empty('页面不存在','请从导航重新进入。');return;}hero(d[0],d[1],d[2]);empty('功能建设中',d[2]);
-      if(!admin)$('content').append(link('先去自由学习 →','/learn','button'));
+      empty('页面不存在','请从导航重新进入。');
+    }
     }
   }
   $('logout').addEventListener('click',async()=>{try{const r=await fetch('/auth/logout',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf_token},body:'{}'});if(!r.ok&&r.status!==401)throw new Error('退出未完成，请刷新重试。');try{const prefix='skilltree.v3.'+encodeURIComponent(session.account)+'.';for(const key of Object.keys(localStorage))if(key.startsWith(prefix))localStorage.removeItem(key);localStorage.setItem('skilltree.auth.changed',String(Date.now()));}catch{}location.replace('/login');}catch(e){$('content').prepend(node('p',e.message,'error'));}});

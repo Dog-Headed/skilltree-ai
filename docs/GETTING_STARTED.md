@@ -83,7 +83,7 @@ This is a workflow demonstration, not evidence of real teaching, grading, or sub
 ## Browser workflow
 
 1. Enter a learning goal and optional prior knowledge. AI will propose the subject, bounded first unit, and evaluation requirements; no scope or mode selector is required.
-2. Create the record and optionally import an example pack or your own materials, then ask AI to prepare the plan. Without teaching materials, AI drafts labeled notes; organization-specific rules require actual documents. TXT/Markdown uploads must be UTF-8; PDFs and Word documents are not accepted.
+2. Create the record and optionally import an example pack or your own materials, then ask AI to prepare the plan. Without teaching materials, AI drafts labeled notes; organization-specific rules require actual documents. TXT/Markdown uploads must be UTF-8; PDF/DOCX/XLSX/PPTX are also accepted within the documented size and page limits.
 3. Review the generated skill dependencies, source coverage, and assessment criteria. Confirm and freeze the plan before formal learning.
 4. Start a lesson, ask questions, then request and answer an assessment. Numeric and explanation objectives are assessed separately when required by the plan.
 5. Read feedback and follow the permitted next action: advance, remediate, review prerequisites, or resolve an uncertain assessment. Legacy exploration records still provide text Q&A without formal completion; the new creation flow has one entry point and preserves evaluator limits.

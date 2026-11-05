@@ -33,7 +33,7 @@ Every node you pass grows a leaf.
 - **🌱 Your path is a real dependency graph, not a table of contents.** Every node has prerequisites, observable learning objectives and an estimated duration. When a node needs several prerequisites, their branches merge beneath it.
 - **🍃 A leaf grows only when you have actually learned it.** Lessons and follow-up questions lead to a formal quiz; text answers are graded against frozen rubrics. Code-owned guards check objectives, pass thresholds and prerequisites before a node counts as passed. A model's say-so is not enough.
 - **🔁 Not passing is not the end.** Diagnosis decides whether to remediate a weak objective, go back to a prerequisite, or collect more evidence.
-- **📚 Learn from your own material.** Paste text or import TXT/Markdown; lessons cite line numbers you can open. Without material, the AI drafts clearly labelled notes.
+- **📚 Learn from your own material.** Paste text or import TXT/Markdown, plus PDF, Word, Excel and PowerPoint; lessons cite sources you can open. Without material, the AI drafts clearly labelled notes.
 - **💾 Close the laptop; your progress stays.** Learning facts and graph state live in SQLite. Request identities make retries safe: a network drop, a restart or a double click does not count an answer twice.
 
 ## How a learning session flows
@@ -184,7 +184,8 @@ See the [development guide](docs/DEVELOPMENT.md) for the source map, API contrac
 - [x] Persistent recovery, input identity checks and bounded model calls
 - [x] Goal-first creation, optional materials and clearly labelled AI notes
 - [x] Botanical growth graph, learning desk and result page; long multi-session routes
-- [ ] **Planned for V4:** PDF / Word knowledge base with RAG citations
+- [x] **Office materials (demo):** PDF / DOCX / XLSX / PPTX upload, parse preview, original download and source location (training Day 2)
+- [ ] **Planned for V4:** richer knowledge base / RAG over large corpora
 - [ ] **Planned for V4:** spoken examples for English and Japanese with speed control
 - [ ] **Planned for V4:** interactive charts inside lessons (function plots, data charts, sample candlesticks)
 
@@ -193,9 +194,9 @@ See the [development guide](docs/DEVELOPMENT.md) for the source map, API contrac
 
 <br>
 
-- A local, single-user prototype with a Chinese browser interface; no multi-user accounts or hosted service.
+- Primarily a local-first prototype with a Chinese browser interface. A small public learning demo may be deployed separately; it is not a full multi-tenant hosted product.
 - Formal assessment requires supported evaluators, suitable materials and a route you have confirmed. Typing any subject name does not add evaluation capabilities.
-- The system does **not** execute student code, verify symbolic proofs, or assess audio, pronunciation, images or physical experiments. Materials are text only; PDF/DOCX import is not available yet.
+- The system does **not** execute student code, verify symbolic proofs, or assess audio, pronunciation, images or physical experiments. Office upload supports PDF/DOCX/XLSX/PPTX with size and page limits; password-protected or scanned PDFs are not supported yet.
 - Text answers are scored by the configured model against rubrics and can be wrong. Valid JSON, valid citations or a completed workflow do not establish teaching or scoring quality; independent human evaluation is still needed.
 - In the screenshots, the written answers to the psychology quiz were produced by the model acting as a sample learner to demonstrate the flow; they are not a real learner's results.
 

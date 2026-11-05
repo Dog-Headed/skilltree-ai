@@ -29,7 +29,7 @@ Set-Location D:\SkillTree_AI\skilltree
 | 员工乙 | employee.b@example.test | SkillTreeDemo2026! |
 | 员工丙 | employee.c@example.test | SkillTreeDemo2026! |
 
-账号仅为虚构示例，不发送邮件。未登录访问首页可直接成为游客，登录页也提供“以游客身份继续学习”。游客可以独立生成知识树、上传 TXT/Markdown、学习与测评，不属于虚构单位。首页可“切换账号”；同一浏览器使用同一个会话，不同账号同时操作请用不同浏览器配置或独立隐私窗口。
+账号仅为虚构示例，不发送邮件。未登录访问首页可直接成为游客，登录页也提供“以游客身份继续学习”。游客可以独立生成知识树、上传资料（含办公格式）、学习与测评，不属于虚构单位。首页可“切换账号”；同一浏览器使用同一个会话，不同账号同时操作请用不同浏览器配置或独立隐私窗口。
 
 本地根目录：`D:\SkillTree_AI\skilltree\work\training-demo\instance`。
 
@@ -59,8 +59,8 @@ Set-Location D:\SkillTree_AI\skilltree
 
 - 管理员首页：`/training/admin`；员工与游客首页：`/training/home`。游客只显示个人学习入口。
 - 个人学习：`/learn`，项目哈希路由继续可用。
-- 资料学习：`/training/materials` → 开始资料学习 → 创建课程 → “粘贴 / 上传资料”。当前支持 UTF-8 TXT/Markdown；PDF、Word、Excel、PPT 留待 Day 2。
-- 单位资料、发布、下发和看板仍提供真实空状态或建设中说明。Day 1 不包含任务发放功能。
+- 资料学习：`/training/materials` → 开始资料学习 → 创建课程 → “粘贴 / 上传资料”。当前支持 UTF-8 TXT/Markdown，以及 PDF/DOCX/XLSX/PPTX（见下方 Day 2）。
+- 单位资料上传／预览／下载已可用；共享课程发布、任务下发和进度看板仍为真实空状态或建设中（Day 3–4）。
 
 ## 公网
 

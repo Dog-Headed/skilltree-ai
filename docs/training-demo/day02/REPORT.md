@@ -76,3 +76,10 @@ PDF 的内部权限加密标记不等于用户设置了打开密码：无需密�
 ## 尚未完成与交接
 
 本日未开放共享课程发布、员工下发、任务学习和进度看板；它们保持真实空状态／功能建设中，不伪造数据。Docling 完整版式转换、OCR、旧 Office、宏、公式计算、大文件／长文范围选择不在本日能力中。等待独立 Day 2 验收，不自动实施 Day 3。
+
+## 修复记录（资料忠实度，进行中）
+
+- 分支：`grokbot/day2-fidelity`（Grok Bot）。详情见 [FIX_REPORT.md](FIX_REPORT.md)。
+- 已改 `app/v3/tutor.py`：制度资料区分原文／解释／带假设例子；校验拦截未规定的起算／日历截止／处罚／审批冒充制度事实。
+- 盒子离线回归：`tests/test_v3_tutor_fidelity.py` + `tests/test_v3_tutor.py` → 57 passed。
+- **不**将独立 `REVIEW` 改写为通过；真实模型追问证据见 FIX_REPORT 的 Live model 节。

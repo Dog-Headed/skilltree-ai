@@ -75,20 +75,26 @@ def _convert(data, filename):
 def _converter():
     global _CONVERTER
     if _CONVERTER is None:
+        # Production hosts here are ~1.6Gi RAM. Docling's default layout models
+        # OOM-kill the process even with OCR/tables off. NativePdfPipeline keeps
+        # Docling's Document + HybridChunker path without loading those models.
+        # DOCX/PPTX still use Docling's declarative SimplePipeline (headings intact).
         from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
         from docling.datamodel.base_models import InputFormat
-        from docling.datamodel.pipeline_options import PdfPipelineOptions
+        from docling.datamodel.pipeline_options import NativePdfPipelineOptions
         from docling.document_converter import DocumentConverter, PdfFormatOption
-        options = PdfPipelineOptions()
-        options.do_ocr = False
-        options.do_table_structure = False
-        options.do_code_enrichment = False
-        options.do_formula_enrichment = False
-        if hasattr(options, 'force_backend_text'):
-            options.force_backend_text = True
+        from docling.pipeline.native_pdf_pipeline import NativePdfPipeline
+        options = NativePdfPipelineOptions()
+        options.generate_page_images = False
         _CONVERTER = DocumentConverter(
             allowed_formats=[InputFormat.PDF, InputFormat.DOCX, InputFormat.PPTX],
-            format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=options, backend=PyPdfiumDocumentBackend)},
+            format_options={
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_cls=NativePdfPipeline,
+                    pipeline_options=options,
+                    backend=PyPdfiumDocumentBackend,
+                )
+            },
         )
     return _CONVERTER
 

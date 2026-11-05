@@ -2,7 +2,7 @@
 
 路径 A：人工整理的演示包继续用于演示。仓库里如果已经有 `samples/yanan-policy-packs/`，上传和拆章都不会改写或删除它。
 
-路径 B：个人资料 `/training/api/materials` 和单位资料 `/training/api/admin/materials` 共用同一条超限分支。PDF 超过 10 页、PPTX 超过 15 张，或 PDF / PPTX / DOCX 正文超过 12,000 字符时，用 Docling 按标题拆成多章。页数、张数和字数上限都不提高。每一章仍是一条普通 ready 资料，沿用原来的导入和课程流程。父包只说明「已自动拆分为 N 个章节」，不能整包导入。
+路径 B：个人资料 `/training/api/materials` 和单位资料 `/training/api/admin/materials` 共用同一条超限分支。PDF 超过 10 页、PPTX 超过 15 张，或 PDF / PPTX / DOCX 正文超过 12,000 字符时，用 Docling 按标题拆成多章。PDF 走无布局模型的 NativePdfPipeline（低内存主机可跑）；DOCX/PPTX 仍走声明式管道保留标题。页数、张数和字数上限都不提高。每一章仍是一条普通 ready 资料，沿用原来的导入和课程流程。父包只说明「已自动拆分为 N 个章节」，不能整包导入。
 
 离线生成章节时调用同一个函数，不必再写解析器：
 

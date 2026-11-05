@@ -148,6 +148,35 @@ def test_failed_upload_no_project_and_deduplicated_valid_upload(runtime):
     assert upload(client,guest,'changed.docx',data=(SAMPLES/'培训制度.docx').read_bytes(),request_id=key).status_code==409
 
 
+def test_admin_materials_page_reuses_personal_prepare_course_action():
+    source=(Path(__file__).resolve().parents[1]/'app/static/training.js').read_text(encoding='utf-8')
+    body=source.split('async function materialsPage',1)[1].split('async function membersPanel',1)[0]
+    assert '用这份资料准备课程' in body
+    assert 'if(!unit)' not in body
+    assert "post(api+'/'+id+'/attach'" in body
+    assert "location.assign('/learn#/p/'+encodeURIComponent(created.project_id)+'/learn')" in body
+
+
+def test_admin_attaches_ready_unit_material_like_personal_prepare(runtime):
+    client,gateway,_=runtime
+    admin=login(client,0)
+    unit=upload(client,admin,'培训制度.docx',unit=True)
+    assert unit.status_code==201,unit.text
+    uid=unit.json()['id']
+    created=client.post('/projects',headers=admin,json={'request_id':str(uuid4()),'intent':{'goal':'依据《培训制度》学习其中的核心规则、适用条件和操作步骤'}})
+    assert created.status_code in {200,201},created.text
+    pid=created.json()['project_id']
+    path='/training/api/admin/materials/'+uid+'/attach'
+    key=str(uuid4());payload={'project_id':pid,'request_id':key}
+    attached=client.post(path,headers=admin,json=payload)
+    assert attached.status_code==200,attached.text
+    assert attached.json()['imported'] is True
+    assert client.post(path,headers=admin,json=payload).json()['reused'] is True
+    employee=login(client,1)
+    denied=client.post(path,headers=employee,json={'project_id':pid,'request_id':str(uuid4())})
+    assert denied.status_code==403
+
+
 def test_direct_existing_course_office_upload_over_old_body_limit(runtime):
     client,gateway,_=runtime;a=login(client,1)
     pid=client.post('/projects',headers=a,json={'request_id':str(uuid4()),'intent':{'goal':'学习新员工制度'}}).json()['project_id']

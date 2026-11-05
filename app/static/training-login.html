@@ -1,13 +1,53 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>登录 · SkillTree 学习空间</title>
-<link rel="icon" href="data:,"><link rel="stylesheet" href="/assets/training.css"><script src="/assets/training-login.js" defer></script></head>
-<body class="login-body"><main class="login-layout"><section class="login-story"><a class="brand" href="/">✳ SkillTree</a><p class="eyebrow">LEARN AND GROW</p><h1>让学习扎根，<br>让能力生长。</h1><p>一个人的好奇，一群人的成长。<br>从自主探索到单位学习，在同一个空间继续前行。</p><div class="botanical-mark" aria-hidden="true">✳</div><small>学习空间</small></section>
-<section class="login-panel"><p class="eyebrow">欢迎来到学习空间</p><h2 id="login-title">登录 SkillTree</h2><p class="muted" id="login-lead">已有账号可以登录；也可以注册个人账号，或直接以游客身份自主学习。</p>
-<form id="login-form"><label for="account">账号邮箱</label><input id="account" type="email" autocomplete="username" required maxlength="254" placeholder="请输入账号邮箱">
-<label for="password">密码</label><input id="password" type="password" autocomplete="current-password" required maxlength="256">
-<div id="confirm-field" hidden><label for="confirm-password">确认密码</label><input id="confirm-password" type="password" autocomplete="new-password" maxlength="256"></div>
-<label class="remember"><input id="remember" type="checkbox" checked>在这台设备上保持登录</label>
-<p id="login-error" role="alert" hidden></p><button class="primary" type="submit" id="login-submit">登录并进入</button></form>
-<button type="button" class="button secondary" id="auth-mode">没有账号？注册个人账号</button>
-<p class="login-note" id="login-note">邮箱仅作登录名，不发送验证码。注册后是个人账号，不会自动加入单位；游客学习进度可在注册时保留。</p>
-<a href="/" class="button secondary" id="guest-entry">以游客身份继续学习 →</a></section></main></body></html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#edf0ea">
+  <title>登录 · SkillTree 学习空间</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2022%2026%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M11%2025%20C11%2018%2010%2013%2011%206%22%20fill%3D%22none%22%20stroke%3D%22%23716652%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M11%2012%20C%2015%2011%2018%207%2018%202%20C%2013%202%2011%206%2011%2012Z%22%20fill%3D%22%2339765e%22%2F%3E%3Cpath%20d%3D%22M11%2016%20C%207%2015.5%204%2012.5%204%208.5%20C%208%208.5%2010.5%2011.5%2011%2016Z%22%20fill%3D%22%23a7c5b1%22%20stroke%3D%22%2339765e%22%20stroke-width%3D%221.2%22%2F%3E%3C%2Fsvg%3E">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/botanical.css">
+  <link rel="stylesheet" href="/assets/controls.css">
+  <link rel="stylesheet" href="/assets/training.css">
+  <script src="/assets/botanical.js" defer></script>
+  <script src="/assets/training-growth.js" defer></script>
+  <script src="/assets/training-login.js" defer></script>
+</head>
+<body class="login-body" data-subject="general">
+  <main class="login-layout">
+    <section class="login-story">
+      <a class="brand" href="/"><svg viewBox="0 0 22 26" aria-hidden="true"><path d="M11 25 C11 18 10 13 11 6" fill="none" stroke="var(--stem)" stroke-width="2" stroke-linecap="round"/><path d="M11 12 C 15 11 18 7 18 2 C 13 2 11 6 11 12Z" fill="var(--leaf-deep)"/><path d="M11 16 C 7 15.5 4 12.5 4 8.5 C 8 8.5 10.5 11.5 11 16Z" fill="var(--leaf-soft)" stroke="var(--leaf)" stroke-width="1.2"/></svg>SkillTree</a>
+      <div class="login-growth" aria-hidden="true">
+        <img class="login-growth-backdrop" alt="" src="/assets/training-login-botanical.png">
+        <svg id="login-tree" class="growth-graph login-tree" viewBox="0 0 400 460"></svg>
+      </div>
+      <p class="eyebrow">LEARN AND GROW</p>
+      <h1>让学习扎根，<br>让能力生长。</h1>
+      <p>一个人的好奇，一群人的成长。<br>从自主探索到单位学习，在同一个空间继续前行。</p>
+      <small>学习空间</small>
+    </section>
+    <section class="login-panel">
+      <p class="eyebrow">欢迎来到学习空间</p>
+      <h2 id="login-title">登录 SkillTree</h2>
+      <p class="muted" id="login-lead">已有账号可以登录；也可以注册个人账号，或直接以游客身份自主学习。</p>
+      <form id="login-form">
+        <label for="account">账号邮箱</label>
+        <input id="account" type="email" autocomplete="username" required maxlength="254" placeholder="请输入账号邮箱">
+        <label for="password">密码</label>
+        <input id="password" type="password" autocomplete="current-password" required maxlength="256">
+        <div id="confirm-field" hidden>
+          <label for="confirm-password">确认密码</label>
+          <input id="confirm-password" type="password" autocomplete="new-password" maxlength="256">
+        </div>
+        <label class="remember"><input id="remember" type="checkbox" checked>在这台设备上保持登录</label>
+        <p id="login-error" role="alert" hidden></p>
+        <button class="primary" type="submit" id="login-submit">登录并进入</button>
+      </form>
+      <button type="button" class="button secondary" id="auth-mode">没有账号？注册个人账号</button>
+      <p class="login-note" id="login-note">邮箱仅作登录名，不发送验证码。注册后是个人账号，不会自动加入单位；游客学习进度可在注册时保留。</p>
+      <a href="/" class="button secondary" id="guest-entry">以游客身份继续学习 →</a>
+    </section>
+  </main>
+</body>
+</html>

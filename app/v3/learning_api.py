@@ -132,8 +132,11 @@ def create_learning_app(paths=V3Paths(), *, llm=None, legacy_business_path=None,
 
     @app.get('/assets/{filename}',include_in_schema=False)
     def asset(filename:str):
-        # Any top-level script or stylesheet in static/; pages and other files are never assets.
-        if not re.fullmatch(r'[a-z0-9][a-z0-9-]*\.(?:js|css)',filename):raise KeyError(filename)
+        # Top-level scripts, stylesheets, and the training illustrations.
+        # Pages and any other files are never assets.
+        if not (re.fullmatch(r'[a-z0-9][a-z0-9-]*\.(?:js|css)', filename)
+                or re.fullmatch(r'training-[a-z0-9-]+\.png', filename)):
+            raise KeyError(filename)
         path=STATIC/filename
         if not path.is_file():raise KeyError(filename)
         return FileResponse(path)

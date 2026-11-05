@@ -147,7 +147,6 @@
     }else{
       empty('页面不存在','请从导航重新进入。');
     }
-    }
   }
   $('logout').addEventListener('click',async()=>{try{const r=await fetch('/auth/logout',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf_token},body:'{}'});if(!r.ok&&r.status!==401)throw new Error('退出未完成，请刷新重试。');try{const prefix='skilltree.v3.'+encodeURIComponent(session.account)+'.';for(const key of Object.keys(localStorage))if(key.startsWith(prefix))localStorage.removeItem(key);localStorage.setItem('skilltree.auth.changed',String(Date.now()));}catch{}location.replace('/login');}catch(e){$('content').prepend(node('p',e.message,'error'));}});
   render().catch(e=>{$('content').replaceChildren(node('p',e.message,'error'),link('重新读取',location.pathname,'button secondary'));});

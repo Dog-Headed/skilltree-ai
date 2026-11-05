@@ -289,3 +289,164 @@ def progress_for_project(paths, project_id: str, required_nodes: list[str], bind
         'completed': done,
         'project_lifecycle': project.get('lifecycle'),
     }
+
+
+def _parse_due(due_at: str | None):
+    if not due_at:
+        return None
+    text = due_at.strip()
+    if text.endswith('Z'):
+        text = text[:-1] + '+00:00'
+    try:
+        value = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if value.tzinfo is None:
+        # Naive deadlines are interpreted as Asia/Shanghai wall time.
+        try:
+            from zoneinfo import ZoneInfo
+            value = value.replace(tzinfo=ZoneInfo('Asia/Shanghai'))
+        except Exception:
+            value = value.replace(tzinfo=timezone.utc)
+    return value
+
+
+def overdue_flag(due_at: str | None, *, now: datetime | None = None) -> dict:
+    due = _parse_due(due_at)
+    if due is None:
+        return {'overdue': False, 'due_at': due_at, 'due_timezone': None}
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    return {
+        'overdue': current > due,
+        'due_at': due.isoformat(),
+        'due_timezone': str(due.tzinfo),
+    }
+
+
+def employee_learning_detail(paths, store, unit_id: str, assignee: dict, course: dict | None):
+    """Build one assignee row for the admin board from real learning facts."""
+    required = list((course or {}).get('required_nodes') or [])
+    project_id = assignee.get('project_id')
+    bindings = store.node_bindings(assignee['id']) if assignee.get('id') else {}
+    progress = progress_for_project(paths, project_id, required, bindings)
+    due = overdue_flag(assignee.get('due_at') if 'due_at' in assignee else None)
+    # due_at lives on the task; callers may pass it separately.
+    detail = {
+        'employee_task_id': assignee.get('id'),
+        'account': assignee.get('account'),
+        'project_id': project_id,
+        'started_at': assignee.get('started_at'),
+        'status': progress['status'] if project_id else 'not_started',
+        'progress': {
+            'required_passed': progress['required_passed'],
+            'required_total': progress['required_total'],
+            'ratio': progress['ratio'],
+            'passed_course_nodes': progress['passed_course_nodes'],
+        },
+        'completed': bool(progress.get('completed')),
+        'overdue': False,
+        'recent_assessment': None,
+        'remediation_targets': [],
+        'updated_at': assignee.get('started_at'),
+        'mode': None,
+    }
+    if not project_id:
+        return detail
+    with LearningRepository(paths) as repo:
+        project = repo.get_project(project_id)
+        session = repo.session(project_id)
+        progress_rows = repo.get_progress(project_id)
+    updated = None
+    for row in progress_rows:
+        for key in ('completed_at', 'started_at'):
+            if row.get(key) and (updated is None or row[key] > updated):
+                updated = row[key]
+    if session:
+        detail['mode'] = session.get('mode')
+        if session.get('last_guard_json'):
+            import json
+            try:
+                guard = json.loads(session['last_guard_json']) if isinstance(session['last_guard_json'], str) else session['last_guard_json']
+            except Exception:
+                guard = None
+            if isinstance(guard, dict):
+                detail['recent_assessment'] = {
+                    'passed': bool(guard.get('passed')),
+                    'effective_action': guard.get('effective_action'),
+                    'assessment_id': session.get('current_assessment_id'),
+                    'node_id': session.get('current_node_id') or session.get('review_node_id'),
+                }
+                if guard.get('effective_action') in {'remediate', 'revisit_prerequisite'} or session.get('mode') in {'remediate', 'review'}:
+                    target = session.get('review_node_id') or session.get('current_node_id')
+                    if target:
+                        detail['remediation_targets'] = [target]
+        if session.get('tutor_request_id') and not updated:
+            updated = assignee.get('started_at')
+    if project and project.get('frozen_at') and (updated is None or project['frozen_at'] > updated):
+        updated = project['frozen_at']
+    detail['updated_at'] = updated or assignee.get('started_at')
+    return detail
+
+
+def task_board(paths, store, unit_id: str, task_id: str, *, now: datetime | None = None):
+    detail = store.task_dashboard(unit_id, task_id)
+    if not detail:
+        return None
+    course = detail.get('course')
+    due_meta = overdue_flag(detail.get('due_at'), now=now)
+    employees = []
+    started = completed = 0
+    for assignee in detail.get('assignees') or []:
+        row = employee_learning_detail(paths, store, unit_id, {**assignee, 'due_at': detail.get('due_at')}, course)
+        row_due = overdue_flag(detail.get('due_at'), now=now)
+        row['overdue'] = row_due['overdue'] and not row['completed']
+        employees.append(row)
+        if assignee.get('project_id'):
+            started += 1
+        if row['completed']:
+            completed += 1
+    total = len(employees)
+    return {
+        'id': detail['id'],
+        'title': detail['title'],
+        'course_version_id': detail['course_version_id'],
+        'course': course,
+        'due_at': detail.get('due_at'),
+        'due_timezone': due_meta['due_timezone'],
+        'overdue': due_meta['overdue'],
+        'counts': {
+            'assigned': total,
+            'started': started,
+            'completed': completed,
+            'not_started': total - started,
+            'in_progress': started - completed,
+        },
+        'employees': employees,
+        'progress_definition': 'required_passed / required_total from real learning_progress completions via node bindings',
+    }
+
+
+def unit_dashboard(paths, store, unit_id: str, *, now: datetime | None = None):
+    overview = store.overview(unit_id)
+    tasks = []
+    for task in overview.get('tasks') or []:
+        board = task_board(paths, store, unit_id, task['id'], now=now)
+        if board:
+            tasks.append({
+                'id': board['id'],
+                'title': board['title'],
+                'course_version_id': board['course_version_id'],
+                'due_at': board['due_at'],
+                'overdue': board['overdue'],
+                'counts': board['counts'],
+            })
+    return {
+        'unit_id': unit_id,
+        'tasks': tasks,
+        'members': overview.get('members') or [],
+        'courses': overview.get('courses') or [],
+        'dashboard_available': True,
+        'empty': not tasks,
+    }

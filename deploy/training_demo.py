@@ -239,10 +239,24 @@ class TrainingSurface:
                 return True
             await gateway.reply(send, 201 if result.get('created') else 200, result)
             return True
+        if path == '/training/api/admin/dashboard' and method == 'GET':
+            board = await asyncio.to_thread(
+                training_learner.unit_dashboard, gateway.paths, self.store, member['unit_id'])
+            await gateway.reply(send, 200, board)
+            return True
         if path.startswith('/training/api/admin/tasks/') and method == 'GET':
-            task_id = path[len('/training/api/admin/tasks/'):]
-            if task_id and '/' not in task_id and task_id != 'assign':
-                value = await asyncio.to_thread(self.store.task_detail, member['unit_id'], task_id)
+            rest = path[len('/training/api/admin/tasks/'):]
+            if rest.endswith('/board') and '/' not in rest[:-len('/board')]:
+                task_id = rest[:-len('/board')]
+                value = await asyncio.to_thread(
+                    training_learner.task_board, gateway.paths, self.store, member['unit_id'], task_id)
+                if not value:
+                    await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '任务不存在。'}})
+                    return True
+                await gateway.reply(send, 200, value)
+                return True
+            if rest and '/' not in rest and rest != 'assign':
+                value = await asyncio.to_thread(self.store.task_detail, member['unit_id'], rest)
                 if not value:
                     await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '任务不存在。'}})
                     return True

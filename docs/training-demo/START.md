@@ -1,8 +1,8 @@
 # 单位学习正式方向：启动与账号
 
-2026-11-05，Day 2 + 4A + Day 3。用户已明确要求本地、GitHub、现有公网同步，学习版成为正式首页；这覆盖原总计划“只本地、不部署公网”的限制。旧学习数据保留，学习运行数据独立。生产部署需另做备份与验收，不随代码合并自动切换。
+2026-11-05，Day 2–5 演示闭环已在 GitHub `main` 落地。用户要求本地、GitHub、现有公网同步，学习版成为正式首页；这覆盖原总计划“只本地、不部署公网”的限制。旧学习数据保留，学习运行数据独立。**生产部署仍须另做备份与验收，不随代码合并自动切换。**
 
-包含 Day 1 独立验收后的调整：对外改称“学习”，保留游客自主学习。Day 2 新增办公资料上传和解析。4A 开放个人注册，并允许管理员按邮箱把已注册账号加入单位；课程发布/下发仍待 Day 3。
+对外改称“学习”，保留游客自主学习。Day 2 办公资料；4A 个人注册与成员管理；Day 3 发布/下发/员工开课；Day 4 管理看板；Day 5 隔离演练与演示脚本见 `day05/`。
 
 ## 本地
 
@@ -77,10 +77,22 @@ Set-Location D:\SkillTree_AI\skilltree
 ## Day 2 资料学习
 
 - 游客／员工：[个人资料入口](http://127.0.0.1:18780/training/materials)。上传 → 核对解析全文和表格／来源位置 → 填目标 → 用资料准备课程 → AI 整理计划 → 确认并开始学习。
-- 管理员：[单位资料入口](http://127.0.0.1:18780/training/admin/materials)。本日可上传、预览、下载原件，尚不发布或下发。
+- 管理员：[单位资料入口](http://127.0.0.1:18780/training/admin/materials)。可上传、预览、下载原件；课程发布、任务下发与看板见 `/training/admin/courses`、`/training/admin/tasks`、`/training/admin/dashboard`。
 - 现有课程准备页的“粘贴／上传资料”也支持 PDF/DOCX/XLSX/PPTX，原 TXT/Markdown 保留。
 - 可直接使用 `docs/training-demo/samples/` 的四份虚构办公样例；事实和位置见 `day02/SAMPLE_CHECKS.md`。真实桌面政策只用于本地验收，不随代码发布。
 
 办公原件最多 8 MiB、正文 12,000 字符；TXT/Markdown 最多 128 KiB。PDF 10 页，PPTX 15 张，XLSX 8 表／500 单元格。无需打开密码的 PDF 权限标记不影响正常读取；需打开密码、扫描件、旧版 Office 和宏暂不支持。超限给出原因，不自动截断。完整上下文仍有 24,000 字符目录上限，多份材料可能需要缩小范围。
 
 上传仍经过同域会话和 CSRF 检查。部署时 Nginx 请求体上限须允许 base64 后的 8 MiB 原件（本次设为 12m）；应用只为资料上传路径开放较大请求，其他接口沿用 256 KiB。无需启动 Office、OCR、Docling、向量库或额外解析端口。
+
+## Day 5 完整演练
+
+- 报告与脚本：`docs/training-demo/day05/REPORT.md`、`DEMO_SCRIPT.md`、`LIMITATIONS.md`。
+- 推荐用新数据根做验收，例如：
+
+```powershell
+& D:\conda_envs\edu_agent\python.exe -m deploy.training_demo --port 18781 --data-root D:\SkillTree_AI\skilltree\work\training-demo\rehearsal-day05
+```
+
+- 离线闭环：`pytest tests/test_training_day05_rehearsal.py -q`。
+- 公网生产目录不要用本脚本覆盖；升级前备份并单独批准。

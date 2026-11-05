@@ -1,13 +1,13 @@
 # 单位学习最小契约（Day 1–2）
 
-2026-11-05。身份、入口、最小关系和资料解析已实现，发布和下发尚未实现。
+2026-11-05（4A 更新）。身份、入口、个人注册、单位成员选择和资料解析已实现；课程发布与任务下发尚未实现。
 
 ## 关系与不变量
 
 | 表／现有存储 | 关系与用途 |
 |---|---|
 | `auth_accounts` / `auth_sessions` | 复用真实密码校验、不可猜会话、CSRF；成员引用 canonical account，浏览器不能选择权限 |
-| `training_units` → `training_members` | 一个虚构单位，1 管理员、3 员工；当前账号唯一单位、角色为 admin/employee |
+| `training_units` → `training_members` | 虚构单位；账号最多属于一个单位；角色为 admin/employee；管理员可按邮箱加入已注册个人账号为员工 |
 | `training_material_versions` | 单位、所有者、unit/private、版本、原件路径、解析路径、来源定位 JSON；Day 2 单位 ready 资料写入 version=1，供后续发布关联 |
 | `training_course_versions` | 课程身份 + 版本唯一；知识树、必学节点、通过规则 JSON；发布版本行禁止更新／删除 |
 | `training_course_materials` | 同单位课程版本 → 资料版本；Day 3 发布事务须固定完整资料关联，不能事后改变依据 |
@@ -23,8 +23,10 @@
 - 服务端用会话中的 canonical account 查询成员表。请求体、URL、`X-Role`、`X-Evaluation-User` 不能改变角色。
 - 管理员可读取本单位成员与学习列表；不因此获得员工私人项目、资料、对话、答案或 Checkpoint。现有 `/projects/...` 对管理员同样执行所有者检查。
 - 员工只能读取自己的项目、队列任务和员工任务。`/training/api/my-tasks` 不接受目标员工参数。
-- 学习实例保留游客，关闭新账号注册。游客复用原有匿名身份、持久 Cookie、CSRF、个人项目归属、调用限额和队列；不插入单位成员表、不授予单位任务或管理权限。公网与本地使用不同账号库、会话 Cookie 名及数据目录。
-- 游客可完成通用学习和个人资料学习（TXT/Markdown 与 PDF/DOCX/XLSX/PPTX）；`/session.training.role=guest`、`unit_id=null`。登录已有账号时沿用原有课程归属迁移，进行中的模型任务须先完成；清除浏览器身份会失去该游客入口，因此页面提示保留浏览器数据或登录。
+- 学习实例保留游客，并开放个人注册。游客复用原有匿名身份、持久 Cookie、CSRF、个人项目归属、调用限额和队列；不插入单位成员表、不授予单位任务或管理权限。公网与本地使用不同账号库、会话 Cookie 名及数据目录。
+- 游客可完成通用学习和个人资料学习（TXT/Markdown 与 PDF/DOCX/XLSX/PPTX）；`/session.training.role=guest`、`unit_id=null`。注册个人账号优先保留 canonical account；登录已有账号时沿用原有课程归属迁移，进行中的模型任务须先完成。
+- 个人注册账号 `/session.training.role=personal`、`unit_id=null`：可自由学习与上传资料，不能访问单位任务或管理接口。请求体中的 role/unit_id/admin 参数一律忽略。
+- 管理员按完整邮箱或账号 ID 查找已注册用户并加入本单位为员工；幂等；跨单位拒绝；不能经此接口提权为管理员或加入游客。后端脚本可授予管理员（见 `deploy/training_admins.py`）。
 - 浏览器课程草稿、创建身份、选中项目、答案暂存沿用 `skilltree.v3.<encodeURIComponent(account)>.`。跨标签登录变更会刷新旧页；登出清除当前账号前缀。主题是公共偏好，不是学习数据。
 
 ## 状态与进度口径
@@ -40,13 +42,17 @@
 | `GET /` | 未登录自动建立限速保护的游客身份 → `/training/home`；管理员 → `/training/admin`，员工 → `/training/home` |
 | `GET /login` / `POST /auth/login` | 学习登录页；沿用 account/password/remember、`X-SkillTree-Login: 1`；设置 HttpOnly 会话 |
 | `POST /auth/logout` | 必须有效会话 + `X-CSRF-Token`；撤销当前会话 |
-| `POST /auth/register` | 403，本阶段使用游客或预置成员身份 |
+| `POST /auth/register` | 开放个人注册；忽略客户端 role/unit_id；游客升级保留进度；返回个人账号会话 |
 | `GET /session` | account/login/csrf_token/guest/logout + training(unit_id, unit_name, account, display_name, role) |
 | `GET /training/api/me` | 当前成员或游客个人空间身份 |
 | `GET /training/api/admin/overview` | 仅管理员：本单位 members、courses、tasks；publishing_available=false |
-| `GET /training/api/my-tasks` | 当前成员的员工任务列表；learning_available=false；游客 403 |
+| `GET /training/api/admin/members/lookup?q=` | 仅管理员：按完整邮箱/账号 ID 查找已注册非游客；最少字段；不列目录 |
+| `POST /training/api/admin/members` | 仅管理员：加入本单位为 employee；幂等；跨单位 409；忽略客户端 role |
+| `POST /training/api/admin/members/remove` | 仅管理员：撤销员工成员身份，保留个人账号与学习数据；不能移除管理员 |
+| `GET /training/admin/members` | 仅管理员：成员管理页 |
+| `GET /training/api/my-tasks` | 当前成员的员工任务列表；learning_available=false；游客/个人账号 403 |
 | `GET /training/admin[/materials\|/courses\|/tasks\|/dashboard]` | 仅管理员；`/materials` 已可上传／预览／下载单位资料；`/courses`、`/tasks`、`/dashboard` 仍为建设中或真实空状态 |
-| `GET /training/home`、`/training/materials` | 员工或游客首页、个人资料学习入口（含办公四格式上传／预览） |
+| `GET /training/home`、`/training/materials` | 员工、游客或个人账号首页、个人资料学习入口（含办公四格式上传／预览） |
 | `GET /training/tasks` | 成员真实空任务页；游客 403 |
 | `GET /learn` | 复用现有知识树与学习台页面；新增返回学习首页导航 |
 | `GET/POST /projects`、`GET /projects/{id}` | 原有个人课程列表／目标创建／准备详情，执行所有权检查 |

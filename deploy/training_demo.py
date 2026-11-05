@@ -68,11 +68,17 @@ class TrainingSurface:
         member = await asyncio.to_thread(self.store.member, account)
         if member:
             return member
-        if account and await asyncio.to_thread(auth.is_guest, account):
+        if not account:
+            return None
+        if await asyncio.to_thread(auth.is_guest, account):
             # Visitors own personal projects, but are never unit members.
             return {'account': account, 'display_name': '游客', 'role': 'guest',
                     'unit_id': None, 'unit_name': '个人学习空间'}
-        return None
+        # Registered personal account: may learn freely without a unit.
+        login = await asyncio.to_thread(auth.login_name, account)
+        label = (login.split('@', 1)[0] if isinstance(login, str) and '@' in login else login) or '个人用户'
+        return {'account': account, 'display_name': label, 'role': 'personal',
+                'unit_id': None, 'unit_name': '个人学习空间'}
 
     async def handle(self, scope, receive, send, user, token, gateway):
         path, method = scope['path'], scope['method']
@@ -83,21 +89,90 @@ class TrainingSurface:
             return False
         member = await self.identity(user, gateway.auth)
         if not member:
-            await gateway.reply(send, 403, {'error': {'code': 'not_a_member', 'message': '请使用预置演示账号登录。'}})
+            await gateway.reply(send, 403, {'error': {'code': 'not_a_member', 'message': '请先登录或注册个人账号。'}})
             return True
         admin_path = path.startswith('/training/admin') or path.startswith('/training/api/admin')
         if admin_path and member['role'] != 'admin':
             await gateway.reply(send, 403, {'error': {'code': 'admin_required', 'message': '此入口仅向本单位学习管理员开放。'}})
             return True
         guest = member['role'] == 'guest'
-        if guest and path in {'/training/tasks', '/training/api/my-tasks'}:
+        personal = member['role'] == 'personal'
+        unaffiliated = guest or personal
+        if unaffiliated and path in {'/training/tasks', '/training/api/my-tasks'}:
             await gateway.reply(send, 403, {'error': {'code': 'member_required',
-                'message': '单位学习任务仅向所属成员开放，游客可以继续自主学习。'}})
+                'message': '单位学习任务仅向所属成员开放，个人账号可以继续自主学习。'}})
+            return True
+        if path == '/training/api/admin/members/lookup' and method == 'GET':
+            from urllib.parse import parse_qs
+            query = parse_qs(scope.get('query_string', b'').decode('latin1'))
+            needle = (query.get('q') or query.get('login') or query.get('account') or [''])[0]
+            found = await asyncio.to_thread(gateway.auth.resolve_registered, needle)
+            if not found:
+                await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '未找到该注册账号。请核对完整邮箱或账号 ID。'}})
+                return True
+            existing = await asyncio.to_thread(self.store.member, found['account'])
+            await gateway.reply(send, 200, {
+                'account': found['account'], 'login': found['login'],
+                'in_this_unit': bool(existing and existing['unit_id'] == member['unit_id']),
+                'in_other_unit': bool(existing and existing['unit_id'] != member['unit_id']),
+                'role': existing['role'] if existing else None,
+            })
+            return True
+        if path == '/training/api/admin/members' and method == 'POST':
+            try:
+                payload = json.loads(await gateway.body(receive, 4096))
+            except Exception:
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供有效的账号邮箱或 ID。'}})
+                return True
+            if not isinstance(payload, dict):
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供有效的账号邮箱或 ID。'}})
+                return True
+            # Ignore client-supplied role/unit_id; only employees can be added here.
+            needle = payload.get('login') or payload.get('account') or payload.get('email')
+            found = await asyncio.to_thread(gateway.auth.resolve_registered, needle)
+            if not found:
+                await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '未找到该注册账号，不能把游客直接加入单位。'}})
+                return True
+            label = payload.get('display_name')
+            if not isinstance(label, str) or not label.strip():
+                label = found['login'].split('@', 1)[0]
+            try:
+                result = await asyncio.to_thread(
+                    self.store.add_employee, member['unit_id'], found['account'], label)
+            except ValueError as err:
+                code = str(err)
+                if code == 'other_unit':
+                    await gateway.reply(send, 409, {'error': {'code': 'other_unit',
+                        'message': '该账号已属于其他单位，本版不支持自动转移。'}})
+                else:
+                    await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '显示名称无效。'}})
+                return True
+            result = {**result, 'login': found['login'], 'unit_name': member['unit_name']}
+            await gateway.reply(send, 200 if not result['created'] else 201, result)
+            return True
+        if path == '/training/api/admin/members/remove' and method == 'POST':
+            try:
+                payload = json.loads(await gateway.body(receive, 4096))
+            except Exception:
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供要移除的账号。'}})
+                return True
+            target = payload.get('account') if isinstance(payload, dict) else None
+            if not isinstance(target, str) or not target.strip():
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供要移除的账号。'}})
+                return True
+            try:
+                result = await asyncio.to_thread(
+                    self.store.remove_employee, member['unit_id'], target.strip())
+            except ValueError:
+                await gateway.reply(send, 409, {'error': {'code': 'cannot_remove_admin',
+                    'message': '不能通过成员管理移除管理员。'}})
+                return True
+            await gateway.reply(send, 200, result)
             return True
         if await self.materials.handle(scope, receive, send, gateway, member):
             return True
         if method not in {'GET', 'HEAD'}:
-            await gateway.reply(send, 405, {'error': {'code': 'not_implemented', 'message': 'Day 1 尚未开放发布和下发操作。'}})
+            await gateway.reply(send, 405, {'error': {'code': 'not_implemented', 'message': '课程发布与任务下发尚未开放。'}})
             return True
         if path == '/session':
             await gateway.reply(send, 200, {'account': user, 'login': await asyncio.to_thread(gateway.auth.login_name, user),
@@ -114,7 +189,8 @@ class TrainingSurface:
             await gateway.reply(send, 200, {'tasks': await asyncio.to_thread(self.store.my_tasks, member['unit_id'], user),
                 'learning_available': False})
         elif path in {'/training/home', '/training/admin', '/training/materials', '/training/tasks',
-                      '/training/admin/materials', '/training/admin/courses', '/training/admin/tasks', '/training/admin/dashboard'}:
+                      '/training/admin/materials', '/training/admin/courses', '/training/admin/tasks',
+                      '/training/admin/dashboard', '/training/admin/members'}:
             await FileResponse(STATIC/'training.html', headers={'Cache-Control': 'no-store'})(scope, receive, send)
         else:
             await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '演示入口不存在。'}})
@@ -123,9 +199,6 @@ class TrainingSurface:
 
 class TrainingGateway(EvaluationGateway):
     async def authenticated(self, scope, receive, send):
-        if scope['path'] == '/auth/register':
-            await self.reply(send, 403, {'error': {'code': 'demo_registration_closed', 'message': '本地演示使用四个预置账号，不开放注册。'}})
-            return None, ''
         if scope['method'] in {'GET', 'HEAD'} and (scope['path'] == '/learn' or scope['path'].startswith('/training/')) and not scope['path'].startswith('/training/api/'):
             # Let the existing boundary perform redirects for signed-out pages.
             headers = dict(scope['headers'])
@@ -142,7 +215,7 @@ class TrainingGateway(EvaluationGateway):
                 return None, token
         user, token = await super().authenticated(scope, receive, send)
         if user and not await self.training.identity(user, self.auth):
-            await self.reply(send, 403, {'error': {'code': 'not_a_member', 'message': '请使用预置演示账号。'}})
+            await self.reply(send, 403, {'error': {'code': 'not_a_member', 'message': '请先登录或注册个人账号。'}})
             return None, token
         return user, token
 

@@ -248,3 +248,29 @@ class AuthStore:
     def logout(self, token):
         with self.connect() as conn:
             conn.execute('DELETE FROM auth_sessions WHERE token_hash=?', (sha256(token.encode()).hexdigest(),))
+
+
+    def resolve_registered(self, value):
+        """Exact login email or canonical account for a non-guest registered identity."""
+        if not isinstance(value, str) or not value.strip() or len(value.strip()) > 254:
+            return None
+        raw = value.strip()
+        try:
+            login = normalize_login(raw)
+        except ValueError:
+            login = None
+        with self.connect() as conn:
+            row = None
+            if login:
+                row = conn.execute(
+                    'SELECT account, login, disabled, password_hash FROM auth_accounts WHERE login=? OR account=?',
+                    (login, login)).fetchone()
+            if row is None:
+                row = conn.execute(
+                    'SELECT account, login, disabled, password_hash FROM auth_accounts WHERE account=?',
+                    (raw,)).fetchone()
+            if not row or row['disabled'] or row['password_hash'] == '!':
+                return None
+            if conn.execute('SELECT 1 FROM auth_guests WHERE account=?', (row['account'],)).fetchone():
+                return None
+            return {'account': row['account'], 'login': row['login']}

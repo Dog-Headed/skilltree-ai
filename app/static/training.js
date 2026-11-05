@@ -38,33 +38,51 @@
     form.addEventListener('submit',async event=>{event.preventDefault();const selected=file.files[0];if(!selected)return;submit.disabled=true;status.textContent='正在上传并解析原件，请等待…';try{if(selected.size>(/\.(txt|md|markdown)$/i.test(selected.name)?131072:8388608))throw new Error('文件超过大小限制，请拆分后上传。');const bytes=new Uint8Array(await selected.arrayBuffer());let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);const result=await post(api,{request_id:crypto.randomUUID(),filename:selected.name,title:title.value.trim(),data_base64:btoa(binary)});status.textContent='解析完成，请核对正文和来源位置。';await refresh();await show(result.id);}catch(e){status.textContent=e.message;await refresh();}finally{submit.disabled=false;}});
     await refresh();
   }
+  async function membersPanel(data){
+    heading('单位成员','按完整邮箱或账号 ID 查找已注册用户，加入本单位为员工');
+    const members=node('div',null,'members');
+    function paint(){members.replaceChildren();for(const member of data.members){const e=node('div',null,'member');e.append(node('strong',displayName(member)),node('small',member.role==='admin'?'学习管理员':'员工'),node('small',member.account));if(member.role==='employee'){const rm=node('button','移出单位','button secondary');rm.type='button';rm.addEventListener('click',async()=>{if(!confirm('仅撤销单位成员身份，个人学习记录会保留。确认移出？'))return;try{await post('/training/api/admin/members/remove',{account:member.account});data.members=data.members.filter(x=>x.account!==member.account);paint();status.textContent='已移出 '+member.account;}catch(err){status.textContent=err.message;}});e.append(rm);}members.append(e);}}
+    const form=node('form',null,'material-form'),input=node('input'),submit=node('button','查找并加入','button'),status=node('p','输入完整账号邮箱或稳定账号 ID。不会列出全站目录，也不会展示对方私人课程。','material-status');
+    input.name='login';input.required=true;input.maxLength=254;input.placeholder='user@example.test';input.setAttribute('aria-label','账号邮箱或 ID');submit.type='submit';status.setAttribute('role','status');
+    form.append(input,submit,status);$('content').append(form,members);paint();
+    form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;status.textContent='正在查找…';try{const q=input.value.trim();const found=await get('/training/api/admin/members/lookup?q='+encodeURIComponent(q));if(found.in_other_unit){status.textContent='该账号已属于其他单位，本版不能自动转移。';return;}if(found.in_this_unit){status.textContent='该账号已在本单位（'+found.role+'）。';return;}const added=await post('/training/api/admin/members',{login:found.login});if(!data.members.some(x=>x.account===added.account))data.members.push({account:added.account,display_name:added.display_name,role:added.role});data.members.sort((a,b)=>a.role===b.role?a.account.localeCompare(b.account):(a.role==='admin'?-1:1));paint();status.textContent=(added.created?'已加入 ':'已在本单位 ')+added.login;input.value='';}catch(err){status.textContent=err.message;}finally{submit.disabled=false;}});
+  }
   async function render(){
-    session=await get('/session');const m=session.training,admin=m.role==='admin',guest=m.role==='guest',path=location.pathname;
-    $('unit-name').textContent=m.unit_name;$('identity').textContent=displayName(m)+' · '+(admin?'管理员':guest?'个人学习':'员工');document.title=(admin?'学习管理':guest?'自主学习':'员工学习')+' · SkillTree';
-    $('logout').hidden=guest;if(guest){$('switch-account').textContent='登录账号';document.querySelector('.unit-label').textContent='个人学习空间';document.querySelector('footer').firstChild.textContent='SkillTree · 让好奇长成能力 ';}
-    const nav=admin?[['学习管理首页','/training/admin'],['学习资料','/training/admin/materials'],['课程与发布','/training/admin/courses'],['任务下发','/training/admin/tasks'],['学习看板','/training/admin/dashboard']]:[['学习首页','/training/home'],['自由学习','/learn'],['上传资料学习','/training/materials'],['我的学习任务','/training/tasks']];
-    for(const [label,href] of nav.filter(([,href])=>!guest||href!=='/training/tasks')){const a=link(label,href,'nav-link'+(path===href?' active':''));if(path===href)a.setAttribute('aria-current','page');$('navigation').append(a);}
+    session=await get('/session');const m=session.training,admin=m.role==='admin',guest=m.role==='guest',personal=m.role==='personal',path=location.pathname;
+    const unaffiliated=guest||personal;
+    $('unit-name').textContent=m.unit_name;$('identity').textContent=displayName(m)+' · '+(admin?'管理员':guest?'游客':personal?'个人账号':'员工');document.title=(admin?'学习管理':unaffiliated?'自主学习':'员工学习')+' · SkillTree';
+    $('logout').hidden=guest;if(unaffiliated){if(guest)$('switch-account').textContent='登录 / 注册';else $('switch-account').textContent='切换账号';document.querySelector('.unit-label').textContent='个人学习空间';document.querySelector('footer').firstChild.textContent='SkillTree · 让好奇长成能力 ';}
+    const nav=admin?[['学习管理首页','/training/admin'],['成员管理','/training/admin/members'],['学习资料','/training/admin/materials'],['课程与发布','/training/admin/courses'],['任务下发','/training/admin/tasks'],['学习看板','/training/admin/dashboard']]:[['学习首页','/training/home'],['自由学习','/learn'],['上传资料学习','/training/materials'],['我的学习任务','/training/tasks']];
+    for(const [label,href] of nav.filter(([,href])=>!unaffiliated||href!=='/training/tasks')){const a=link(label,href,'nav-link'+(path===href?' active':''));if(path===href)a.setAttribute('aria-current','page');$('navigation').append(a);}
     $('content').replaceChildren(node('p','SKILLTREE / LEARN AND GROW','eyebrow'));
-    if(path==='/training/admin'){
-      const data=await get('/training/api/admin/overview');hero('学习管理空间','把一份知识，变成共同的成长。','从资料到课程，从任务到学习结果。在这里组织共同学习，让每位员工沿着自己的进度前行。');
-      const cards=node('div',null,'cards');cards.append(card('01 / MATERIALS','学习资料','集中准备学习资料，为后续生成课程保留可靠依据。','查看资料入口','/training/admin/materials',true),card('02 / COURSES','课程与下发','确认知识树，再将同一课程分配给多位员工独立学习。','查看课程入口','/training/admin/courses'),card('03 / PROGRESS','学习看板','查看学习任务范围内的真实学习结果与待补弱目标。','查看看板入口','/training/admin/dashboard'));$('content').append(cards);
-      heading('单位成员','已预置的真实登录身份');const members=node('div',null,'members');for(const member of data.members){const e=node('div',null,'member');e.append(node('strong',displayName(member)),node('small',member.role==='admin'?'学习管理员':'员工'),node('small',member.account));members.append(e);}$('content').append(members);
-      heading('学习任务','来自当前单位的实际记录');empty(data.tasks.length?'学习任务':'还没有学习任务',data.tasks.length?'任务学习入口将在后续阶段开放。':'课程发布与任务下发尚未开放。当前没有示例课程、成绩或统计。');
+    if(path==='/training/admin'||path==='/training/admin/members'){
+      const data=await get('/training/api/admin/overview');
+      if(path==='/training/admin'){
+        hero('学习管理空间','把一份知识，变成共同的成长。','从资料到课程，从任务到学习结果。在这里组织共同学习，让每位员工沿着自己的进度前行。');
+        const cards=node('div',null,'cards');cards.append(card('01 / MATERIALS','学习资料','集中准备学习资料，为后续生成课程保留可靠依据。','查看资料入口','/training/admin/materials',true),card('02 / MEMBERS','成员管理','按邮箱查找已注册个人账号，加入本单位后才能接收任务。','管理成员','/training/admin/members'),card('03 / COURSES','课程与下发','确认知识树，再将同一课程分配给多位员工独立学习。','查看课程入口','/training/admin/courses'),card('04 / PROGRESS','学习看板','查看学习任务范围内的真实学习结果与待补弱目标。','查看看板入口','/training/admin/dashboard'));$('content').append(cards);
+        heading('单位成员','当前成员一览');const members=node('div',null,'members');for(const member of data.members){const e=node('div',null,'member');e.append(node('strong',displayName(member)),node('small',member.role==='admin'?'学习管理员':'员工'),node('small',member.account));members.append(e);}$('content').append(members);$('content').append(link('打开成员管理 →','/training/admin/members','button secondary'));
+        heading('学习任务','来自当前单位的实际记录');empty(data.tasks.length?'学习任务':'还没有学习任务',data.tasks.length?'任务学习入口将在后续阶段开放。':'课程发布与任务下发尚未开放。当前没有示例课程、成绩或统计。');
+      }else{
+        hero('成员管理','选择账号加入本单位','只添加已注册的个人账号为员工。不会转移私人课程，也不能在此提升管理员。');
+        await membersPanel(data);
+      }
     }else if(path==='/training/home'){
-      hero(guest?'个人学习空间':'员工学习空间',guest?'今天想学些什么？':displayName(m)+'，今天想学些什么？',guest?'从好奇出发，也可以带上自己的资料。无需登录，就能规划知识树、学习与测评。':'从自己的目标出发，或跟随单位安排的学习任务。每个人都有独立的学习记录，积累的能力会一直保留。');
-      const cards=node('div',null,'cards');cards.append(card('01 / EXPLORE','自由学习','告诉 AI 你想学什么、已有怎样的基础，规划属于自己的知识树。','开始自由学习','/learn',true),card('02 / MATERIALS','上传资料学习','围绕课程讲义、阅读笔记或自选资料，建立自己的学习路径。','查看资料入口','/training/materials'));if(!guest)cards.append(card('03 / ASSIGNED','我的学习任务','在这里领取单位安排的课程，按照自己的进度学习与测评。','查看我的任务','/training/tasks'));$('content').append(cards);
-      heading('属于你的学习',guest?'你的目标，你的节奏':'自主学习与学习任务分别记录');$('content').append(node('p',guest?'游客可以用通用知识或自己的办公资料学习。进度与当前浏览器身份关联，请保留浏览器数据；登录已有账号后，课程和个人资料会保留。':'自由学习和办公资料学习已可使用。单位任务将在下发后显示。','notice'));
+      hero(unaffiliated?'个人学习空间':'员工学习空间',unaffiliated?'今天想学些什么？':displayName(m)+'，今天想学些什么？',guest?'从好奇出发，也可以带上自己的资料。无需登录，就能规划知识树、学习与测评。':personal?'你已是个人账号，可以自由学习和上传资料；加入单位后才会看到单位任务。':'从自己的目标出发，或跟随单位安排的学习任务。每个人都有独立的学习记录，积累的能力会一直保留。');
+      const cards=node('div',null,'cards');cards.append(card('01 / EXPLORE','自由学习','告诉 AI 你想学什么、已有怎样的基础，规划属于自己的知识树。','开始自由学习','/learn',true),card('02 / MATERIALS','上传资料学习','围绕课程讲义、阅读笔记或自选资料，建立自己的学习路径。','查看资料入口','/training/materials'));if(!unaffiliated)cards.append(card('03 / ASSIGNED','我的学习任务','在这里领取单位安排的课程，按照自己的进度学习与测评。','查看我的任务','/training/tasks'));$('content').append(cards);
+      heading('属于你的学习',unaffiliated?'你的目标，你的节奏':'自主学习与学习任务分别记录');
+      if(guest)$('content').append(node('p','游客可以用通用知识或自己的办公资料学习。进度与当前浏览器身份关联，请保留浏览器数据；注册个人账号或登录已有账号后，课程和个人资料会保留。','notice'),link('注册并保留进度 →','/login?register=1','button'));
+      else if(personal)$('content').append(node('p','个人账号可以自由学习和上传资料。只有管理员把你加入单位后，才会出现单位任务入口。','notice'));
+      else $('content').append(node('p','自由学习和办公资料学习已可使用。单位任务将在下发后显示。','notice'));
     }else if(path==='/training/materials'||path==='/training/admin/materials'){
       await materialsPage(path==='/training/admin/materials');
     }else if(path==='/training/tasks'){
       const data=await get('/training/api/my-tasks');hero('单位安排','我的学习任务','这里只显示分配给当前账号的单位学习；个人自由学习记录保存在学习花园。');empty(data.tasks.length?'任务学习入口尚未开放':'暂时没有分配给你的学习任务',data.tasks.length?'任务已记录，领取与学习功能将在后续阶段接通。':'管理员下发功能尚未开放。收到任务后，这里会显示真实任务和截止时间。');
     }else{
       const details={
-        '/training/admin/materials':['单位学习资料','准备可靠的学习资料','单位资料上传与解析预览将在 Day 2 接通。当前没有已上传的学习资料。'],
         '/training/admin/courses':['课程与发布','一份课程，多人独立学习','课程预览、版本确认和发布将在 Day 3 接通。当前没有已发布课程。'],
         '/training/admin/tasks':['任务下发','把课程送到需要的人手中','选择员工和下发任务将在 Day 3 接通。当前尚不能创建或分配任务。'],
         '/training/admin/dashboard':['学习看板','让成长有迹可循','学习进度看板将在 Day 4 接通。当前没有学习事实，不展示成绩或统计。']
-      };const d=details[path];hero(d[0],d[1],d[2]);empty('功能建设中',d[2]);
+      };const d=details[path];if(!d){empty('页面不存在','请从导航重新进入。');return;}hero(d[0],d[1],d[2]);empty('功能建设中',d[2]);
       if(!admin)$('content').append(link('先去自由学习 →','/learn','button'));
     }
   }

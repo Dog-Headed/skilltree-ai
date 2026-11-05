@@ -185,6 +185,7 @@ See the [development guide](docs/DEVELOPMENT.md) for the source map, API contrac
 - [x] Goal-first creation, optional materials and clearly labelled AI notes
 - [x] Botanical growth graph, learning desk and result page; long multi-session routes
 - [x] **Office materials (demo):** PDF / DOCX / XLSX / PPTX upload, parse preview, original download and source location (training Day 2)
+- [x] **Unit training demo loop:** publish/assign, employee start, admin progress board, isolated rehearsal (training Day 3–5; production deploy separate)
 - [ ] **Planned for V4:** richer knowledge base / RAG over large corpora
 - [ ] **Planned for V4:** spoken examples for English and Japanese with speed control
 - [ ] **Planned for V4:** interactive charts inside lessons (function plots, data charts, sample candlesticks)

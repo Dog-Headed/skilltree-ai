@@ -1,6 +1,6 @@
-# 单位学习最小契约（Day 1–2）
+# 单位学习最小契约（Day 1–5）
 
-2026-11-05（4A 更新）。身份、入口、个人注册、单位成员选择、资料解析、课程发布、任务下发与员工开课已实现；进度看板见 Day 4。
+2026-11-05（Day 5）。身份、入口、个人注册、单位成员、资料解析、课程发布、任务下发、员工开课、进度看板与隔离演练均已实现。
 
 ## 关系与不变量
 
@@ -51,7 +51,7 @@
 | `POST /training/api/admin/members/remove` | 仅管理员：撤销员工成员身份，保留个人账号与学习数据；不能移除管理员 |
 | `GET /training/admin/members` | 仅管理员：成员管理页 |
 | `GET /training/api/my-tasks` | 当前成员的员工任务列表；learning_available=false；游客/个人账号 403 |
-| `GET /training/admin[/materials\|/courses\|/tasks\|/dashboard]` | 仅管理员；`/materials` 已可上传／预览／下载单位资料；`/courses`、`/tasks`、`/dashboard` 仍为建设中或真实空状态 |
+| `GET /training/admin[/materials\|/courses\|/tasks\|/dashboard]` | 仅管理员；`/materials` 已可上传／预览／下载单位资料；`/courses`、`/tasks`、`/dashboard` 已接通（无数据时为空状态） |
 | `GET /training/home`、`/training/materials` | 员工、游客或个人账号首页、个人资料学习入口（含办公四格式上传／预览） |
 | `GET /training/tasks` | 成员真实空任务页；游客 403 |
 | `GET /learn` | 复用现有知识树与学习台页面；新增返回学习首页导航 |
@@ -61,7 +61,7 @@
 | `GET /jobs/active`、`/jobs/{id}`、`/jobs/{id}/events` | 原账号隔离的任务读取／事件流 |
 | `GET/POST /model-settings` | 原账号模型设置；密码与密钥不进入页面课程 DTO |
 
-课程发布、任务下发与员工开始任务已开放（见下方 Day 3）。进度看板写接口仍未作为独立写面；未知路由 404。
+课程发布、任务下发、员工开课与管理看板已开放（见下方 Day 3–4）。看板为只读聚合；未知路由 404。
 
 ## Day 3 发布 / 下发 / 开课（2026-11-05）
 
@@ -89,7 +89,7 @@
 
 `gateway.sqlite.training_assets` 保存账号所有者、private/unit 范围、单位、请求 UUID、内容指纹、标题、文件名和 processing/ready/failed 状态。上传在同一 HTTP 请求中完成解析，页面真实显示上传解析中；失败持久保存原因。重启将未完成的 processing 标记为 failed，不伪造成功。相同账号、范围和请求 UUID 重放复用原记录，变更内容 409。
 
-私人资料属于游客或账号，管理员不能读员工私人资料；游客登录已有账号时与个人项目一起迁移归属。单位资料仅当前单位管理员可上传、预览和下载，员工暂不能读取未发布原件。单位 ready 资料同时建立不可变 `training_material_versions`（version=1），供下一天关联共享课程；每次新上传建立独立资料版本 ID，本阶段不提供覆盖修改。尚未发布或下发任何课程。
+私人资料属于游客或账号，管理员不能读员工私人资料；游客登录已有账号时与个人项目一起迁移归属。单位资料仅当前单位管理员可上传、预览和下载，员工暂不能读取未发布原件。单位 ready 资料同时建立不可变 `training_material_versions`（version=1），供发布关联；每次新上传建立独立资料版本 ID，本阶段不提供覆盖修改。发布/下发见 Day 3。
 
 | 方法／地址 | 行为 |
 |---|---|
@@ -107,3 +107,10 @@
 `SourceDocument/SourceChunk` 复用原模型和行号/哈希契约。解析正文的标题携带 PDF 页码、DOCX 章节/段落/表号、XLSX 工作表/范围、PPTX 张号/形状。学习库新增 `source_files` 保存资料版本对应的原件相对位置及结构元信息，和 SourceDocument 在同一事务写入；原件按 SHA256 留存于 `learning/original-files`。教学引用仍是 chunk_id/source_id/source_version，通过行范围与 blocks 对应，不另建虚构引用。
 
 没有向量数据库或检索服务。现有学习引擎将完整教学资料片段组成有界上下文（序列化目录上限 24,000 字符）；多份资料累计超限时明确停止规划，要求缩小范围。解析成功不等于课程生成成功或完成学习；仍需真实模型规划、确认计划、讲解、原评价与推进事实。
+
+## Day 5 演练约定（2026-11-05）
+
+- 验收使用**新隔离实例**（`--data-root` 指向 `work/training-demo/` 下新目录），不得覆盖现用或生产目录。
+- 闭环：四格式上传 → 发布短课 → 下发甲乙 → 甲完成 / 乙答错补弱 → 丙与游客自学 → 看板真实计数 → 重启同根目录进度仍在。
+- 幂等：`request_id` 覆盖资料上传、发布、下发、员工 start 与学习引擎事件。
+- 离线证据：`tests/test_training_day05_rehearsal.py`；真人演示脚本见 `day05/DEMO_SCRIPT.md`；边界见 `day05/LIMITATIONS.md`。

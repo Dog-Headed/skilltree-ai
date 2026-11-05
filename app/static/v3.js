@@ -904,7 +904,11 @@
       const session = await get('/session');
       authSession = session;
       if (session.training) {
-        document.querySelector('.top-tools').prepend(el('a', {class:'btn subtle',href:'/',text:'学习首页'}));
+        const tools = document.querySelector('.top-tools');
+        const home = el('a', {class:'btn subtle',href:'/',text:'学习首页'});
+        tools.prepend(home);
+        // Unit admins land on the garden; this is their way back to the training hub.
+        if (session.training.role === 'admin') home.after(el('a', {class:'btn subtle',href:'/training/admin',text:'学习管理'}));
         document.querySelector('.brand small').textContent = '自由学习 · ' + (session.training.display_name === '\u57f9\u8bad管理员' ? '学习管理员' : session.training.display_name);
       }
       if (session?.account) {

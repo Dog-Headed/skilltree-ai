@@ -11,7 +11,7 @@ Updated: 2026-11-05 (Asia/Shanghai). Owner: Grok Bot continuous implementation.
 | Day3 publish/assign | PR #4 → `a40004d` |
 | Day3 employee start | PR #5 → `f2998f3` |
 | Day4 dashboard | PR #6 → `7baff8f` |
-| Day5 rehearsal + docs | this PR (pending merge) |
+| Day5 rehearsal + docs | PR #7 → `3a98441` |
 | Production | still on `80d53f4`; **not deployed** |
 
 ## Status

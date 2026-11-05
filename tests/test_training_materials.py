@@ -90,7 +90,7 @@ def test_guests_private_employees_unit_permissions_restart_and_adoption(runtime)
     guest,account=visit(client)
     first=upload(client,guest,'岗位职责表.xlsx');assert first.status_code==201,first.text
     asset=first.json();aid=asset['id']
-    assert asset['status']=='ready' and len(asset['parsed']['blocks'])==2
+    assert asset['status']=='ready' and asset['kind']=='document' and not asset.get('auto_split') and len(asset['parsed']['blocks'])==2
     # Login adopts both course ownership and un-attached private materials atomically.
     response=client.post('/auth/login',json={'account':demo.ACCOUNTS[1][0],'password':demo.DEMO_PASSWORD},headers={'X-SkillTree-Login':'1','Cookie':guest['Cookie']})
     a={'Cookie':response.headers['set-cookie'].split(';')[0],'X-CSRF-Token':response.json()['csrf_token']}

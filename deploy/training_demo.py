@@ -169,10 +169,88 @@ class TrainingSurface:
                 return True
             await gateway.reply(send, 200, result)
             return True
+        if path == '/training/api/admin/courses/publish' and method == 'POST':
+            try:
+                payload = json.loads(await gateway.body(receive, 262144))
+            except Exception:
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供有效的发布内容。'}})
+                return True
+            if not isinstance(payload, dict):
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供有效的发布内容。'}})
+                return True
+            try:
+                result = await asyncio.to_thread(
+                    self.store.publish_course, member['unit_id'],
+                    request_id=payload.get('request_id'),
+                    course_id=payload.get('course_id') or 'course',
+                    title=payload.get('title'),
+                    tree=payload.get('tree'),
+                    required_nodes=payload.get('required_nodes'),
+                    pass_rule=payload.get('pass_rule') or {'rule': 'all_required_nodes'},
+                    material_version_ids=payload.get('material_version_ids'))
+            except KeyError:
+                await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '资料版本不存在或不属于本单位。'}})
+                return True
+            except ValueError:
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '发布参数无效：需要 request_id、title、tree、必学节点和资料版本。'}})
+                return True
+            await gateway.reply(send, 201 if result.get('created') else 200, result)
+            return True
+        if path.startswith('/training/api/admin/courses/') and method == 'GET':
+            course_id = path[len('/training/api/admin/courses/'):]
+            if course_id and '/' not in course_id and course_id != 'publish':
+                value = await asyncio.to_thread(self.store.course_version, member['unit_id'], course_id)
+                if not value:
+                    await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '课程版本不存在。'}})
+                    return True
+                await gateway.reply(send, 200, value)
+                return True
+        if path == '/training/api/admin/tasks/assign' and method == 'POST':
+            try:
+                payload = json.loads(await gateway.body(receive, 4096))
+            except Exception:
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供有效的下发内容。'}})
+                return True
+            if not isinstance(payload, dict):
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供有效的下发内容。'}})
+                return True
+            try:
+                result = await asyncio.to_thread(
+                    self.store.assign_task, member['unit_id'],
+                    request_id=payload.get('request_id'),
+                    course_version_id=payload.get('course_version_id'),
+                    title=payload.get('title'),
+                    due_at=payload.get('due_at'),
+                    created_by=member['account'],
+                    accounts=payload.get('accounts'))
+            except KeyError:
+                await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '课程版本不存在。'}})
+                return True
+            except PermissionError:
+                await gateway.reply(send, 403, {'error': {'code': 'admin_required', 'message': '仅管理员可下发任务。'}})
+                return True
+            except ValueError as err:
+                code = str(err)
+                message = '下发参数无效。'
+                if code == 'invalid_assignee':
+                    message = '只能向本单位员工下发，请先在成员管理中加入账号。'
+                await gateway.reply(send, 422, {'error': {'code': code if code.startswith('invalid_') else 'invalid_input', 'message': message}})
+                return True
+            await gateway.reply(send, 201 if result.get('created') else 200, result)
+            return True
+        if path.startswith('/training/api/admin/tasks/') and method == 'GET':
+            task_id = path[len('/training/api/admin/tasks/'):]
+            if task_id and '/' not in task_id and task_id != 'assign':
+                value = await asyncio.to_thread(self.store.task_detail, member['unit_id'], task_id)
+                if not value:
+                    await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '任务不存在。'}})
+                    return True
+                await gateway.reply(send, 200, value)
+                return True
         if await self.materials.handle(scope, receive, send, gateway, member):
             return True
         if method not in {'GET', 'HEAD'}:
-            await gateway.reply(send, 405, {'error': {'code': 'not_implemented', 'message': '课程发布与任务下发尚未开放。'}})
+            await gateway.reply(send, 405, {'error': {'code': 'not_implemented', 'message': '该写接口尚未开放（员工开课初始化仍在接入）。'}})
             return True
         if path == '/session':
             await gateway.reply(send, 200, {'account': user, 'login': await asyncio.to_thread(gateway.auth.login_name, user),

@@ -75,12 +75,41 @@
       else $('content').append(node('p','自由学习和办公资料学习已可使用。单位任务将在下发后显示。','notice'));
     }else if(path==='/training/materials'||path==='/training/admin/materials'){
       await materialsPage(path==='/training/admin/materials');
+    }else if(path==='/training/admin/courses'){
+      const data=await get('/training/api/admin/overview');
+      const materials=await get('/training/api/admin/materials');
+      hero('课程与发布','一份课程，多人独立学习','先选择已解析的单位资料，发布冻结的课程版本。员工开课初始化仍在接入。');
+      const form=node('form',null,'material-form'),title=node('input'),select=node('select'),nodes=node('input'),submit=node('button','发布课程版本','button'),status=node('p','发布后不可原地改写；修改请发新版本。','material-status');
+      title.required=true;title.maxLength=200;title.placeholder='课程标题';title.setAttribute('aria-label','课程标题');
+      select.required=true;select.setAttribute('aria-label','单位资料');select.append(node('option','选择一份 ready 资料'));
+      for(const m of materials.materials.filter(x=>x.status==='ready')){const o=node('option',m.title+' · '+m.filename);o.value=m.id;select.append(o);}
+      nodes.required=true;nodes.value='时限要求,适用范围,常见问题';nodes.placeholder='必学节点，逗号分隔';nodes.setAttribute('aria-label','必学节点');
+      submit.type='submit';form.append(title,select,nodes,submit,status);$('content').append(form);
+      form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;status.textContent='正在发布…';try{const required=nodes.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean);if(required.length<1)throw new Error('请至少填写一个必学节点。');const tree={plan_version:1,nodes:required.map((label,i)=>({node_id:'n'+(i+1),title:label,objectives:[]}))};const result=await post('/training/api/admin/courses/publish',{request_id:crypto.randomUUID(),course_id:'unit-course',title:title.value.trim(),tree,required_nodes:tree.nodes.map(n=>n.node_id),pass_rule:{rule:'all_required_nodes'},material_version_ids:[select.value]});status.textContent='已发布 '+(result.title)+' v'+result.version+'（'+result.id+'）';location.reload();}catch(e){status.textContent=e.message;submit.disabled=false;}});
+      heading('已发布课程','不可变版本');
+      if(!data.courses.length)empty('还没有已发布课程','上传单位资料后，可在上方发布短课程。');
+      else{const list=node('div',null,'members');for(const course of data.courses){const e=node('div',null,'member');e.append(node('strong',course.title),node('small','v'+course.version),node('small',course.id),node('small',course.published_at||''));list.append(e);}$('content').append(list);}
+    }else if(path==='/training/admin/tasks'){
+      const data=await get('/training/api/admin/overview');
+      hero('任务下发','把课程送到需要的人手中','选择已发布课程和员工下发。每人独立学习；员工开始学习入口仍在接入。');
+      const form=node('form',null,'material-form'),title=node('input'),course=node('select'),due=node('input'),people=node('div'),submit=node('button','下发任务','button'),status=node('p','只会创建员工任务行，不会复制别人的学习进度。','material-status');
+      title.required=true;title.maxLength=200;title.placeholder='任务标题';title.setAttribute('aria-label','任务标题');
+      course.required=true;course.setAttribute('aria-label','课程版本');course.append(node('option','选择课程版本'));
+      for(const c of data.courses){const o=node('option',c.title+' · v'+c.version);o.value=c.id;course.append(o);}
+      due.type='datetime-local';due.setAttribute('aria-label','截止时间');
+      people.append(node('p','选择员工（可多选）'));
+      const checks=[];for(const member of data.members.filter(m=>m.role==='employee')){const label=node('label',null,'remember'),box=node('input');box.type='checkbox';box.value=member.account;label.append(box,document.createTextNode(' '+displayName(member)+' · '+member.account));people.append(label);checks.push(box);}
+      submit.type='submit';form.append(title,course,due,people,submit,status);$('content').append(form);
+      form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;status.textContent='正在下发…';try{const accounts=checks.filter(c=>c.checked).map(c=>c.value);if(!accounts.length)throw new Error('请至少选择一名员工。');const payload={request_id:crypto.randomUUID(),course_version_id:course.value,title:title.value.trim(),accounts};if(due.value)payload.due_at=new Date(due.value).toISOString();const result=await post('/training/api/admin/tasks/assign',payload);status.textContent='已下发给 '+result.assignees.length+' 人';location.reload();}catch(e){status.textContent=e.message;submit.disabled=false;}});
+      heading('已下发任务','本单位任务');
+      if(!data.tasks.length)empty('还没有学习任务','发布课程后可在上方下发。');
+      else{const list=node('div',null,'members');for(const task of data.tasks){const e=node('div',null,'member');e.append(node('strong',task.title),node('small',task.course_version_id),node('small',task.due_at||'无截止时间'),node('small',task.id));list.append(e);}$('content').append(list);}
     }else if(path==='/training/tasks'){
-      const data=await get('/training/api/my-tasks');hero('单位安排','我的学习任务','这里只显示分配给当前账号的单位学习；个人自由学习记录保存在学习花园。');empty(data.tasks.length?'任务学习入口尚未开放':'暂时没有分配给你的学习任务',data.tasks.length?'任务已记录，领取与学习功能将在后续阶段接通。':'管理员下发功能尚未开放。收到任务后，这里会显示真实任务和截止时间。');
+      const data=await get('/training/api/my-tasks');hero('单位安排','我的学习任务','这里只显示分配给当前账号的单位学习；开始学习（独立项目初始化）仍在接入。');
+      if(!data.tasks.length)empty('暂时没有分配给你的学习任务','管理员下发后，这里会显示真实任务和截止时间。');
+      else{const list=node('div',null,'members');for(const task of data.tasks){const e=node('div',null,'member');e.append(node('strong',task.title),node('small',task.due_at||'无截止时间'),node('small',task.project_id?'已开始':'未开始'),node('small',task.course_version_id));list.append(e);}$('content').append(list);$('content').append(node('p','开始学习入口将在员工项目初始化接通后可用。','notice'));}
     }else{
       const details={
-        '/training/admin/courses':['课程与发布','一份课程，多人独立学习','课程预览、版本确认和发布将在 Day 3 接通。当前没有已发布课程。'],
-        '/training/admin/tasks':['任务下发','把课程送到需要的人手中','选择员工和下发任务将在 Day 3 接通。当前尚不能创建或分配任务。'],
         '/training/admin/dashboard':['学习看板','让成长有迹可循','学习进度看板将在 Day 4 接通。当前没有学习事实，不展示成绩或统计。']
       };const d=details[path];if(!d){empty('页面不存在','请从导航重新进入。');return;}hero(d[0],d[1],d[2]);empty('功能建设中',d[2]);
       if(!admin)$('content').append(link('先去自由学习 →','/learn','button'));

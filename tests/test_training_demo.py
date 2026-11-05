@@ -46,16 +46,33 @@ def login(client, index=0):
     return {'Cookie': result.headers['set-cookie'].split(';')[0], 'X-CSRF-Token': result.json()['csrf_token']}
 
 
+GARDEN_ENTRY = '/learn#/garden'
+
+
+def assert_garden(response):
+    """Original v3 garden shell, not the training card hub."""
+    assert response.status_code == 200, response.text
+    page = response.text
+    assert 'SkillTree · 生长图谱' in page
+    assert '让好奇慢慢生长' in page
+    assert '＋ 种一棵树' in page
+    assert '我的树' in page
+    assert '正在打开你的学习空间' not in page
+    assert 'training.js' not in page
+
+
 def visit(client):
     client.cookies.clear()
     response = client.get('/', follow_redirects=False)
-    assert response.status_code == 303 and response.headers['location'] == '/training/home'
+    assert response.status_code == 303 and response.headers['location'] == GARDEN_ENTRY
     cookie = response.headers['set-cookie']
     assert 'HttpOnly' in cookie and 'Max-Age=31536000' in cookie
     session = client.get('/session').json()
     assert session['guest'] and not session['logout']
     assert session['training']['role'] == 'guest' and session['training']['unit_id'] is None
-    return {'Cookie': cookie.split(';')[0], 'X-CSRF-Token': session['csrf_token']}, session['account']
+    headers = {'Cookie': cookie.split(';')[0], 'X-CSRF-Token': session['csrf_token']}
+    assert_garden(client.get('/learn', headers=headers))
+    return headers, session['account']
 
 
 def finish_request(client, headers, path, payload):
@@ -154,7 +171,10 @@ def test_all_roles_server_auth_and_no_parameter_escalation(runtime):
     client, gateway, model = runtime
     assert client.get('/training/home', follow_redirects=False).headers['location'] == '/'
     assert client.get('/session', headers={'X-Evaluation-User': demo.ACCOUNTS[0][0]}).status_code == 401
-    assert client.get('/', follow_redirects=False).headers['location'] == '/training/home'
+    landing = client.get('/', follow_redirects=False)
+    assert landing.status_code == 303 and landing.headers['location'] == GARDEN_ENTRY
+    assert 'HttpOnly' in landing.headers['set-cookie']
+    assert_garden(client.get('/learn'))
     assert client.get('/session').json()['guest'] is True
     assert client.post('/auth/register', json={}).status_code == 403
     for i in range(4):
@@ -162,13 +182,27 @@ def test_all_roles_server_auth_and_no_parameter_escalation(runtime):
         session = client.get('/session', headers=headers).json()
         assert session['training']['role'] == ('admin' if i == 0 else 'employee')
         landing = client.get('/', headers=headers, follow_redirects=False)
-        assert landing.headers['location'] == ('/training/admin' if i == 0 else '/training/home')
+        assert landing.status_code == 303 and landing.headers['location'] == GARDEN_ENTRY
+        assert_garden(client.get('/learn', headers=headers))
         if i:
             forged = {**headers, 'X-Evaluation-User': demo.ACCOUNTS[0][0], 'X-Role': 'admin'}
             assert client.get('/training/admin?role=admin', headers=forged).status_code == 403
             assert client.get('/training/api/admin/overview?account=admin@example.test', headers=forged).status_code == 403
             assert client.post('/training/api/admin/publish', json={'role': 'admin'}, headers=forged).status_code == 403
         assert client.get('/learn', headers=headers).status_code == 200
+        if i == 0:
+            assert client.get('/training/admin', headers=headers).status_code == 200
+        else:
+            assert client.get('/training/home', headers=headers).status_code == 200
+    client.cookies.clear()
+    registered = client.post('/auth/register', headers={'X-SkillTree-Login': '1'}, json={
+        'account': 'personal.entry@example.test', 'password': 'personal-password',
+        'confirm_password': 'personal-password', 'remember': True})
+    assert registered.status_code == 201, registered.text
+    personal = client.get('/', follow_redirects=False)
+    assert personal.status_code == 303 and personal.headers['location'] == GARDEN_ENTRY
+    assert client.get('/session').json()['training']['role'] == 'personal'
+    assert_garden(client.get('/learn'))
     headers = login(client)
     value = client.get('/training/api/admin/overview', headers=headers).json()
     assert len(value['members']) == 4 and value['tasks'] == value['courses'] == []

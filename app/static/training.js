@@ -52,7 +52,7 @@
     const unaffiliated=guest||personal;
     $('unit-name').textContent=m.unit_name;$('identity').textContent=displayName(m)+' · '+(admin?'管理员':guest?'游客':personal?'个人账号':'员工');document.title=(admin?'学习管理':unaffiliated?'自主学习':'员工学习')+' · SkillTree';
     $('logout').hidden=guest;if(unaffiliated){if(guest)$('switch-account').textContent='登录 / 注册';else $('switch-account').textContent='切换账号';document.querySelector('.unit-label').textContent='个人学习空间';document.querySelector('footer').firstChild.textContent='SkillTree · 让好奇长成能力 ';}
-    const nav=admin?[['学习管理首页','/training/admin'],['成员管理','/training/admin/members'],['学习资料','/training/admin/materials'],['课程与发布','/training/admin/courses'],['任务下发','/training/admin/tasks'],['学习看板','/training/admin/dashboard']]:[['学习首页','/training/home'],['自由学习','/learn'],['上传资料学习','/training/materials'],['我的学习任务','/training/tasks']];
+    const nav=admin?[['学习管理首页','/training/admin'],['成员管理','/training/admin/members'],['学习资料','/training/admin/materials'],['课程与发布','/training/admin/courses'],['任务下发','/training/admin/tasks'],['学习看板','/training/admin/dashboard']]:[['学习首页','/learn#/garden'],['自由学习','/learn'],['上传资料学习','/training/materials'],['我的学习任务','/training/tasks']];
     for(const [label,href] of nav.filter(([,href])=>!unaffiliated||href!=='/training/tasks')){const a=link(label,href,'nav-link'+(path===href?' active':''));if(path===href)a.setAttribute('aria-current','page');$('navigation').append(a);}
     $('content').replaceChildren(node('p','SKILLTREE / LEARN AND GROW','eyebrow'));
     if(path==='/training/admin'||path==='/training/admin/members'){

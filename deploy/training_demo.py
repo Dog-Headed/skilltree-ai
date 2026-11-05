@@ -317,7 +317,9 @@ class TrainingSurface:
         elif path == '/learn':
             await gateway.application({**scope, 'path': '/', 'raw_path': b'/'}, receive, send)
         elif path == '/':
-            await gateway.reply(send, 303, {}, [(b'location', b'/training/admin' if member['role'] == 'admin' else b'/training/home')])
+            # Same original garden for every role. Training hubs stay on /training/*.
+            # Fragment selects 我的花园; /learn#/p/... is unchanged because it never hits this branch.
+            await gateway.reply(send, 303, {}, [(b'location', b'/learn#/garden')])
         elif path == '/training/api/me':
             await gateway.reply(send, 200, member)
         elif path == '/training/api/admin/overview':

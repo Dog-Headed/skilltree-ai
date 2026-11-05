@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse
 from .asgi import EvaluationGateway
 from .auth import AuthStore, csrf_token
 from .training_store import TrainingStore
+from . import training_learner
 from app.v3.storage import PROJECT_ROOT, V3Paths, initialize_storage
 from app.v3.runtime_storage import initialize_learning_storage
 from app.v3.learning_api import create_learning_app, STATIC
@@ -247,10 +248,54 @@ class TrainingSurface:
                     return True
                 await gateway.reply(send, 200, value)
                 return True
+
+        if path.startswith('/training/api/my-tasks/') and path.endswith('/start') and method == 'POST':
+            employee_task_id = path[len('/training/api/my-tasks/'):-len('/start')]
+            if not employee_task_id or '/' in employee_task_id:
+                await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '任务不存在。'}})
+                return True
+            if unaffiliated or member['role'] not in {'employee', 'admin'}:
+                await gateway.reply(send, 403, {'error': {'code': 'member_required', 'message': '仅单位成员可开始分配给自己的任务。'}})
+                return True
+            try:
+                payload = json.loads(await gateway.body(receive, 4096))
+            except Exception:
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供 request_id。'}})
+                return True
+            if not isinstance(payload, dict):
+                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供 request_id。'}})
+                return True
+            try:
+                result = await asyncio.to_thread(
+                    training_learner.ensure_initialized,
+                    gateway.paths, self.materials.root, self.store, gateway.ownership,
+                    member['unit_id'], user, employee_task_id, request_id=payload.get('request_id'))
+            except KeyError:
+                await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '任务不存在或不属于当前账号。'}})
+                return True
+            except PermissionError:
+                await gateway.reply(send, 409, {'error': {'code': 'project_conflict', 'message': '学习项目归属冲突，请联系管理员。'}})
+                return True
+            except FileNotFoundError:
+                await gateway.reply(send, 409, {'error': {'code': 'material_missing', 'message': '课程资料原件缺失，无法开课。'}})
+                return True
+            except ValueError as err:
+                code = str(err)
+                await gateway.reply(send, 422, {'error': {'code': code if code.startswith(('invalid_', 'no_')) else 'invalid_input',
+                    'message': '无法按已发布课程初始化学习项目，请刷新后重试。'}})
+                return True
+            except Exception as err:
+                # Surface freeze/import contract failures without leaking internals.
+                await gateway.reply(send, 500, {'error': {'code': 'start_failed',
+                    'message': '开课初始化失败，进度未推进；请稍后重试。'}})
+                return True
+            await gateway.reply(send, 201 if result.get('created') else 200, result)
+            return True
+
         if await self.materials.handle(scope, receive, send, gateway, member):
             return True
         if method not in {'GET', 'HEAD'}:
-            await gateway.reply(send, 405, {'error': {'code': 'not_implemented', 'message': '该写接口尚未开放（员工开课初始化仍在接入）。'}})
+            await gateway.reply(send, 405, {'error': {'code': 'not_implemented', 'message': '该写接口尚未开放。'}})
             return True
         if path == '/session':
             await gateway.reply(send, 200, {'account': user, 'login': await asyncio.to_thread(gateway.auth.login_name, user),
@@ -264,8 +309,24 @@ class TrainingSurface:
         elif path == '/training/api/admin/overview':
             await gateway.reply(send, 200, await asyncio.to_thread(self.store.overview, member['unit_id']))
         elif path == '/training/api/my-tasks':
-            await gateway.reply(send, 200, {'tasks': await asyncio.to_thread(self.store.my_tasks, member['unit_id'], user),
-                'learning_available': False})
+            tasks = await asyncio.to_thread(self.store.my_tasks, member['unit_id'], user)
+            enriched = []
+            for task in tasks:
+                item = dict(task)
+                item['learning_available'] = True
+                if task.get('project_id'):
+                    course = await asyncio.to_thread(self.store.course_version, member['unit_id'], task['course_version_id'])
+                    bindings = await asyncio.to_thread(self.store.node_bindings, task['id'])
+                    progress = await asyncio.to_thread(
+                        training_learner.progress_for_project, gateway.paths, task['project_id'],
+                        (course or {}).get('required_nodes') or [], bindings)
+                    item['progress'] = progress
+                    item['status'] = progress['status']
+                else:
+                    item['progress'] = None
+                    item['status'] = 'not_started'
+                enriched.append(item)
+            await gateway.reply(send, 200, {'tasks': enriched, 'learning_available': True})
         elif path in {'/training/home', '/training/admin', '/training/materials', '/training/tasks',
                       '/training/admin/materials', '/training/admin/courses', '/training/admin/tasks',
                       '/training/admin/dashboard', '/training/admin/members'}:
@@ -320,6 +381,7 @@ def create_app(*, root=None, port=18780, llm=None, public_origin=None, seed_pass
         application = ModelScopedApplication(application, settings)
     from .training_materials import TrainingMaterials
     materials = TrainingMaterials(root, root/'gateway.sqlite', store)
+    store.material_filename_hint = materials.filename_for
     gateway = TrainingGateway(application, paths, root/'gateway.sqlite', auth_store=auth, queued=True,
         origin=public_origin or f'http://127.0.0.1:{port}', cookie_secure=bool(public_origin), guest_access=True,
         cookie_name='__Host-skilltree_training_session' if public_origin else f'skilltree_training_{port}_session',

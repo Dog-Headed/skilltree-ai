@@ -61,7 +61,7 @@
         hero('学习管理空间','把一份知识，变成共同的成长。','从资料到课程，从任务到学习结果。在这里组织共同学习，让每位员工沿着自己的进度前行。');
         const cards=node('div',null,'cards');cards.append(card('01 / MATERIALS','学习资料','集中准备学习资料，为后续生成课程保留可靠依据。','查看资料入口','/training/admin/materials',true),card('02 / MEMBERS','成员管理','按邮箱查找已注册个人账号，加入本单位后才能接收任务。','管理成员','/training/admin/members'),card('03 / COURSES','课程与下发','确认知识树，再将同一课程分配给多位员工独立学习。','查看课程入口','/training/admin/courses'),card('04 / PROGRESS','学习看板','查看学习任务范围内的真实学习结果与待补弱目标。','查看看板入口','/training/admin/dashboard'));$('content').append(cards);
         heading('单位成员','当前成员一览');const members=node('div',null,'members');for(const member of data.members){const e=node('div',null,'member');e.append(node('strong',displayName(member)),node('small',member.role==='admin'?'学习管理员':'员工'),node('small',member.account));members.append(e);}$('content').append(members);$('content').append(link('打开成员管理 →','/training/admin/members','button secondary'));
-        heading('学习任务','来自当前单位的实际记录');empty(data.tasks.length?'学习任务':'还没有学习任务',data.tasks.length?'任务学习入口将在后续阶段开放。':'课程发布与任务下发尚未开放。当前没有示例课程、成绩或统计。');
+        heading('学习任务','来自当前单位的实际记录');if(!data.tasks.length)empty('还没有学习任务','发布课程并下发后，这里会显示任务。');else{const list=node('div',null,'members');for(const task of data.tasks){const e=node('div',null,'member');e.append(node('strong',task.title),node('small',task.course_version_id),node('small',task.due_at||'无截止时间'),node('small',task.id));list.append(e);}$('content').append(list);$('content').append(link('去任务下发 →','/training/admin/tasks','button secondary'));}
       }else{
         hero('成员管理','选择账号加入本单位','只添加已注册的个人账号为员工。不会转移私人课程，也不能在此提升管理员。');
         await membersPanel(data);
@@ -78,7 +78,7 @@
     }else if(path==='/training/admin/courses'){
       const data=await get('/training/api/admin/overview');
       const materials=await get('/training/api/admin/materials');
-      hero('课程与发布','一份课程，多人独立学习','先选择已解析的单位资料，发布冻结的课程版本。员工开课初始化仍在接入。');
+      hero('课程与发布','一份课程，多人独立学习','先选择已解析的单位资料，发布冻结的课程版本。员工开始任务时会各自初始化独立学习项目。');
       const form=node('form',null,'material-form'),title=node('input'),select=node('select'),nodes=node('input'),submit=node('button','发布课程版本','button'),status=node('p','发布后不可原地改写；修改请发新版本。','material-status');
       title.required=true;title.maxLength=200;title.placeholder='课程标题';title.setAttribute('aria-label','课程标题');
       select.required=true;select.setAttribute('aria-label','单位资料');select.append(node('option','选择一份 ready 资料'));
@@ -91,7 +91,7 @@
       else{const list=node('div',null,'members');for(const course of data.courses){const e=node('div',null,'member');e.append(node('strong',course.title),node('small','v'+course.version),node('small',course.id),node('small',course.published_at||''));list.append(e);}$('content').append(list);}
     }else if(path==='/training/admin/tasks'){
       const data=await get('/training/api/admin/overview');
-      hero('任务下发','把课程送到需要的人手中','选择已发布课程和员工下发。每人独立学习；员工开始学习入口仍在接入。');
+      hero('任务下发','把课程送到需要的人手中','选择已发布课程和员工下发。每人独立学习，开始后不会复制其他人的进度。');
       const form=node('form',null,'material-form'),title=node('input'),course=node('select'),due=node('input'),people=node('div'),submit=node('button','下发任务','button'),status=node('p','只会创建员工任务行，不会复制别人的学习进度。','material-status');
       title.required=true;title.maxLength=200;title.placeholder='任务标题';title.setAttribute('aria-label','任务标题');
       course.required=true;course.setAttribute('aria-label','课程版本');course.append(node('option','选择课程版本'));
@@ -105,9 +105,9 @@
       if(!data.tasks.length)empty('还没有学习任务','发布课程后可在上方下发。');
       else{const list=node('div',null,'members');for(const task of data.tasks){const e=node('div',null,'member');e.append(node('strong',task.title),node('small',task.course_version_id),node('small',task.due_at||'无截止时间'),node('small',task.id));list.append(e);}$('content').append(list);}
     }else if(path==='/training/tasks'){
-      const data=await get('/training/api/my-tasks');hero('单位安排','我的学习任务','这里只显示分配给当前账号的单位学习；开始学习（独立项目初始化）仍在接入。');
+      const data=await get('/training/api/my-tasks');hero('单位安排','我的学习任务','这里只显示分配给当前账号的单位学习。开始后会按已发布课程初始化你自己的独立项目。');
       if(!data.tasks.length)empty('暂时没有分配给你的学习任务','管理员下发后，这里会显示真实任务和截止时间。');
-      else{const list=node('div',null,'members');for(const task of data.tasks){const e=node('div',null,'member');e.append(node('strong',task.title),node('small',task.due_at||'无截止时间'),node('small',task.project_id?'已开始':'未开始'),node('small',task.course_version_id));list.append(e);}$('content').append(list);$('content').append(node('p','开始学习入口将在员工项目初始化接通后可用。','notice'));}
+      else{const list=node('div',null,'members');for(const task of data.tasks){const e=node('div',null,'member');const status=task.status==='completed'?'已完成':(task.project_id?'进行中':'未开始');const progress=task.progress?('必学 '+task.progress.required_passed+'/'+task.progress.required_total):'';e.append(node('strong',task.title),node('small',task.due_at||'无截止时间'),node('small',status+(progress?' · '+progress:'')),node('small',task.course_version_id));const go=node('button',task.project_id?'继续学习':'开始学习','button');go.type='button';go.addEventListener('click',async()=>{go.disabled=true;try{let projectId=task.project_id;if(!projectId){const started=await post('/training/api/my-tasks/'+encodeURIComponent(task.id)+'/start',{request_id:crypto.randomUUID()});projectId=started.project_id;}location.assign('/learn#/p/'+encodeURIComponent(projectId)+'/learn');}catch(err){go.disabled=false;alert(err.message);}});e.append(go);list.append(e);}$('content').append(list);}
     }else{
       const details={
         '/training/admin/dashboard':['学习看板','让成长有迹可循','学习进度看板将在 Day 4 接通。当前没有学习事实，不展示成绩或统计。']

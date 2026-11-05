@@ -1,7 +1,7 @@
 """Training unit foundations. Shared course content, separate learner runs.
 
-Day 3 publication/assignment APIs are still closed. 4A adds member selection.
-Account IDs refer to the canonical IDs in the isolated AuthStore.
+Day 3 covers publish, assign, and employee project start. Account IDs refer to
+the canonical IDs in the isolated AuthStore.
 """
 from contextlib import contextmanager
 from pathlib import Path
@@ -75,6 +75,9 @@ CREATE TRIGGER IF NOT EXISTS training_frozen_course_materials_delete BEFORE DELE
  BEGIN SELECT RAISE(ABORT,'Published course material links are immutable'); END;
 CREATE TRIGGER IF NOT EXISTS training_frozen_course_materials_update BEFORE UPDATE ON training_course_materials
  BEGIN SELECT RAISE(ABORT,'Published course material links are immutable'); END;
+CREATE TABLE IF NOT EXISTS training_start_requests(
+ unit_id TEXT NOT NULL, request_id TEXT NOT NULL, employee_task_id TEXT NOT NULL, project_id TEXT NOT NULL,
+ PRIMARY KEY(unit_id, request_id));
 '''
 
 
@@ -310,3 +313,94 @@ class TrainingStore:
             value = dict(task)
             value['assignees'] = assignees
             return value
+
+
+    def employee_task(self, unit_id, employee_task_id):
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT e.*, t.course_version_id, t.title AS task_title, t.due_at "
+                "FROM training_employee_tasks e JOIN training_tasks t ON t.id=e.task_id "
+                "WHERE e.unit_id=? AND e.id=?",
+                (unit_id, employee_task_id)).fetchone()
+            return dict(row) if row else None
+
+    def employee_task_public(self, unit_id, employee_task_id):
+        row = self.employee_task(unit_id, employee_task_id)
+        if not row:
+            return None
+        bindings = self.node_bindings(employee_task_id)
+        return {
+            'id': row['id'], 'task_id': row['task_id'], 'account': row['account'],
+            'project_id': row['project_id'], 'started_at': row['started_at'],
+            'course_version_id': row['course_version_id'], 'title': row['task_title'],
+            'due_at': row['due_at'], 'node_bindings': bindings,
+        }
+
+    def node_bindings(self, employee_task_id):
+        with self.connect() as conn:
+            return {row['course_node_id']: row['project_node_id'] for row in conn.execute(
+                'SELECT course_node_id,project_node_id FROM training_node_bindings WHERE employee_task_id=?',
+                (employee_task_id,))}
+
+    def material_version(self, unit_id, material_version_id):
+        with self.connect() as conn:
+            row = conn.execute(
+                'SELECT * FROM training_material_versions WHERE unit_id=? AND id=?',
+                (unit_id, material_version_id)).fetchone()
+            return dict(row) if row else None
+
+    def material_filename_hint(self, material_id):
+        return None
+
+    def start_request(self, unit_id, request_id):
+        with self.connect() as conn:
+            row = conn.execute(
+                'SELECT employee_task_id, project_id FROM training_start_requests WHERE unit_id=? AND request_id=?',
+                (unit_id, request_id)).fetchone()
+            if not row:
+                return None
+            return self.employee_task_public(unit_id, row['employee_task_id'])
+
+    def record_start_request(self, unit_id, request_id, employee_task_id, project_id):
+        with self.connect() as conn:
+            conn.execute(
+                'INSERT OR IGNORE INTO training_start_requests(unit_id,request_id,employee_task_id,project_id) VALUES (?,?,?,?)',
+                (unit_id, request_id, employee_task_id, project_id))
+
+    def link_employee_project(self, unit_id, employee_task_id, project_id, bindings, *, started_at):
+        """Attach an independent project and node map. Idempotent if already linked."""
+        if not isinstance(project_id, str) or not project_id.startswith('v3_'):
+            raise ValueError('invalid_project')
+        if not isinstance(bindings, list) or not bindings:
+            raise ValueError('invalid_bindings')
+        with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            row = conn.execute(
+                'SELECT project_id, account FROM training_employee_tasks WHERE unit_id=? AND id=?',
+                (unit_id, employee_task_id)).fetchone()
+            if not row:
+                raise KeyError('unknown_employee_task')
+            if row['project_id']:
+                if row['project_id'] != project_id:
+                    raise ValueError('employee_task_project_mismatch')
+                return {'created': False, 'project_id': project_id}
+            conn.execute(
+                'UPDATE training_employee_tasks SET project_id=?, started_at=? WHERE unit_id=? AND id=? AND project_id IS NULL',
+                (project_id, started_at, unit_id, employee_task_id))
+            for course_node_id, project_node_id in bindings:
+                conn.execute(
+                    'INSERT INTO training_node_bindings(employee_task_id,project_id,course_node_id,project_node_id)'
+                    ' VALUES (?,?,?,?)',
+                    (employee_task_id, project_id, course_node_id, project_node_id))
+            return {'created': True, 'project_id': project_id}
+
+    def task_dashboard(self, unit_id, task_id):
+        detail = self.task_detail(unit_id, task_id)
+        if not detail:
+            return None
+        course = self.course_version(unit_id, detail['course_version_id'])
+        detail['course'] = {
+            'id': course['id'], 'title': course['title'], 'version': course['version'],
+            'required_nodes': course['required_nodes'],
+        } if course else None
+        return detail

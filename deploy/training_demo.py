@@ -53,7 +53,8 @@ def seed(auth, store, password=DEMO_PASSWORD):
         if not exists:
             auth.create_account(login, password)
     with store.connect() as conn:
-        conn.execute('INSERT OR IGNORE INTO training_units VALUES (?,?)', (UNIT_ID, '青禾研习社（虚构演示单位）'))
+        conn.execute('INSERT OR IGNORE INTO training_units VALUES (?,?)', (UNIT_ID, '中国电信延安分公司'))
+        conn.execute('UPDATE training_units SET name=? WHERE id=?', ('中国电信延安分公司', UNIT_ID))
         for login, name, role in ACCOUNTS:
             with auth.connect() as identities:
                 account = identities.execute('SELECT account FROM auth_accounts WHERE login=?', (login,)).fetchone()[0]
@@ -317,7 +318,9 @@ class TrainingSurface:
         elif path == '/learn':
             await gateway.application({**scope, 'path': '/', 'raw_path': b'/'}, receive, send)
         elif path == '/':
-            await gateway.reply(send, 303, {}, [(b'location', b'/training/admin' if member['role'] == 'admin' else b'/training/home')])
+            # Same original garden for every role. Training hubs stay on /training/*.
+            # Fragment selects 我的花园; /learn#/p/... is unchanged because it never hits this branch.
+            await gateway.reply(send, 303, {}, [(b'location', b'/learn#/garden')])
         elif path == '/training/api/me':
             await gateway.reply(send, 200, member)
         elif path == '/training/api/admin/overview':

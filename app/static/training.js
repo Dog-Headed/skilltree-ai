@@ -8,8 +8,8 @@
   window.addEventListener('storage', e => { if (e.key === 'skilltree.auth.changed') location.reload(); });
   window.addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
   async function get(url) { const r=await fetch(url,{cache:'no-store'}); if(r.status===401){location.replace('/login');throw new Error('请登录。');} const v=await r.json();if(!r.ok)throw new Error(v.error?.message||'读取失败，请刷新重试。');return v; }
-  function hero(label,title,description) {const h=node('section',null,'hero'),copy=node('div');copy.append(node('span',label,'badge'),node('h1',title),node('p',description));const mark=node('div','✳','hero-mark');mark.setAttribute('aria-hidden','true');h.append(copy,mark);$('content').append(h);}
-  function card(number,title,text,action,href,featured=false){const e=link('',href,'card'+(featured?' featured':''));e.append(node('span',number,'card-number'),node('h3',title),node('p',text),node('span',action+' →','action'));return e;}
+  function hero(label,title,description) {const h=node('section',null,'hero'),copy=node('div');copy.append(node('span',label,'badge'),node('h1',title),node('p',description));const mark=node('div',null,'hero-mark');mark.setAttribute('aria-hidden','true');mark.innerHTML='<svg viewBox="0 0 22 26" aria-hidden="true"><path d="M11 25 C11 18 10 13 11 6" fill="none" stroke="var(--stem)" stroke-width="2" stroke-linecap="round"/><path d="M11 12 C 15 11 18 7 18 2 C 13 2 11 6 11 12Z" fill="var(--leaf-deep)"/><path d="M11 16 C 7 15.5 4 12.5 4 8.5 C 8 8.5 10.5 11.5 11 16Z" fill="var(--leaf-soft)" stroke="var(--leaf)" stroke-width="1.2"/></svg>';h.append(copy,mark);$('content').append(h);}
+  function card(number,title,text,action,href,featured=false,icon=''){const e=link('',href,'card'+(featured?' featured':''));if(icon){const img=node('img',null,'card-icon');img.src=icon;img.alt='';e.append(img);}e.append(node('span',number,'card-number'),node('h3',title),node('p',text),node('span',action+' →','action'));return e;}
   function empty(title,text){const e=node('section',null,'empty');e.append(node('h2',title),node('p',text),link('返回首页','/','button secondary'));$('content').append(e);}
   function heading(title,subtitle){const e=node('div',null,'section-heading');e.append(node('h2',title),node('small',subtitle));$('content').append(e);}
   async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf_token},body:JSON.stringify(body)});const v=await r.json();if(!r.ok)throw new Error(v.error?.message||v.error||'操作失败，请刷新资料列表核对。');return v;}
@@ -58,7 +58,7 @@
     $('unit-name').textContent=m.unit_name;$('identity').textContent=displayName(m)+' · '+(admin?'管理员':guest?'游客':personal?'个人账号':'员工');document.title=(admin?'学习管理':unaffiliated?'自主学习':'员工学习')+' · SkillTree';
     $('logout').hidden=guest;if(unaffiliated){if(guest)$('switch-account').textContent='登录 / 注册';else $('switch-account').textContent='切换账号';document.querySelector('.unit-label').textContent='个人学习空间';document.querySelector('footer').firstChild.textContent='SkillTree · 让好奇长成能力 ';}
     const nav=admin?[['学习管理首页','/training/admin'],['成员管理','/training/admin/members'],['学习资料','/training/admin/materials'],['课程与发布','/training/admin/courses'],['任务下发','/training/admin/tasks'],['学习看板','/training/admin/dashboard']]:[['学习首页','/learn#/garden'],['自由学习','/learn'],['上传资料学习','/training/materials'],['我的学习任务','/training/tasks']];
-    for(const [label,href] of nav.filter(([,href])=>!unaffiliated||href!=='/training/tasks')){const a=link(label,href,'nav-link'+(path===href?' active':''));if(path===href)a.setAttribute('aria-current','page');$('navigation').append(a);}
+    for(const [label,href] of nav.filter(([,href])=>!unaffiliated||href!=='/training/tasks')){const a=link(label,href,'nav-link'+(path===href?' active':''));if(path===href)a.setAttribute('aria-current','page');$('navigation').append(a);if(path===href)a.scrollIntoView({block:'nearest',inline:'nearest'});}
     $('content').replaceChildren(node('p','SKILLTREE / LEARN AND GROW','eyebrow'));
     if(path==='/training/admin'||path==='/training/admin/members'){
       const data=await get('/training/api/admin/overview');
@@ -73,7 +73,7 @@
       }
     }else if(path==='/training/home'){
       hero(unaffiliated?'个人学习空间':'员工学习空间',unaffiliated?'今天想学些什么？':displayName(m)+'，今天想学些什么？',guest?'从好奇出发，也可以带上自己的资料。无需登录，就能规划知识树、学习与测评。':personal?'你已是个人账号，可以自由学习和上传资料；加入单位后才会看到单位任务。':'从自己的目标出发，或跟随单位安排的学习任务。每个人都有独立的学习记录，积累的能力会一直保留。');
-      const cards=node('div',null,'cards');cards.append(card('01 / EXPLORE','自由学习','告诉 AI 你想学什么、已有怎样的基础，规划属于自己的知识树。','开始自由学习','/learn',true),card('02 / MATERIALS','上传资料学习','围绕课程讲义、阅读笔记或自选资料，建立自己的学习路径。','查看资料入口','/training/materials'));if(!unaffiliated)cards.append(card('03 / ASSIGNED','我的学习任务','在这里领取单位安排的课程，按照自己的进度学习与测评。','查看我的任务','/training/tasks'));$('content').append(cards);
+      const cards=node('div',null,'cards');cards.append(card('01 / EXPLORE','自由学习','告诉 AI 你想学什么、已有怎样的基础，规划属于自己的知识树。','开始自由学习','/learn',true,'/assets/training-icon-free-learn.png'),card('02 / MATERIALS','上传资料学习','围绕课程讲义、阅读笔记或自选资料，建立自己的学习路径。','查看资料入口','/training/materials',false,'/assets/training-icon-upload.png'));if(!unaffiliated)cards.append(card('03 / ASSIGNED','我的学习任务','在这里领取单位安排的课程，按照自己的进度学习与测评。','查看我的任务','/training/tasks',false,'/assets/training-icon-tasks.png'));$('content').append(cards);
       heading('属于你的学习',unaffiliated?'你的目标，你的节奏':'自主学习与学习任务分别记录');
       if(guest)$('content').append(node('p','游客可以用通用知识或自己的办公资料学习。进度与当前浏览器身份关联，请保留浏览器数据；注册个人账号或登录已有账号后，课程和个人资料会保留。','notice'),link('注册并保留进度 →','/login?register=1','button'));
       else if(personal)$('content').append(node('p','个人账号可以自由学习和上传资料。只有管理员把你加入单位后，才会出现单位任务入口。','notice'));

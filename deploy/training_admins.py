@@ -37,6 +37,7 @@ def strong_password(length=24):
 def ensure_unit(store, unit_id, unit_name):
     with store.connect() as conn:
         conn.execute('INSERT OR IGNORE INTO training_units VALUES (?,?)', (unit_id, unit_name))
+        conn.execute('UPDATE training_units SET name=? WHERE id=?', (unit_name, unit_id))
 
 
 def grant_admin(auth: AuthStore, store: TrainingStore, login: str, *, unit_id: str, unit_name: str,
@@ -101,7 +102,7 @@ def main():
     parser.add_argument('--auth-db', type=Path, required=True)
     parser.add_argument('--training-db', type=Path, required=True)
     parser.add_argument('--unit-id', default=UNIT_ID)
-    parser.add_argument('--unit-name', default='青禾研习社（虚构演示单位）')
+    parser.add_argument('--unit-name', default='中国电信延安分公司')
     parser.add_argument('--private-out', type=Path, required=True,
                         help='JSON file outside Git for newly generated passwords')
     parser.add_argument('--qa-admins', action='store_true',

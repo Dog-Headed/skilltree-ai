@@ -21,6 +21,7 @@ from app.v3.learning_api import create_learning_app, STATIC
 
 TRAINING_WORK = PROJECT_ROOT / 'work' / 'training-demo'
 UNIT_ID = 'demo-qinghe'
+UNIT_NAME = '中国电信延安分公司'
 ACCOUNTS = (
     ('admin@example.test', '学习管理员', 'admin'),
     ('employee.a@example.test', '员工甲', 'employee'),
@@ -53,7 +54,7 @@ def seed(auth, store, password=DEMO_PASSWORD):
         if not exists:
             auth.create_account(login, password)
     with store.connect() as conn:
-        conn.execute('INSERT OR IGNORE INTO training_units VALUES (?,?)', (UNIT_ID, '青禾研习社（虚构演示单位）'))
+        conn.execute('INSERT OR IGNORE INTO training_units VALUES (?,?)', (UNIT_ID, UNIT_NAME))
         for login, name, role in ACCOUNTS:
             with auth.connect() as identities:
                 account = identities.execute('SELECT account FROM auth_accounts WHERE login=?', (login,)).fetchone()[0]

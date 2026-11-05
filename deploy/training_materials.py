@@ -54,6 +54,11 @@ class TrainingMaterials:
             raise KeyError(identity)
         return dict(row)
 
+    def filename_for(self, material_id):
+        with self.connect() as conn:
+            row = conn.execute('SELECT filename FROM training_assets WHERE id=?', (material_id,)).fetchone()
+        return row['filename'] if row else None
+
     def public(self, row, detail=False):
         result = {k: row[k] for k in ('id','title','filename','scope','status','error','created_at')}
         if detail and row['status'] == 'ready':

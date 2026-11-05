@@ -16,14 +16,20 @@
   async function materialsPage(unit){
     const api=unit?'/training/api/admin/materials':'/training/api/materials';
     hero(unit?'单位资料库':'个人资料库',unit?'准备可靠的学习资料':'从自己的资料开始学习',unit?'上传原件，核对解析正文与来源位置，再用这份资料准备课程。':'上传后先核对原文，再建立属于自己的学习路线。个人资料仅当前身份可见。');
-    $('content').append(node('p','支持文字 PDF、DOCX、XLSX、PPTX、UTF-8 TXT / Markdown，办公文件不超过 8 MiB，TXT / Markdown 不超过 128 KiB。办公文件正文最多 12,000 字符；扫描件、旧版 Office、宏和需打开密码的文件暂不支持。Excel 公式仅展示，不执行。','notice'));
+    $('content').append(node('p','支持文字 PDF、DOCX、XLSX、PPTX、UTF-8 TXT / Markdown，办公文件不超过 8 MiB，TXT / Markdown 不超过 128 KiB。办公文件正文最多 12,000 字符；PDF 最多 10 页，PPTX 最多 15 张。超过该上限的 PDF、PPTX、DOCX 会按标题自动拆成多个章节，不提高上限。扫描件、旧版 Office、宏和需打开密码的文件暂不支持。Excel 公式仅展示，不执行。','notice'));
     const form=node('form',null,'material-form'),file=node('input'),title=node('input'),submit=node('button','上传并解析','button'),status=node('p','请选择一份资料。','material-status');
     file.type='file';file.name='file';file.required=true;file.accept='.pdf,.docx,.xlsx,.pptx,.txt,.md,.markdown';file.setAttribute('aria-label','选择学习资料');title.name='title';title.maxLength=256;title.required=true;title.placeholder='资料标题';title.setAttribute('aria-label','资料标题');submit.type='submit';status.setAttribute('role','status');
     file.addEventListener('change',()=>{title.value=file.files[0]?.name.replace(/\.[^.]+$/,'')||'';});form.append(file,title,submit,status);$('content').append(form);
     const library=node('section',null,'material-library'),preview=node('section',null,'material-preview');$('content').append(library,preview);
     async function show(id){
-      const data=await get(api+'/'+id);preview.replaceChildren(node('h2',data.title),node('p',data.filename+' · '+({ready:'解析完成',failed:'解析失败',processing:'正在解析'}[data.status])));
+      const data=await get(api+'/'+id);const stateLabel=data.auto_split?'已自动拆分为 '+(data.chapter_count||0)+' 个章节':({ready:'解析完成',failed:'解析失败',processing:'正在解析'}[data.status]);preview.replaceChildren(node('h2',data.title),node('p',data.filename+' · '+stateLabel));
       if(data.status!=='ready'){preview.append(node('p',data.error||'解析尚未完成，请稍后刷新。','error'));return;}
+      if(data.auto_split){
+        preview.append(node('p','该文件已自动拆分为 '+(data.chapter_count||0)+' 个章节。请分别核对各章，再准备课程。','notice'));
+        for(const chapter of data.chapters||[]){const open=node('button',chapter.title,'button secondary');open.type='button';open.addEventListener('click',()=>show(chapter.id).catch(e=>{status.textContent=e.message;}));preview.append(open);}
+        preview.append(link('下载原件',api+'/'+id+'/original','button secondary'));
+        return;
+      }
       const parsed=data.parsed;preview.append(node('p',parsed.format.toUpperCase()+' · 正文 '+parsed.content.length+' 字符','dim'),link('下载原件',api+'/'+id+'/original','button secondary'));
       for(const warning of parsed.warnings)preview.append(node('p',warning,'notice'));
       const details=node('details'),summary=node('summary','解析全文与来源位置');details.append(summary,node('pre',parsed.content,'material-text'));
@@ -33,8 +39,8 @@
       start.addEventListener('submit',async event=>{event.preventDefault();button.disabled=true;message.textContent='正在创建课程并导入已核对资料…';try{const created=await post('/projects',{request_id:crypto.randomUUID(),intent:{goal:goal.value.trim(),prior_knowledge:prior.value.trim()}});await post(api+'/'+id+'/attach',{project_id:created.project_id,request_id:crypto.randomUUID()});location.assign('/learn#/p/'+encodeURIComponent(created.project_id)+'/learn');}catch(e){message.textContent=e.message;button.disabled=false;}});
       preview.scrollIntoView({block:'start',behavior:'smooth'});
     }
-    async function refresh(){const data=await get(api);library.replaceChildren(node('h2',unit?'已上传单位资料':'我的资料'));if(!data.materials.length)library.append(node('p','还没有上传资料。上传成功后，可在这里核对正文和来源位置。'));for(const material of data.materials){const row=node('div',null,'material-row'),open=node('button',material.title+' · '+({ready:'解析完成',failed:'解析失败',processing:'正在解析'}[material.status]),'button secondary');open.type='button';open.addEventListener('click',()=>show(material.id).catch(e=>{status.textContent=e.message;}));row.append(open,node('small',material.filename));library.append(row);}}
-    form.addEventListener('submit',async event=>{event.preventDefault();const selected=file.files[0];if(!selected)return;submit.disabled=true;status.textContent='正在上传并解析原件，请等待…';try{if(selected.size>(/\.(txt|md|markdown)$/i.test(selected.name)?131072:8388608))throw new Error('文件超过大小限制，请拆分后上传。');const bytes=new Uint8Array(await selected.arrayBuffer());let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);const result=await post(api,{request_id:crypto.randomUUID(),filename:selected.name,title:title.value.trim(),data_base64:btoa(binary)});status.textContent='解析完成，请核对正文和来源位置。';await refresh();await show(result.id);}catch(e){status.textContent=e.message;await refresh();}finally{submit.disabled=false;}});
+    async function refresh(){const data=await get(api);library.replaceChildren(node('h2',unit?'已上传单位资料':'我的资料'));const visible=data.materials.filter(material=>material.kind!=='chapter');if(!visible.length)library.append(node('p','还没有上传资料。上传成功后，可在这里核对正文和来源位置。'));for(const material of visible){const row=node('div',null,'material-row'),label=material.auto_split?material.title+' · 已自动拆分为 '+material.chapter_count+' 个章节':material.title+' · '+({ready:'解析完成',failed:'解析失败',processing:'正在解析'}[material.status]);const open=node('button',label,'button secondary');open.type='button';open.addEventListener('click',()=>show(material.id).catch(e=>{status.textContent=e.message;}));row.append(open,node('small',material.filename));library.append(row);}}
+    form.addEventListener('submit',async event=>{event.preventDefault();const selected=file.files[0];if(!selected)return;submit.disabled=true;status.textContent='正在上传并解析原件，请等待…';try{if(selected.size>(/\.(txt|md|markdown)$/i.test(selected.name)?131072:8388608))throw new Error('文件超过大小限制，请拆分后上传。');const bytes=new Uint8Array(await selected.arrayBuffer());let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);const result=await post(api,{request_id:crypto.randomUUID(),filename:selected.name,title:title.value.trim(),data_base64:btoa(binary)});status.textContent=result.auto_split?('该文件已自动拆分为 '+result.chapter_count+' 个章节。'):'解析完成，请核对正文和来源位置。';await refresh();await show(result.id);}catch(e){status.textContent=e.message;await refresh();}finally{submit.disabled=false;}});
     await refresh();
   }
   async function membersPanel(data){
@@ -81,7 +87,7 @@
       const form=node('form',null,'material-form'),title=node('input'),select=node('select'),nodes=node('input'),submit=node('button','发布课程版本','button'),status=node('p','发布后不可原地改写；修改请发新版本。','material-status');
       title.required=true;title.maxLength=200;title.placeholder='课程标题';title.setAttribute('aria-label','课程标题');
       select.required=true;select.setAttribute('aria-label','单位资料');select.append(node('option','选择一份 ready 资料'));
-      for(const m of materials.materials.filter(x=>x.status==='ready')){const o=node('option',m.title+' · '+m.filename);o.value=m.id;select.append(o);}
+      for(const m of materials.materials.filter(x=>x.status==='ready' && x.kind!=='pack')){const o=node('option',m.title+' · '+m.filename);o.value=m.id;select.append(o);}
       nodes.required=true;nodes.value='时限要求,适用范围,常见问题';nodes.placeholder='必学节点，逗号分隔';nodes.setAttribute('aria-label','必学节点');
       submit.type='submit';form.append(title,select,nodes,submit,status);$('content').append(form);
       form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;status.textContent='正在发布…';try{const required=nodes.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean);if(required.length<1)throw new Error('请至少填写一个必学节点。');const tree={plan_version:1,nodes:required.map((label,i)=>({node_id:'n'+(i+1),title:label,objectives:[]}))};const result=await post('/training/api/admin/courses/publish',{request_id:crypto.randomUUID(),course_id:'unit-course',title:title.value.trim(),tree,required_nodes:tree.nodes.map(n=>n.node_id),pass_rule:{rule:'all_required_nodes'},material_version_ids:[select.value]});status.textContent='已发布 '+(result.title)+' v'+result.version+'（'+result.id+'）';location.reload();}catch(e){status.textContent=e.message;submit.disabled=false;}});

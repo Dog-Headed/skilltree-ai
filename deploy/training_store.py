@@ -1,6 +1,6 @@
-"""Day 1 business foundations. Shared course content, separate learner runs.
+"""Training unit foundations. Shared course content, separate learner runs.
 
-No publication, assignment or completion mutation API is exposed on Day 1.
+Day 3 publication/assignment APIs are still closed. 4A adds member selection.
 Account IDs refer to the canonical IDs in the isolated AuthStore.
 """
 from contextlib import contextmanager
@@ -102,3 +102,53 @@ class TrainingStore:
             return [dict(row) for row in conn.execute('''SELECT e.id,e.task_id,e.project_id,t.title,t.due_at,
                 t.course_version_id FROM training_employee_tasks e JOIN training_tasks t ON t.id=e.task_id
                 WHERE e.unit_id=? AND e.account=?''', (unit_id, account))]
+
+
+    def add_employee(self, unit_id, account, display_name):
+        """Add a registered personal account as an employee of this unit.
+
+        Idempotent when already in this unit. Rejects accounts already in another
+        unit. Never grants admin through this path.
+        """
+        if not isinstance(display_name, str) or not display_name.strip() or len(display_name.strip()) > 64:
+            raise ValueError('invalid_display_name')
+        name = display_name.strip()
+        with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            if not conn.execute('SELECT 1 FROM training_units WHERE id=?', (unit_id,)).fetchone():
+                raise KeyError('unknown_unit')
+            existing = conn.execute(
+                'SELECT unit_id, role, display_name FROM training_members WHERE account=?',
+                (account,)).fetchone()
+            if existing:
+                if existing['unit_id'] != unit_id:
+                    raise ValueError('other_unit')
+                return {
+                    'unit_id': existing['unit_id'], 'account': account,
+                    'display_name': existing['display_name'], 'role': existing['role'],
+                    'created': False,
+                }
+            conn.execute(
+                'INSERT INTO training_members(unit_id,account,display_name,role) VALUES (?,?,?,?)',
+                (unit_id, account, name, 'employee'))
+            return {
+                'unit_id': unit_id, 'account': account, 'display_name': name,
+                'role': 'employee', 'created': True,
+            }
+
+    def remove_employee(self, unit_id, account):
+        """Revoke unit membership only; never deletes personal learning data."""
+        with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            row = conn.execute(
+                'SELECT role FROM training_members WHERE unit_id=? AND account=?',
+                (unit_id, account)).fetchone()
+            if not row:
+                return {'removed': False, 'account': account}
+            if row['role'] == 'admin':
+                raise ValueError('cannot_remove_admin')
+            conn.execute(
+                'DELETE FROM training_members WHERE unit_id=? AND account=?',
+                (unit_id, account))
+            return {'removed': True, 'account': account}
+

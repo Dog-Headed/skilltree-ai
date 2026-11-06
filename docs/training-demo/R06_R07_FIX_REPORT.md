@@ -8,8 +8,8 @@
 
 | 编号 | 状态 | 提交 SHA | 验证 | 证据 | 剩余限制 |
 | --- | --- | --- | --- | --- | --- |
-| R06 | 已修检测与离线回归；真实模型首讲待外部条件 | 见本分支最终提交 | `pytest tests/test_v3_tutor_fidelity.py tests/test_v3_tutor.py` | `docs/training-demo/day02/r06-r07-evidence.json` | 无 `LLM_MODEL` / `LLM_API_KEY` / `LLM_BASE_URL`，也无 `.env`。没有真实模型教学 JSON，也没有编造一份。检测器仍是分句规则，不是全文蕴含模型。 |
-| R07 | 已修 | 见本分支最终提交 | `pytest tests/test_training_split.py` | 同上 JSON 的 `chapters`；原失败用例仍保留“同一章不得同时含 CHAPTERONE 与 CHAPTERTWO” | 无可靠标题时按页或按长度，并写明不是按标题。长度续分可能在切开的那一页上让相邻两段的页码范围相接。扫描件仍不 OCR。 |
+| R06 | 已修检测与离线回归；真实模型首讲待外部条件 | `b95c1e40392f38ac9bd0ae6ba9e4a3ab453c44f7` | `pytest tests/test_v3_tutor_fidelity.py tests/test_v3_tutor.py` | `docs/training-demo/day02/r06-r07-evidence.json` | 无 `LLM_MODEL` / `LLM_API_KEY` / `LLM_BASE_URL`，也无 `.env`。没有真实模型教学 JSON，也没有编造一份。检测器仍是分句规则，不是全文蕴含模型。 |
+| R07 | 已修 | `b95c1e40392f38ac9bd0ae6ba9e4a3ab453c44f7` | `pytest tests/test_training_split.py` | 同上 JSON 的 `chapters`；原失败用例仍保留“同一章不得同时含 CHAPTERONE 与 CHAPTERTWO” | 无可靠标题时按页或按长度，并写明不是按标题。长度续分可能在切开的那一页上让相邻两段的页码范围相接。扫描件仍不 OCR。 |
 
 ## R06
 
@@ -60,4 +60,4 @@
 python -m pytest tests/test_v3_tutor_fidelity.py tests/test_v3_tutor.py tests/test_training_split.py -q --tb=line
 ```
 
-本次结果：**83 passed**，1 条 Starlette `BlockingPortal` 弃用警告，6.86 秒。未跑全量离线回归（R11 另开）。未改生产库，未部署。
+实现提交 `b95c1e40392f38ac9bd0ae6ba9e4a3ab453c44f7`。本次结果：**83 passed**，1 条 Starlette `BlockingPortal` 弃用警告，6.86 秒。未跑全量离线回归（R11 另开）。未改生产库，未部署。本表中的 SHA 在随后一次只改本文件的提交里写入，代码没有再变。

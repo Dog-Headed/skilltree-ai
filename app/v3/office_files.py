@@ -5,7 +5,7 @@ from io import BytesIO
 from pathlib import PurePath
 import zipfile
 
-from .materials import MaterialInputError
+from .materials import MaterialInputError, MaterialLimitExceeded
 
 MAX_BYTES = 8 * 1024 * 1024
 MAX_TEXT = 12000
@@ -37,7 +37,7 @@ def parse_file(data, filename):
             entry['rows'] = rows
         result['blocks'].append(entry)
         if len('\n'.join(lines)) > MAX_TEXT:
-            raise MaterialInputError('解析全文超过 12,000 字符，请缩小范围；未截断或导入任何片段。')
+            raise MaterialLimitExceeded('解析全文超过 12,000 字符，请缩小范围；未截断或导入任何片段。')
 
     def table_text(rows):
         return '\n'.join(' | '.join(str(c).replace('\n', ' / ').replace('|', '\\|') for c in row) for row in rows)
@@ -69,7 +69,7 @@ def parse_file(data, filename):
             if reader.is_encrypted and not reader.decrypt(''):
                 raise MaterialInputError('PDF 需要打开密码，暂不支持；请提供可直接打开的文字版。')
             if not 1 <= len(reader.pages) <= 10:
-                raise MaterialInputError('PDF 超过 10 页，请按章节拆分后上传。')
+                raise MaterialLimitExceeded('PDF 超过 10 页，请按章节拆分后上传。')
             result['warnings'].append('仅提取文字层；多栏阅读顺序及复杂表格需对照原件，未做 OCR 或图片理解。')
             for number, page in enumerate(reader.pages, 1):
                 stream = page.get('/Contents')
@@ -140,7 +140,7 @@ def parse_file(data, filename):
             result['parser'] = 'python-pptx ' + version('python-pptx')
             result['warnings'].append('按幻灯片形状顺序提取文字和表格；图片、图表、讲者备注及动画未解析。')
             if not 1 <= len(presentation.slides) <= 15:
-                raise MaterialInputError('PPTX 必须为 1–15 张幻灯片。')
+                raise MaterialLimitExceeded('PPTX 必须为 1–15 张幻灯片。')
             def shapes(items):
                 for shape in items:
                     if hasattr(shape, 'shapes'):

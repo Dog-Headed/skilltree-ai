@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse
 from .asgi import EvaluationGateway
 from .auth import AuthStore, csrf_token
 from .training_store import TrainingStore
+from . import training_course
 from . import training_learner
 from app.v3.storage import PROJECT_ROOT, V3Paths, initialize_storage
 from app.v3.runtime_storage import initialize_learning_storage
@@ -29,6 +30,46 @@ ACCOUNTS = (
     ('employee.c@example.test', '员工丙', 'employee'),
 )
 DEMO_PASSWORD = 'SkillTreeDemo2026!'
+
+_COURSE_ERRORS = {
+    'draft_required': (422, '请发布你有权访问的 Planner 草稿及其 revision，不能提交手填节点树。'),
+    'draft_not_found': (404, '草稿不存在，或当前账号无权发布它。'),
+    'draft_not_ready': (422, '这份草稿还没有可发布的计划。请先用 Planner 生成并确认。'),
+    'draft_stale': (409, '草稿版本已变化，请重新生成后再发布这一固定 revision。'),
+    'material_mismatch': (422, '发布资料必须与草稿实际引用的单位资料一致。'),
+    'invalid_course': (422, '草稿未通过契约、依赖或评价校验，没有留下发布记录。'),
+    'invalid_course_empty': (422, '课程没有任何节点，未发布。'),
+    'invalid_course_objectives': (422, '节点缺少可执行的学习目标，未发布。'),
+    'invalid_course_dangling_required': (422, '必学节点不存在，未发布。'),
+    'invalid_course_dangling_dependency': (422, '依赖了不存在的节点，未发布。'),
+    'invalid_course_cycle': (422, '课程依赖存在环，未发布。'),
+    'invalid_course_duplicate': (422, '节点或必学项重复，未发布。'),
+    'invalid_course_unknown_rule': (422, '未知的通过规则，未发布。'),
+    'invalid_course_policy': (422, '评价配置不可执行，未发布。'),
+    'invalid_course_source': (422, '资料引用不属于本次发布的单位资料，未发布。'),
+    'invalid_request_id': (422, '请提供有效的 request_id。'),
+    'invalid_course_id': (422, '课程身份无效。'),
+    'invalid_title': (422, '请填写课程标题。'),
+    'invalid_materials': (422, '请关联至少一份单位资料。'),
+    'duplicate_materials': (422, '资料版本重复。'),
+    'request_target_mismatch': (409, '该请求编号已绑定其他账号、操作或任务，不能复用。'),
+    'course_needs_republish': (409, '该历史课程缺少可执行的目标或评价配置。请重新发布确认后的草稿；原版本已保留。'),
+    'source_mapping_failed': (422, '员工项目无法按发布时的资料片段对应来源，学习未开始。'),
+    'no_materials': (422, '课程没有关联资料，无法开课。'),
+    'no_chunks': (422, '课程资料没有可引用片段，无法开课。'),
+}
+
+
+async def _course_error(gateway, send, err, fallback='发布参数无效，没有留下发布记录。'):
+    code = str(err)
+    status, message = _COURSE_ERRORS.get(code, (422, fallback))
+    if code not in _COURSE_ERRORS and code.startswith(('invalid_', 'no_')):
+        code_out = code
+    elif code in _COURSE_ERRORS:
+        code_out = code
+    else:
+        code_out = 'invalid_input'
+    await gateway.reply(send, status, {'error': {'code': code_out, 'message': message}})
 
 
 def isolated_root(value):
@@ -55,6 +96,7 @@ def seed(auth, store, password=DEMO_PASSWORD):
             auth.create_account(login, password)
     with store.connect() as conn:
         conn.execute('INSERT OR IGNORE INTO training_units VALUES (?,?)', (UNIT_ID, UNIT_NAME))
+        conn.execute('UPDATE training_units SET name=? WHERE id=?', (UNIT_NAME, UNIT_ID))
         for login, name, role in ACCOUNTS:
             with auth.connect() as identities:
                 account = identities.execute('SELECT account FROM auth_accounts WHERE login=?', (login,)).fetchone()[0]
@@ -171,30 +213,39 @@ class TrainingSurface:
                 return True
             await gateway.reply(send, 200, result)
             return True
+        if path == '/training/api/admin/course-drafts' and method == 'GET':
+            drafts = await asyncio.to_thread(
+                training_course.list_drafts, gateway.paths, self.store, gateway.ownership,
+                member['unit_id'], user)
+            await gateway.reply(send, 200, drafts)
+            return True
         if path == '/training/api/admin/courses/publish' and method == 'POST':
             try:
                 payload = json.loads(await gateway.body(receive, 262144))
             except Exception:
                 await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供有效的发布内容。'}})
                 return True
-            if not isinstance(payload, dict):
-                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '请提供有效的发布内容。'}})
+            if not isinstance(payload, dict) or not payload.get('draft_project_id'):
+                await gateway.reply(send, 422, {'error': {
+                    'code': 'draft_required',
+                    'message': '请发布你有权访问的 Planner 草稿及其 revision，不能提交手填节点树。'}})
                 return True
             try:
                 result = await asyncio.to_thread(
-                    self.store.publish_course, member['unit_id'],
+                    training_course.publish_from_draft, gateway.paths, self.store, gateway.ownership,
+                    member['unit_id'], user,
                     request_id=payload.get('request_id'),
-                    course_id=payload.get('course_id') or 'course',
+                    course_id=payload.get('course_id'),
                     title=payload.get('title'),
-                    tree=payload.get('tree'),
+                    draft_project_id=payload.get('draft_project_id'),
+                    draft_revision=payload.get('draft_revision'),
                     required_nodes=payload.get('required_nodes'),
-                    pass_rule=payload.get('pass_rule') or {'rule': 'all_required_nodes'},
                     material_version_ids=payload.get('material_version_ids'))
             except KeyError:
                 await gateway.reply(send, 404, {'error': {'code': 'not_found', 'message': '资料版本不存在或不属于本单位。'}})
                 return True
-            except ValueError:
-                await gateway.reply(send, 422, {'error': {'code': 'invalid_input', 'message': '发布参数无效：需要 request_id、title、tree、必学节点和资料版本。'}})
+            except ValueError as err:
+                await _course_error(gateway, send, err)
                 return True
             await gateway.reply(send, 201 if result.get('created') else 200, result)
             return True
@@ -295,9 +346,7 @@ class TrainingSurface:
                 await gateway.reply(send, 409, {'error': {'code': 'material_missing', 'message': '课程资料原件缺失，无法开课。'}})
                 return True
             except ValueError as err:
-                code = str(err)
-                await gateway.reply(send, 422, {'error': {'code': code if code.startswith(('invalid_', 'no_')) else 'invalid_input',
-                    'message': '无法按已发布课程初始化学习项目，请刷新后重试。'}})
+                await _course_error(gateway, send, err, fallback='无法按已发布课程初始化学习项目，请刷新后重试。')
                 return True
             except Exception as err:
                 # Surface freeze/import contract failures without leaking internals.

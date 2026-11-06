@@ -36,7 +36,9 @@
 
 ## 生产部署
 
-**未部署。** 公网仍停在 `80d53f4`。GitHub `main` 含 Day2–Day5 代码后，需先备份 `work/training-demo/production`，再经显式批准同步与重启；本报告不构成部署许可。
+2026-11-05 本文适用提交为 Day 5 合并 PR #7（`3a98441`）。当时写的是：**未部署。** 公网仍停在 `80d53f4`。那份报告本身不构成部署许可，也不能再当成当前生产版本。
+
+2026-11-06：GitHub `main` 为 `d948212`（含 PR #18 `bbdb3bc` 与 PR #19 squash `d948212`），生产按该 `main` 部署。此前 healthz 与目录不一致，是因为 `/healthz` 返回 `SKILLTREE_COMMIT` 而不是目录 `HEAD`；该标记已在运维侧按实际部署提交写回。GitHub 与服务器已同步。Windows 本机仓未强制覆盖、待用户自行同步。不要为同步覆盖用户未提交文件。详见 [PROGRESS.md](../PROGRESS.md)。
 
 ## 交付物
 

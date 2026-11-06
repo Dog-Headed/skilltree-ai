@@ -6,8 +6,11 @@ the canonical IDs in the isolated AuthStore.
 from contextlib import contextmanager
 from pathlib import Path
 import json
+import re
 import sqlite3
 from uuid import uuid4
+
+_COURSE_ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$')
 
 
 SCHEMA = '''
@@ -77,6 +80,7 @@ CREATE TRIGGER IF NOT EXISTS training_frozen_course_materials_update BEFORE UPDA
  BEGIN SELECT RAISE(ABORT,'Published course material links are immutable'); END;
 CREATE TABLE IF NOT EXISTS training_start_requests(
  unit_id TEXT NOT NULL, request_id TEXT NOT NULL, employee_task_id TEXT NOT NULL, project_id TEXT NOT NULL,
+ account TEXT, operation TEXT NOT NULL DEFAULT 'start',
  PRIMARY KEY(unit_id, request_id));
 '''
 
@@ -87,6 +91,7 @@ class TrainingStore:
         self.database.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as conn:
             conn.executescript(SCHEMA)
+            self._ensure_start_request_binding(conn)
 
     @contextmanager
     def connect(self):
@@ -99,6 +104,22 @@ class TrainingStore:
         finally:
             conn.close()
 
+    @staticmethod
+    def _ensure_start_request_binding(conn):
+        """Add operator and operation columns without rewriting existing rows."""
+        columns = {row[1] for row in conn.execute('PRAGMA table_info(training_start_requests)')}
+        if 'account' not in columns:
+            conn.execute('ALTER TABLE training_start_requests ADD COLUMN account TEXT')
+        if 'operation' not in columns:
+            conn.execute("ALTER TABLE training_start_requests ADD COLUMN operation TEXT")
+        conn.execute('''UPDATE training_start_requests
+            SET account=(
+                SELECT e.account FROM training_employee_tasks e
+                WHERE e.unit_id=training_start_requests.unit_id AND e.id=training_start_requests.employee_task_id
+            )
+            WHERE account IS NULL''')
+        conn.execute("UPDATE training_start_requests SET operation='start' WHERE operation IS NULL")
+
     def member(self, account):
         with self.connect() as conn:
             row = conn.execute('''SELECT m.*,u.name AS unit_name FROM training_members m
@@ -110,7 +131,7 @@ class TrainingStore:
             members = [dict(row) for row in conn.execute(
                 'SELECT account,display_name,role FROM training_members WHERE unit_id=? ORDER BY role,account', (unit_id,))]
             courses = [dict(row) for row in conn.execute(
-                'SELECT id,title,version,published_at FROM training_course_versions WHERE unit_id=?', (unit_id,))]
+                'SELECT id,course_id,title,version,published_at FROM training_course_versions WHERE unit_id=?', (unit_id,))]
             tasks = [dict(row) for row in conn.execute(
                 'SELECT id,title,course_version_id,due_at FROM training_tasks WHERE unit_id=?', (unit_id,))]
         return {'members': members, 'courses': courses, 'tasks': tasks, 'publishing_available': True}
@@ -191,21 +212,15 @@ class TrainingStore:
 
     def publish_course(self, unit_id, *, request_id, course_id, title, tree, required_nodes, pass_rule,
                        material_version_ids):
-        """Freeze a course version and its material links. Idempotent on request_id."""
+        """Freeze a course version and its material links. Idempotent on request_id.
+
+        Validation runs before any insert. A failed check leaves no course version
+        and no publish-request row. Replaying a successful request_id returns the
+        original version.
+        """
+        from deploy.training_course import assert_course_publishable
         if not isinstance(request_id, str) or not request_id.strip():
             raise ValueError('invalid_request_id')
-        if not isinstance(course_id, str) or not course_id.strip() or len(course_id) > 64:
-            raise ValueError('invalid_course_id')
-        if not isinstance(title, str) or not title.strip() or len(title.strip()) > 200:
-            raise ValueError('invalid_title')
-        if not isinstance(tree, dict) or not isinstance(required_nodes, list) or not required_nodes:
-            raise ValueError('invalid_tree')
-        if not isinstance(pass_rule, dict) or not isinstance(material_version_ids, list) or not material_version_ids:
-            raise ValueError('invalid_materials')
-        if len(set(material_version_ids)) != len(material_version_ids):
-            raise ValueError('duplicate_materials')
-        if len(set(required_nodes)) != len(required_nodes):
-            raise ValueError('duplicate_nodes')
         request_id = request_id.strip()
         with self.connect() as conn:
             conn.execute('BEGIN IMMEDIATE')
@@ -213,36 +228,48 @@ class TrainingStore:
                 'SELECT course_version_id FROM training_publish_requests WHERE unit_id=? AND request_id=?',
                 (unit_id, request_id)).fetchone()
             if prior:
-                value = self.course_version(unit_id, prior['course_version_id'])
-                value['created'] = False
-                return value
-            for mid in material_version_ids:
-                row = conn.execute(
-                    'SELECT id FROM training_material_versions WHERE unit_id=? AND id=?',
-                    (unit_id, mid)).fetchone()
-                if not row:
-                    raise KeyError('unknown_material')
-            version = 1 + (conn.execute(
-                'SELECT COALESCE(MAX(version),0) FROM training_course_versions WHERE unit_id=? AND course_id=?',
-                (unit_id, course_id.strip())).fetchone()[0] or 0)
-            identity = 'cv_' + uuid4().hex
-            conn.execute(
-                'INSERT INTO training_course_versions'
-                '(id,unit_id,course_id,version,title,tree_json,required_nodes_json,pass_rule_json)'
-                ' VALUES (?,?,?,?,?,?,?,?)',
-                (identity, unit_id, course_id.strip(), version, title.strip(),
-                 json.dumps(tree, ensure_ascii=False),
-                 json.dumps(required_nodes, ensure_ascii=False),
-                 json.dumps(pass_rule, ensure_ascii=False)))
-            for mid in material_version_ids:
+                identity = prior['course_version_id']
+                created = False
+            else:
+                if course_id is None or (isinstance(course_id, str) and not course_id.strip()):
+                    course_id = 'course_' + uuid4().hex
+                if not isinstance(course_id, str) or _COURSE_ID.fullmatch(course_id.strip()) is None:
+                    raise ValueError('invalid_course_id')
+                if not isinstance(title, str) or not title.strip() or len(title.strip()) > 200:
+                    raise ValueError('invalid_title')
+                if not isinstance(material_version_ids, list) or not material_version_ids:
+                    raise ValueError('invalid_materials')
+                if len(set(material_version_ids)) != len(material_version_ids):
+                    raise ValueError('duplicate_materials')
+                assert_course_publishable(tree, required_nodes, pass_rule, material_version_ids)
+                for mid in material_version_ids:
+                    row = conn.execute(
+                        'SELECT id FROM training_material_versions WHERE unit_id=? AND id=?',
+                        (unit_id, mid)).fetchone()
+                    if not row:
+                        raise KeyError('unknown_material')
+                version = 1 + (conn.execute(
+                    'SELECT COALESCE(MAX(version),0) FROM training_course_versions WHERE unit_id=? AND course_id=?',
+                    (unit_id, course_id.strip())).fetchone()[0] or 0)
+                identity = 'cv_' + uuid4().hex
                 conn.execute(
-                    'INSERT INTO training_course_materials(unit_id,course_version_id,material_version_id) VALUES (?,?,?)',
-                    (unit_id, identity, mid))
-            conn.execute(
-                'INSERT INTO training_publish_requests(unit_id,request_id,course_version_id) VALUES (?,?,?)',
-                (unit_id, request_id, identity))
+                    'INSERT INTO training_course_versions'
+                    '(id,unit_id,course_id,version,title,tree_json,required_nodes_json,pass_rule_json)'
+                    ' VALUES (?,?,?,?,?,?,?,?)',
+                    (identity, unit_id, course_id.strip(), version, title.strip(),
+                     json.dumps(tree, ensure_ascii=False),
+                     json.dumps(required_nodes, ensure_ascii=False),
+                     json.dumps(pass_rule, ensure_ascii=False)))
+                for mid in material_version_ids:
+                    conn.execute(
+                        'INSERT INTO training_course_materials(unit_id,course_version_id,material_version_id) VALUES (?,?,?)',
+                        (unit_id, identity, mid))
+                conn.execute(
+                    'INSERT INTO training_publish_requests(unit_id,request_id,course_version_id) VALUES (?,?,?)',
+                    (unit_id, request_id, identity))
+                created = True
         value = self.course_version(unit_id, identity)
-        value['created'] = True
+        value['created'] = created
         return value
 
 
@@ -352,20 +379,39 @@ class TrainingStore:
     def material_filename_hint(self, material_id):
         return None
 
-    def start_request(self, unit_id, request_id):
+    def start_request_row(self, unit_id, request_id):
+        """Return the idempotency binding, not another employee's project view."""
         with self.connect() as conn:
             row = conn.execute(
-                'SELECT employee_task_id, project_id FROM training_start_requests WHERE unit_id=? AND request_id=?',
+                'SELECT unit_id, request_id, employee_task_id, project_id, account, operation'
+                ' FROM training_start_requests WHERE unit_id=? AND request_id=?',
                 (unit_id, request_id)).fetchone()
-            if not row:
-                return None
-            return self.employee_task_public(unit_id, row['employee_task_id'])
+            return dict(row) if row else None
 
-    def record_start_request(self, unit_id, request_id, employee_task_id, project_id):
+    @staticmethod
+    def start_binding_matches(row, account, operation, employee_task_id):
+        if not row:
+            return False
+        return (row.get('account') == account and (row.get('operation') or 'start') == operation
+                and row.get('employee_task_id') == employee_task_id)
+
+    def record_start_request(self, unit_id, request_id, employee_task_id, project_id, account, operation='start'):
         with self.connect() as conn:
+            conn.execute('BEGIN IMMEDIATE')
+            prior = conn.execute(
+                'SELECT account, operation, employee_task_id, project_id FROM training_start_requests'
+                ' WHERE unit_id=? AND request_id=?',
+                (unit_id, request_id)).fetchone()
+            if prior:
+                if not self.start_binding_matches(dict(prior), account, operation, employee_task_id):
+                    raise ValueError('request_target_mismatch')
+                if prior['project_id'] != project_id:
+                    raise ValueError('request_target_mismatch')
+                return
             conn.execute(
-                'INSERT OR IGNORE INTO training_start_requests(unit_id,request_id,employee_task_id,project_id) VALUES (?,?,?,?)',
-                (unit_id, request_id, employee_task_id, project_id))
+                'INSERT INTO training_start_requests'
+                '(unit_id,request_id,employee_task_id,project_id,account,operation) VALUES (?,?,?,?,?,?)',
+                (unit_id, request_id, employee_task_id, project_id, account, operation))
 
     def link_employee_project(self, unit_id, employee_task_id, project_id, bindings, *, started_at):
         """Attach an independent project and node map. Idempotent if already linked."""

@@ -121,6 +121,18 @@ SPECIFIED_START_OK = (
 )
 
 
+NEGATED_FINE = "本制度不设置罚款。"
+DIFFERENT_SUBJECT = "供应商逾期交货将被处以罚款。"
+DIFFERENT_CONDITION = "连续旷课三次将处以罚款。"
+SAME_FINE = "未完成学习将面临罚款。"
+NEGATED_APPROVAL = "本制度不设置审批。"
+SAME_APPROVER = "延期须由直属导师审批。"
+DIFFERENT_APPROVER = "延期须由部门负责人审批。"
+NEGATED_START = "学习时限不从入职当天起算。"
+NEGATED_DEADLINE = "制度不以下周一为截止日期。"
+SAME_DEADLINE = "周一入职最晚应在下周一前完成学习。"
+
+
 @pytest.mark.parametrize(
     "text,material,expected",
     [
@@ -131,6 +143,24 @@ SPECIFIED_START_OK = (
         (SPECIFIED_START_OK, POLICY_WITH_START, False),
         (INVENTED_START, POLICY_WITH_START, True),  # still invents 下周一 deadline
         ("变量保存值，赋值后可读到新值。", "变量保存值。", False),
+        # Negation: the keyword is present, but the source denies the sanction.
+        ("未完成学习将面临罚款。", NEGATED_FINE, True),
+        ("本制度不设置罚款。", NEGATED_FINE, False),
+        ("原文明确否定罚款。假设未完成学习会面临罚款，这只是假设，不是制度条文。", NEGATED_FINE, False),
+        # Same words, different subject or condition, are not grounded.
+        ("员工未完成学习将面临罚款。", DIFFERENT_SUBJECT, True),
+        ("未完成学习将面临罚款。", DIFFERENT_CONDITION, True),
+        ("供应商逾期交货将被处以罚款。", DIFFERENT_SUBJECT, False),
+        (SAME_FINE, SAME_FINE, False),
+        # Approver, start-count, and calendar deadline follow the same rule.
+        (SAME_APPROVER, NEGATED_APPROVAL, True),
+        (DIFFERENT_APPROVER, SAME_APPROVER, True),
+        (SAME_APPROVER, SAME_APPROVER, False),
+        ("这个时限从入职当天开始计算。", NEGATED_START, True),
+        ("学习时限不从入职当天起算。", NEGATED_START, False),
+        ("最晚应在下周一前完成。", NEGATED_DEADLINE, True),
+        (SAME_DEADLINE, SAME_DEADLINE, False),
+        ("罚款一般指交纳金钱，这里只解释词语。", NEGATED_FINE, False),
     ],
 )
 def test_ungrounded_policy_detector(text, material, expected):
@@ -143,7 +173,8 @@ def test_system_prompt_requires_fact_explanation_hypothesis_split():
     system = model.messages[0][0].content
     assert "原文事实" in system and "带假设的例子" in system
     assert "起算日" in system
-    assert "v3-day2-fidelity-1" in system
+    assert "v3-day2-fidelity-2" in system
+    assert "不设置罚款" in system and "原文明确否定" in system
 
 
 def test_invented_start_count_is_repaired_once():
@@ -151,6 +182,16 @@ def test_invented_start_count_is_repaired_once():
     model = FakeModel(reply(INVENTED_START), reply(HEDGED_EXAMPLE))
     result = generate(model, budget=budget)
     assert "假设" in result.text and "未规定起算日" in result.text
+    assert budget.output_repair_count == 1 and len(model.messages) == 2
+
+
+def test_negated_penalty_keyword_is_still_rejected():
+    """Seeing 罚款 in the source must not bless the opposite sanction."""
+    bad = reply("未完成学习将面临罚款。")
+    model = FakeModel(bad, bad)
+    budget = ModelCallBudget()
+    with pytest.raises(ModelOutputValidationError, match="处罚|假设|否定"):
+        generate(model, content=NEGATED_FINE, budget=budget)
     assert budget.output_repair_count == 1 and len(model.messages) == 2
 
 

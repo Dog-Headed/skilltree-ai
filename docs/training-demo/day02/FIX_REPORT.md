@@ -42,3 +42,9 @@ No production service restart, no DB/env overwrite in this fix step. Deploy only
 ## Independent REVIEW
 
 Not rewritten to “passed”. This FIX_REPORT documents the remediation attempt only.
+
+## 2026-11-06 follow-up
+
+R06 的否定、主体和条件盲区，以及 R07 的 PDF 拆章，记在 [R06_R07_FIX_REPORT.md](../R06_R07_FIX_REPORT.md)。上面的 Live model 节仍是当时的超时记录，没有被改成真实模型通过。本次环境没有模型密钥，没有补写教学 JSON。
+
+上面 Production 节的 “Deploy only after review/sync” 只适用于 2026-11-05 的这次修复提交（基线 `80d53f4`）。2026-11-06 的 `main` 是 `d948212`，GitHub 与服务器已同步；Windows 本机仓未强制覆盖、待用户自行同步。汇总见 [FIX_REPORT.md](../FIX_REPORT.md)。

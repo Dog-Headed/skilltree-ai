@@ -5,14 +5,16 @@ import base64
 import binascii
 from hashlib import sha256
 import json
-from pathlib import Path
+from pathlib import Path, PurePath
 import re
+import shutil
 import sqlite3
-from uuid import UUID, uuid4
+from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 from fastapi.responses import FileResponse
-from app.v3.office_files import parse_file
-from app.v3.materials import MaterialInputError, MaterialService
+from app.v3.office_files import MAX_TEXT, parse_file
+from app.v3.materials import MaterialInputError, MaterialLimitExceeded, MaterialService
+from app.v3.split_policy import chapter_notice, split_document, split_notice
 from app.v3.execution import project_execution
 from app.v3.learning_repository import LearningRepository
 from app.v3.project_management import require_visible
@@ -31,6 +33,7 @@ class TrainingMaterials:
                 request_id TEXT NOT NULL, fingerprint TEXT NOT NULL, title TEXT NOT NULL,
                 filename TEXT NOT NULL, status TEXT NOT NULL, error TEXT,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(account,scope,request_id))''')
+            self._ensure_asset_columns(conn)
             conn.execute("UPDATE training_assets SET status='failed',error='服务在解析完成前重启，请重新上传。' WHERE status='processing'")
 
     @contextmanager
@@ -59,11 +62,46 @@ class TrainingMaterials:
             row = conn.execute('SELECT filename FROM training_assets WHERE id=?', (material_id,)).fetchone()
         return row['filename'] if row else None
 
+    def _ensure_asset_columns(self, conn):
+        cols = {row[1] for row in conn.execute('PRAGMA table_info(training_assets)')}
+        if 'parent_id' not in cols:
+            conn.execute('ALTER TABLE training_assets ADD COLUMN parent_id TEXT')
+        if 'asset_role' not in cols:
+            conn.execute("ALTER TABLE training_assets ADD COLUMN asset_role TEXT NOT NULL DEFAULT 'document'")
+        if 'split_count' not in cols:
+            conn.execute('ALTER TABLE training_assets ADD COLUMN split_count INTEGER')
+        if 'chapter_index' not in cols:
+            conn.execute('ALTER TABLE training_assets ADD COLUMN chapter_index INTEGER')
+
+    def _field(self, row, name, default=None):
+        if name not in row.keys():
+            return default
+        value = row[name]
+        return default if value is None else value
+
     def public(self, row, detail=False):
         result = {k: row[k] for k in ('id','title','filename','scope','status','error','created_at')}
+        role = self._field(row, 'asset_role', 'document')
+        result['kind'] = role
+        if role == 'pack':
+            result['auto_split'] = True
+            result['chapter_count'] = self._field(row, 'split_count', 0)
+        elif role == 'chapter':
+            result['parent_id'] = self._field(row, 'parent_id')
+            result['chapter_index'] = self._field(row, 'chapter_index')
         if detail and row['status'] == 'ready':
-            result['parsed'] = json.loads((self.root/row['id']/'parsed.json').read_text(encoding='utf-8'))
+            parsed_path = self.root/row['id']/'parsed.json'
+            if parsed_path.is_file():
+                result['parsed'] = json.loads(parsed_path.read_text(encoding='utf-8'))
+            if role == 'pack':
+                result['chapters'] = self._chapters(row['id'])
         return result
+
+    def _chapters(self, parent_id):
+        with self.connect() as conn:
+            rows = conn.execute('''SELECT id,title,chapter_index FROM training_assets
+                WHERE parent_id=? ORDER BY chapter_index,id''', (parent_id,)).fetchall()
+        return [{'id': row['id'], 'title': row['title'], 'index': row['chapter_index']} for row in rows]
 
     def upload(self, payload, member, scope):
         if set(payload) != {'request_id', 'filename', 'title', 'data_base64'}:
@@ -92,28 +130,108 @@ class TrainingMaterials:
                          VALUES (?,?,?,?,?,?,?,?, 'processing')''',
                          (identity,member['account'],member['unit_id'],scope,request,fingerprint,title.strip(),filename))
         try:
-            parsed = parse_file(data, filename)
-            folder = self.root / identity
-            folder.mkdir()
-            (folder/'original').write_bytes(data)
-            (folder/'parsed.json').write_text(json.dumps(parsed,ensure_ascii=False),encoding='utf-8')
-            if scope == 'unit':
-                with self.store.connect() as conn:
-                    conn.execute('''INSERT INTO training_material_versions
-                        (id,unit_id,owner_account,visibility,version,title,original_path,parsed_path,locations_json)
-                        VALUES (?,?,?,'unit',1,?,?,?,?)''',
-                        (identity,member['unit_id'],member['account'],title.strip(),str(folder/'original'),
-                         str(folder/'parsed.json'),json.dumps(parsed['blocks'],ensure_ascii=False)))
-            with self.connect() as conn:
-                conn.execute("UPDATE training_assets SET status='ready' WHERE id=?",(identity,))
+            ext = PurePath(filename).suffix.lower().lstrip('.')
+            try:
+                parsed = parse_file(data, filename)
+            except MaterialLimitExceeded:
+                if ext not in {'pdf', 'docx', 'pptx'}:
+                    raise
+                self._store_split(identity, data, filename, title.strip(), member, scope, request)
+            else:
+                self._store_parsed(identity, data, parsed, title.strip(), member, scope)
         except MaterialInputError as exc:
             with self.connect() as conn:
                 conn.execute("UPDATE training_assets SET status='failed',error=? WHERE id=?",(str(exc),identity))
         return self.public(self.get(identity,member,scope), True)
 
+    def _store_parsed(self, identity, data, parsed, title, member, scope):
+        folder = self.root / identity
+        folder.mkdir()
+        (folder/'original').write_bytes(data)
+        (folder/'parsed.json').write_text(json.dumps(parsed,ensure_ascii=False),encoding='utf-8')
+        if scope == 'unit':
+            with self.store.connect() as conn:
+                self._insert_unit_version(conn, identity, member, title, folder, parsed['blocks'])
+        with self.connect() as conn:
+            conn.execute("UPDATE training_assets SET status='ready' WHERE id=?",(identity,))
+
+    def _insert_unit_version(self, conn, identity, member, title, folder, blocks):
+        conn.execute('''INSERT INTO training_material_versions
+            (id,unit_id,owner_account,visibility,version,title,original_path,parsed_path,locations_json)
+            VALUES (?,?,?,'unit',1,?,?,?,?)''',
+            (identity,member['unit_id'],member['account'],title,str(folder/'original'),
+             str(folder/'parsed.json'),json.dumps(blocks,ensure_ascii=False)))
+
+    def _store_split(self, identity, data, filename, title, member, scope, request):
+        chapters = split_document(data, filename)
+        prepared, created = [], []
+        try:
+            for chapter in chapters:
+                child_id = 'material_' + uuid4().hex
+                child_name = _chapter_filename(filename, chapter.index)
+                raw = chapter.content.encode('utf-8')
+                folder = self.root / child_id
+                folder.mkdir()
+                created.append(child_id)
+                parsed = parse_file(raw, child_name)
+                if len(parsed['content']) > MAX_TEXT:
+                    raise MaterialInputError('拆分章节仍超过 12,000 字符，未导入。')
+                parsed['warnings'].append(chapter_notice(chapter))
+                parsed['split_basis'] = chapter.split_basis
+                parsed['page_start'] = chapter.page_start
+                parsed['page_end'] = chapter.page_end
+                (folder/'original').write_bytes(raw)
+                (folder/'parsed.json').write_text(json.dumps(parsed,ensure_ascii=False),encoding='utf-8')
+                prepared.append({'id': child_id, 'title': _chapter_asset_title(title, chapter.title),
+                    'filename': child_name, 'index': chapter.index, 'parsed': parsed,
+                    'split_basis': chapter.split_basis, 'page_start': chapter.page_start,
+                    'page_end': chapter.page_end,
+                    'request_id': str(uuid5(NAMESPACE_URL, f'{request}:chapter:{chapter.index}')),
+                    'fingerprint': sha256(raw).hexdigest()})
+            folder = self.root / identity
+            folder.mkdir()
+            (folder/'original').write_bytes(data)
+            manifest = {'filename': filename, 'format': PurePath(filename).suffix.lower().lstrip('.'),
+                'original_sha256': sha256(data).hexdigest(), 'original_bytes': len(data),
+                'parser': 'docling NativePdfPipeline/HybridChunker',
+                'warnings': [split_notice(chapters)],
+                'blocks': [], 'content': '', 'auto_split': True, 'chapter_count': len(prepared),
+                'split_bases': sorted({chapter.split_basis for chapter in chapters}),
+                'chapters': [{'id': item['id'], 'title': item['title'], 'index': item['index'],
+                    'split_basis': item['split_basis'], 'page_start': item['page_start'], 'page_end': item['page_end']}
+                    for item in prepared]}
+            (folder/'parsed.json').write_text(json.dumps(manifest,ensure_ascii=False),encoding='utf-8')
+            with self.connect() as conn:
+                for item in prepared:
+                    conn.execute('''INSERT INTO training_assets(
+                        id,account,unit_id,scope,request_id,fingerprint,title,filename,status,
+                        parent_id,asset_role,chapter_index)
+                        VALUES (?,?,?,?,?,?,?,?, 'ready', ?, 'chapter', ?)''',
+                        (item['id'], member['account'], member['unit_id'], scope, item['request_id'],
+                         item['fingerprint'], item['title'], item['filename'], identity, item['index']))
+                conn.execute("UPDATE training_assets SET status='ready', asset_role='pack', split_count=? WHERE id=?",
+                             (len(prepared), identity))
+            if scope == 'unit':
+                with self.store.connect() as conn:
+                    for item in prepared:
+                        self._insert_unit_version(conn, item['id'], member, item['title'], self.root/item['id'], item['parsed']['blocks'])
+        except Exception as exc:
+            with self.connect() as conn:
+                conn.execute('DELETE FROM training_assets WHERE parent_id=?', (identity,))
+            for child_id in created:
+                shutil.rmtree(self.root/child_id, ignore_errors=True)
+            if isinstance(exc, MaterialInputError):
+                raise
+            raise MaterialInputError('超限文件无法按标题拆分，请按章节拆分后重新上传。') from exc
+
+    def _fail_if_pack(self, row):
+        if self._field(row, 'asset_role', 'document') == 'pack':
+            raise MaterialInputError('该文件已按章节拆分，请选择其中一个章节再准备课程。')
+
     def attach(self, row, payload, gateway, member):
         if set(payload) != {'project_id','request_id'} or row['status'] != 'ready':
             raise MaterialInputError('请先完成解析并选择自己的待准备课程。')
+        self._fail_if_pack(row)
         pid = payload['project_id']
         if not isinstance(pid,str) or pid not in gateway.ownership.owned(member['account']):
             raise KeyError('Project unavailable')
@@ -170,3 +288,22 @@ class TrainingMaterials:
         except (ValueError,TypeError):
             await gateway.reply(send,422,{'error':{'code':'invalid_material','message':'资料输入不完整或格式无效，请重新选择文件。'}})
         return True
+
+
+def _chapter_filename(filename, index):
+    suffix = f'-第{index}章.md'
+    stem = PurePath(filename).stem
+    if len(stem) + len(suffix) > 255:
+        stem = stem[:255 - len(suffix)]
+    return (stem or '章节') + suffix
+
+
+def _chapter_asset_title(parent, heading):
+    heading = (heading or '正文').strip() or '正文'
+    suffix = ' · ' + heading
+    if len(parent) + len(suffix) <= 256:
+        return parent + suffix
+    room = 256 - len(suffix)
+    if room < 1:
+        return heading[:256]
+    return parent[:room].rstrip() + suffix

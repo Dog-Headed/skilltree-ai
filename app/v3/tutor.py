@@ -28,7 +28,7 @@ from app.v3.contracts import (
 from app.v3.materials import ContextBudgetExceeded, json_data
 from app.v3.tutor_feedback import TutorFeedback
 
-TUTOR_PROMPT_VERSION = "v3-day2-fidelity-1"
+TUTOR_PROMPT_VERSION = "v3-day2-fidelity-2"
 TutorMode = Literal["normal", "qa", "remediate", "review", "exploration"]
 _MODES = {"normal", "qa", "remediate", "review", "exploration"}
 _REPAIR_RESERVE = 1200
@@ -72,17 +72,21 @@ def has_completion_claim(text: str) -> bool:
 
 _POLICY_HEDGE = re.compile(
     r"原文未(?:规定|写明|给出|说明|约定)|制度未(?:规定|写明|给出)|资料未(?:规定|写明|给出)|"
-    r"未明确(?:规定|写明|给出)?|没有规定|并未规定|未约定|"
+    r"未明确(?:规定|写明|给出)?|没有规定|并未规定|未约定|原文明确否定|资料明确否定|"
     r"假设|假定|若按|按常见口径|仅作理解|仅供理解|不是原文规定|不能当作制度|"
     r"不可当作制度|不属于原文|不能据此认定|不构成制度规定",
     re.IGNORECASE,
 )
-_START_COUNT_ASSERT = re.compile(
-    r"(?:从|自)(?:入职|到职|报到)?(?:当天|当日|次日|第二天)(?:起|开始)?(?:计算|起算)|"
-    r"起算日(?:是|为|按|从)|(?:包含|计入|算入)(?:入职)?当天|"
-    r"不包含周末和法定节假日|不含周末(?:和|及)法定节假日|"
-    r"法定节假日(?:不计入|除外|不包含)",
-    re.IGNORECASE,
+_START_PARTS = (
+    ("hire-day", re.compile(
+        r"(?:从|自)(?:入职|到职|报到)?(?:当天|当日)(?:起|开始)?(?:计算|起算)|"
+        r"(?:包含|计入|算入)(?:入职)?当天|入职当天开始|入职当日开始"
+    )),
+    ("next-day", re.compile(
+        r"(?:从|自)(?:入职|到职|报到)?(?:次日|第二天)(?:起|开始)?(?:计算|起算)"
+    )),
+    ("skip-weekend", re.compile(r"不包含周末|不含周末|周末(?:和|及)?法定节假日不计入|周末不计入")),
+    ("skip-holiday", re.compile(r"法定节假日(?:不计入|除外|不包含)|不包含法定节假日|不含法定节假日")),
 )
 _CALENDAR_DEADLINE_ASSERT = re.compile(
     r"(?:最晚|截止)(?:应|须|要)?在(?:下)?周[一二三四五六日天]|"
@@ -90,14 +94,32 @@ _CALENDAR_DEADLINE_ASSERT = re.compile(
     r"(?:应|须|要)在\d{1,2}\s*月\s*\d{1,2}\s*日(?:前|当天|截止)",
     re.IGNORECASE,
 )
+_DEADLINE_TOKEN = re.compile(r"(?:下)?周[一二三四五六日天]|\d{1,2}\s*月\s*\d{1,2}\s*日")
 _PENALTY_ASSERT = re.compile(
     r"(?:将|会|应|须)(?:受到|予以|给予|面临)(?:处罚|处分|罚款|警告|辞退|开除)|"
-    r"逾期(?:将|会|即)|不完成(?:将|会)(?:取消|开除|辞退|处罚)",
+    r"不完成(?:将|会)(?:取消|开除|辞退|处罚)",
     re.IGNORECASE,
 )
+_PENALTY_KINDS = ("开除", "辞退", "罚款", "处罚", "处分", "警告", "取消")
 _APPROVER_INVENT = re.compile(
-    r"(?:须|必须|只能|应由)([^。；\n]{0,16})(?:审批|批准|核准)",
-    re.IGNORECASE,
+    r"(?:须|必须|只能|应由|由)([^。；，,\n]{0,16})(?:审批|批准|核准)",
+)
+_APPROVER_WORD = re.compile(r"审批|批准|核准")
+_ROLES = (
+    "部门负责人", "直属导师", "新员工", "供应商", "承包商", "负责人",
+    "员工", "学员", "导师", "管理员", "甲方", "乙方",
+)
+_CONDITIONS = (
+    "未完成学习", "未完成培训", "连续旷课三次", "连续旷课", "考试不合格",
+    "未完成", "未提交", "未参加", "未通过", "违反制度", "逾期交货", "逾期",
+    "缺勤", "旷课", "入职当天", "入职当日", "入职次日",
+    "下周一", "下周二", "下周三", "下周四", "下周五", "下周六", "下周日", "下周末",
+    "周一", "周二", "周三", "周四", "周五", "周六", "周日", "周末",
+)
+_NEGATION_TAIL = re.compile(
+    r"(?:不设置|不予设置|不设|没有|不存在|不予|不进行|不予以|不适用|免除|免于|"
+    r"无需|无须|不必|不会|不应|不得|不能|不可以|禁止|未设置|并不|绝不|不以|不按|"
+    r"未规定|没有规定|并非|不是|不|无|未|非)$"
 )
 
 
@@ -105,48 +127,216 @@ def _clause_hedged(clause: str) -> bool:
     return bool(_POLICY_HEDGE.search(clause))
 
 
-def _material_mentions(material_text: str, *needles: str) -> bool:
-    body = material_text or ""
-    return any(needle and needle in body for needle in needles)
+def _sentences(text: str) -> list[str]:
+    return [part.strip() for part in re.split(r"[。！？；\n]", text or "") if part.strip()]
+
+
+def _mention_negated(sentence: str, keyword: str) -> bool:
+    """True when a keyword is in the sentence only under a nearby negation."""
+    found = False
+    for match in re.finditer(re.escape(keyword), sentence):
+        found = True
+        prefix = sentence[max(0, match.start() - 8):match.start()]
+        if _NEGATION_TAIL.search(prefix):
+            continue
+        return False
+    return found
+
+
+def _roles(text: str) -> list[str]:
+    hits = []
+    for role in _ROLES:
+        start = 0
+        while True:
+            index = text.find(role, start)
+            if index < 0:
+                break
+            hits.append((index, role))
+            start = index + len(role)
+    kept = []
+    for index, role in hits:
+        inside = False
+        for other_index, other in hits:
+            if len(other) > len(role) and other_index <= index and index + len(role) <= other_index + len(other):
+                inside = True
+                break
+        if not inside:
+            kept.append(role)
+    return kept
+
+
+def _role_supported(claim_role: str, support_roles: list[str]) -> bool:
+    return any(claim_role == other or claim_role in other or other in claim_role for other in support_roles)
+
+
+def _subjects_compatible(claim: str, support: str) -> bool:
+    claim_roles = _roles(claim)
+    if not claim_roles:
+        return True
+    support_roles = _roles(support)
+    if not support_roles:
+        return False
+    return all(_role_supported(role, support_roles) for role in claim_roles)
+
+
+def _conditions(text: str) -> list[str]:
+    found = []
+    remaining = text
+    for phrase in sorted(_CONDITIONS, key=len, reverse=True):
+        if phrase in remaining:
+            found.append(phrase)
+            remaining = remaining.replace(phrase, " ")
+    return found
+
+
+def _conditions_compatible(claim: str, support: str) -> bool:
+    """A stated condition must appear in the supporting sentence itself.
+
+    A shorter material phrase does not license a more specific claim, and a
+    different subject or trigger is not accepted just because both mention
+    the same sanction word.
+    """
+    claim_conditions = _conditions(claim)
+    if not claim_conditions:
+        return True
+    support_conditions = _conditions(support)
+    return all(any(condition == other or condition in other for other in support_conditions) for condition in claim_conditions)
+
+
+def _polarity(sentence: str, pattern: re.Pattern) -> tuple[bool, bool]:
+    affirmative = negative = False
+    for match in pattern.finditer(sentence):
+        prefix = sentence[max(0, match.start() - 6):match.start()]
+        if re.search(r"(?:不|并非|没有|未|无|非)$", prefix):
+            negative = True
+        else:
+            affirmative = True
+    return affirmative, negative
+
+
+def _start_count_ungrounded(clause: str, material: str) -> bool:
+    for _name, pattern in _START_PARTS:
+        claim_yes, claim_no = _polarity(clause, pattern)
+        if not claim_yes and not claim_no:
+            continue
+        material_yes = material_no = False
+        for sentence in _sentences(material):
+            yes, no = _polarity(sentence, pattern)
+            material_yes = material_yes or yes
+            material_no = material_no or no
+        if claim_yes and not material_yes:
+            return True
+        if claim_no and not material_no:
+            return True
+    return False
+
+
+def _deadline_ungrounded(clause: str, material: str) -> bool:
+    for match in _CALENDAR_DEADLINE_ASSERT.finditer(clause):
+        tokens = _DEADLINE_TOKEN.findall(match.group(0))
+        if not tokens:
+            return True
+        for token in tokens:
+            supported = False
+            for sentence in _sentences(material):
+                if token not in sentence or _mention_negated(sentence, token):
+                    continue
+                if _CALENDAR_DEADLINE_ASSERT.search(sentence):
+                    supported = True
+                    break
+            if not supported:
+                return True
+    return False
+
+
+def _asserted_penalty_kinds(clause: str) -> list[str]:
+    kinds = []
+    for match in _PENALTY_ASSERT.finditer(clause):
+        fragment = match.group(0)
+        for kind in _PENALTY_KINDS:
+            if kind in fragment and kind not in kinds:
+                kinds.append(kind)
+    return kinds
+
+
+def _affirmative_penalty_sentences(material: str, kind: str) -> list[str]:
+    found = []
+    for sentence in _sentences(material):
+        if kind not in sentence or _mention_negated(sentence, kind):
+            continue
+        if re.search(r"将|会|应|须|处以|给予|予以|受到|面临", sentence):
+            found.append(sentence)
+    return found
+
+
+def _penalty_ungrounded(clause: str, material: str) -> bool:
+    if not _PENALTY_ASSERT.search(clause):
+        return False
+    kinds = _asserted_penalty_kinds(clause)
+    if not kinds:
+        return False
+    for kind in kinds:
+        if _mention_negated(clause, kind):
+            negated = any(kind in sentence and _mention_negated(sentence, kind) for sentence in _sentences(material))
+            if not negated:
+                return True
+            continue
+        supports = _affirmative_penalty_sentences(material, kind)
+        if not any(_subjects_compatible(clause, sentence) and _conditions_compatible(clause, sentence) for sentence in supports):
+            return True
+    return False
+
+
+def _approver_name(fragment: str) -> str:
+    name = re.sub(r"^(?:须|必须|只能|应由|由|并|且|和|及)+", "", fragment.strip())
+    return name.strip(" ，,、：:由")
+
+
+def _approver_ungrounded(clause: str, material: str) -> bool:
+    match = _APPROVER_INVENT.search(clause)
+    if match is None:
+        return False
+    if _NEGATION_TAIL.search(clause[max(0, match.start() - 6):match.start()]):
+        return False
+    if _mention_negated(clause, match.group(0)[-2:]):
+        return False
+    name = _approver_name(match.group(1))
+    for sentence in _sentences(material):
+        if _APPROVER_WORD.search(sentence) is None:
+            continue
+        if any(_mention_negated(sentence, word) for word in _APPROVER_WORD.findall(sentence)):
+            continue
+        if name and name not in sentence:
+            continue
+        if _subjects_compatible(clause, sentence) and _conditions_compatible(clause, sentence):
+            return False
+    return True
 
 
 def has_ungrounded_policy_assertion(text: str, material_text: str) -> bool:
-    """Reject invented policy mechanics stated as fact for user materials.
+    """Reject policy claims whose polarity, subject, or condition is unsupported.
 
-    Citations prove a fragment was retrieved, not that every elaborating
-    sentence is supported. When teaching_contexts exist, reject calendar
-    start-count / penalty / approver inventions unless the material itself
-    states them or the clause explicitly marks a hypothesis / insufficiency.
-    General knowledge teaching without material_text is not gated here.
+    A keyword such as 罚款 or 审批 in the material does not license every
+    related sentence. An affirmative claim needs an affirmative material
+    sentence about the same subject and condition. A negated material
+    sentence does not support the opposite rule. Clauses that explicitly
+    mark a hypothesis or say the source is silent are not treated as
+    policy facts. General-knowledge teaching without material text is not
+    gated here.
     """
     if not text or not (material_text or "").strip():
         return False
-    material = material_text
     for raw in re.split(r"[。！？；\n]", text):
         clause = raw.strip()
         if not clause or _clause_hedged(clause):
             continue
-        if _START_COUNT_ASSERT.search(clause):
-            if re.search(r"起算|当天开始|入职当天|入职当日|法定节假日|不含周末|不包含周末", clause):
-                if not _material_mentions(
-                    material,
-                    "起算", "当天开始", "从入职当天", "自入职当天", "入职当日",
-                    "法定节假日", "不含周末", "不包含周末",
-                ):
-                    return True
-        if _CALENDAR_DEADLINE_ASSERT.search(clause):
-            if not _material_mentions(
-                material, "下周一", "下周二", "下周三", "下周四", "下周五", "下周六", "下周日",
-            ):
-                # Material may mention 周五提交; derived next-week deadlines still need hedge.
-                return True
-        if _PENALTY_ASSERT.search(clause) and not _material_mentions(
-            material, "处罚", "处分", "罚款", "警告", "辞退", "开除",
-        ):
+        if _start_count_ungrounded(clause, material_text):
             return True
-        if _APPROVER_INVENT.search(clause) and not _material_mentions(
-            material, "审批", "批准", "核准",
-        ):
+        if _deadline_ungrounded(clause, material_text):
+            return True
+        if _penalty_ungrounded(clause, material_text):
+            return True
+        if _approver_ungrounded(clause, material_text):
             return True
     return False
 
@@ -310,11 +500,13 @@ review模式要说明错误与当前先修目标的关系。它们也是数据�
 只引用teaching_contexts中实际提供的教学片段，使用本轮输出schema规定的引用格式。
 正式教学必须至少引用一个实际片段；探索无资料时引用为空。
 对用户提供的制度／操作资料，必须区分三类表述，不得混为一谈：
-1) 原文事实：仅复述teaching_contexts中实际出现的规则、时限、责任人或数字；
+1) 原文事实：仅复述teaching_contexts中实际出现的规则、时限、责任人或数字，并保持原文的否定或肯定；
 2) 一般解释：说明术语或学习方法，不新增制度条款；
 3) 带假设的例子：必须显式写明“假设／假定／若按某口径”，且不能写成制度规定。
-未规定的起算日、调休／法定节假日口径、具体日历截止日期、审批人、处罚或例外，
-不得说成制度要求；应写明“原文未规定”，再在需要时给出标明假设的理解例子。
+资料里出现“罚款、审批、截止、起算”等词，不能据此编写另一个主体、另一种条件或相反结论。
+资料写明“不设置罚款”“无需审批”“不从某日起算”等否定时，要复述该否定，不得改写成将面临罚款、须由某人审批或另一截止日期。
+资料没有写明的审批人、处罚、起算日和截止日期，要写“原文未规定”；资料明确否定时写“原文明确否定”。
+不能把未写明的细节说成制度要求。需要举例时，单独写成带“假设”的例子。
 引用存在只证明片段被提供，不证明你的延伸解释有依据。
 通用知识学习（非用户制度原文）仍可做有依据的概念讲解与例子，不要因此改成只会复述原文或拒答。
 不能宣称用户已经通过、完成测评、掌握课程或获得依赖解锁。学习模式由服务端决定。

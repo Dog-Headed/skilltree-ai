@@ -158,16 +158,12 @@ def test_backend_qa_admins_script(tmp_path, monkeypatch):
     gateway = demo.create_app(root=tmp_path / 'qa-instance', llm=GuidedFake())
     private = tmp_path / 'private' / 'qa.json'
     # Invoke grant helpers directly against this instance DBs.
-    with gateway.training.store.connect() as conn:
-        seeded = conn.execute('SELECT name FROM training_units WHERE id=?', (demo.UNIT_ID,)).fetchone()[0]
-    assert seeded == '中国电信延安分公司'
-    assert training_admins.UNIT_NAME == '中国电信延安分公司'
     results = []
     records = []
     for i, login in enumerate(training_admins.QA_LOGINS, start=1):
         results.append(training_admins.grant_admin(
             gateway.auth, gateway.training.store, login,
-            unit_id=demo.UNIT_ID, unit_name=demo.UNIT_NAME,
+            unit_id=demo.UNIT_ID, unit_name='青禾研习社（虚构演示单位）',
             display_name=f'QA管理员{i}', password=None, private_records=records))
     assert all(r['created_account'] and r['membership'] == 'joined_as_admin' for r in results)
     training_admins.write_private(private, records, {'unit_id': demo.UNIT_ID})
@@ -179,7 +175,7 @@ def test_backend_qa_admins_script(tmp_path, monkeypatch):
     for i, login in enumerate(training_admins.QA_LOGINS, start=1):
         again.append(training_admins.grant_admin(
             gateway.auth, gateway.training.store, login,
-            unit_id=demo.UNIT_ID, unit_name=demo.UNIT_NAME,
+            unit_id=demo.UNIT_ID, unit_name='青禾研习社（虚构演示单位）',
             display_name=f'QA管理员{i}', password='SHOULD-NOT-APPLY-123', private_records=[]))
     assert all(r['created_account'] is False and r['membership'] == 'already_admin' for r in again)
     # Login + admin overview works with generated password.

@@ -8,6 +8,7 @@ import pytest
 from deploy import training_demo as demo
 from tests.test_training_demo import login, finish_request, GuestFlowFake
 from tests.day11_support import learning_event, private_quiz, answers_for_quiz
+from tests.training_publish_support import chain_nodes, confirm_draft, publish_payload
 from app.v3.learning_repository import LearningRepository
 import json
 
@@ -53,26 +54,18 @@ def runtime(tmp_path, monkeypatch):
         yield client, gateway, model
 
 
-def publish_and_assign(client, admin, accounts):
+def publish_and_assign(client, gateway, admin, accounts, *, course_id='basic-policy', title='基础制度短课'):
     raw = '# 制度\n新员工须在入职后 5 个工作日内完成基础制度学习。\n适用范围：全体新员工。\n'.encode()
     material = client.post('/training/api/admin/materials', headers=admin, json={
         'request_id': str(uuid4()), 'filename': 'policy.md', 'title': '基础制度',
         'data_base64': base64.b64encode(raw).decode()}).json()
     assert material['status'] == 'ready'
-    tree = {
-        'plan_version': 1,
-        'nodes': [
-            {'node_id': 'n1', 'title': '时限要求', 'objectives': []},
-            {'node_id': 'n2', 'title': '适用范围', 'objectives': []},
-            {'node_id': 'n3', 'title': '常见问题', 'objectives': []},
-        ],
-    }
-    course = client.post('/training/api/admin/courses/publish', headers=admin, json={
-        'request_id': str(uuid4()), 'course_id': 'basic-policy', 'title': '基础制度短课',
-        'tree': tree, 'required_nodes': ['n1', 'n2', 'n3'],
-        'pass_rule': {'rule': 'all_required_nodes'},
-        'material_version_ids': [material['id']],
-    }).json()
+    draft = confirm_draft(
+        client, gateway, admin, material['id'], title, chain_nodes(), ['choice_exact'])
+    published = client.post('/training/api/admin/courses/publish', headers=admin, json=publish_payload(
+        draft, title=title, course_id=course_id, required_nodes=['n1', 'n2', 'n3']))
+    assert published.status_code == 201, published.text
+    course = published.json()
     task = client.post('/training/api/admin/tasks/assign', headers=admin, json={
         'request_id': str(uuid4()), 'course_version_id': course['id'],
         'title': '本周制度学习', 'due_at': '2026-12-31T18:00:00+08:00',
@@ -85,7 +78,7 @@ def test_employee_start_idempotent_independent_and_learnable(runtime):
     client, gateway, model = runtime
     admin = login(client, 0)
     a, b, c = demo.ACCOUNTS[1][0], demo.ACCOUNTS[2][0], demo.ACCOUNTS[3][0]
-    material, course, task = publish_and_assign(client, admin, [a, b])
+    material, course, task = publish_and_assign(client, gateway, admin, [a, b])
 
     # Resolve employee_task ids from assignee rows.
     detail = client.get('/training/api/admin/tasks/' + task['id'], headers=admin).json()

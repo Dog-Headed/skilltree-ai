@@ -1,6 +1,8 @@
 # 单位学习最小契约（Day 1–5）
 
-2026-11-05（Day 5）。身份、入口、个人注册、单位成员、资料解析、课程发布、任务下发、员工开课、进度看板与隔离演练均已实现。
+2026-11-05（Day 5）起，身份、入口、个人注册、单位成员、资料解析、课程发布、任务下发、员工开课、进度看板与隔离演练均已实现。2026-11-06，PR #18（`bbdb3bc`）把发布改为已确认草稿并在领取时保留课程语义；PR #19（squash `d948212`）补上制度断言的否定／主体／条件，以及 PDF 只在可靠标题时按标题拆章。下文接口描述适用该 `main`：`d9482127ef3e2de07a15886aa45e4a7f6ef339e7`。
+
+同日同步：GitHub 与服务器已同步到这一提交。`/healthz` 报告的是 `SKILLTREE_COMMIT`，运维侧已按部署提交写回，不再把目录更新误记成另一套旧 SHA。Windows 本机仓未强制覆盖、待用户自行同步。
 
 ## 关系与不变量
 
@@ -45,12 +47,12 @@
 | `POST /auth/register` | 开放个人注册；忽略客户端 role/unit_id；游客升级保留进度；返回个人账号会话 |
 | `GET /session` | account/login/csrf_token/guest/logout + training(unit_id, unit_name, account, display_name, role) |
 | `GET /training/api/me` | 当前成员或游客个人空间身份 |
-| `GET /training/api/admin/overview` | 仅管理员：本单位 members、courses、tasks；publishing_available=false |
+| `GET /training/api/admin/overview` | 仅管理员：本单位 members、courses、tasks；`publishing_available=true`（2026-11-05 以前的契约表曾写 false，那只表示 Day 3 发布接口尚未接通） |
 | `GET /training/api/admin/members/lookup?q=` | 仅管理员：按完整邮箱/账号 ID 查找已注册非游客；最少字段；不列目录 |
 | `POST /training/api/admin/members` | 仅管理员：加入本单位为 employee；幂等；跨单位 409；忽略客户端 role |
 | `POST /training/api/admin/members/remove` | 仅管理员：撤销员工成员身份，保留个人账号与学习数据；不能移除管理员 |
 | `GET /training/admin/members` | 仅管理员：成员管理页 |
-| `GET /training/api/my-tasks` | 当前成员的员工任务列表；learning_available=false；游客/个人账号 403 |
+| `GET /training/api/my-tasks` | 当前成员的员工任务列表；`learning_available=true`；游客/个人账号 403。2026-11-05 以前曾记为 false，表示员工开课尚未接通 |
 | `GET /training/admin[/materials\|/courses\|/tasks\|/dashboard]` | 仅管理员；`/materials` 已可上传／预览／下载单位资料；`/courses`、`/tasks`、`/dashboard` 已接通（无数据时为空状态） |
 | `GET /training/home`、`/training/materials` | 培训卡片与个人资料学习入口仍可直接打开（含办公四格式上传／预览）；不是默认进入页 |
 | `GET /training/tasks` | 成员真实空任务页；游客 403 |
@@ -67,11 +69,12 @@
 
 | 方法／地址 | 行为 |
 |---|---|
-| `POST /training/api/admin/courses/publish` | 仅管理员；冻结课程版本与资料关联；`request_id` 幂等 |
+| `POST /training/api/admin/courses/publish` | 仅管理员；发布当前账号有权访问的 Planner 草稿及明确 `draft_revision`。服务端读取该修订的计划、依赖、目标和评价阈值，不接受浏览器手填节点树。新课程省略 `course_id` 时由服务端分配独立身份；传入已有 `course_id` 才递增版本。校验失败不留下发布记录。`request_id` 幂等 |
+| `GET /training/api/admin/course-drafts` | 仅管理员；列出本人草稿、revision、依赖、目标、阈值和单位资料。过期或缺少评价配置的草稿标记为不可发布 |
 | `GET /training/api/admin/courses/{id}` | 仅管理员；读取已发布版本 |
 | `POST /training/api/admin/tasks/assign` | 仅管理员；创建任务与员工任务行；`request_id` 幂等 |
 | `GET /training/api/admin/tasks/{id}` | 仅管理员；任务与指派人 |
-| `POST /training/api/my-tasks/{employee_task_id}/start` | 仅任务所属员工；按发布课程初始化独立项目并冻结；不调用 Planner 改写目标；`request_id` 幂等 |
+| `POST /training/api/my-tasks/{employee_task_id}/start` | 仅任务所属员工。先确认该任务属于当前账号，再按操作者、操作类型 `start` 和目标任务复用 `request_id`。跨账号或跨任务复用同一编号会被拒绝，不会返回他人的项目。重复领取同一任务只保留一个项目，不重置进度。员工计划保留已发布的依赖、目标、`criterion_ids`、作答任务和评价阈值，并按资料锚点逐项映射到本人片段。历史课程若缺少这些配置则拒绝开课并保留原版本 |
 | `GET /training/api/my-tasks` | 成员任务列表；`learning_available=true`；已开课附真实必学节点进度 |
 
 发布后的课程版本与资料关联不可更新／删除。员工项目的 SourceChunk 在本项目内新建，不复制其他员工或管理员执行快照。
@@ -102,7 +105,9 @@
 | `GET /projects/{id}/sources/{sid}/versions/{v}` | 原来源正文、片段，附 file 元信息和各片段重叠的 locations；私有测评来源继续禁止公开读取 |
 | `GET /projects/{id}/sources/{sid}/versions/{v}/original` | 同样检查项目归属、可见性后下载保留的原件；不暴露服务器路径 |
 
-四类办公原件最多 8 MiB，解析全文最多 12,000 字符；TXT/Markdown 仍最多 128 KiB。PDF 最多 10 页，PPTX 最多 15 张；XLSX 最多 8 表、总范围 500 单元格；单个 DOCX 表最多 500 单元格。Office ZIP 解压总量最多 8 MiB、512 项。超限整份拒绝，不静默截断。PDF 可带编辑/复制权限加密，只要无需打开密码即可读取；真正需要打开密码、扫描/无文字页、旧 Office、宏与加密 Office 暂不支持。公式保留原式及已有缓存，不执行或重算；缺缓存明确标注。
+四类办公原件最多 8 MiB，解析全文最多 12,000 字符；TXT/Markdown 仍最多 128 KiB。PDF 最多 10 页，PPTX 最多 15 张；XLSX 最多 8 表、总范围 500 单元格；单个 DOCX 表最多 500 单元格。Office ZIP 解压总量最多 8 MiB、512 项。这些上限不提高。PDF、PPTX、DOCX 超过页数、幻灯片或 12,000 字符时，不整份失败：DOCX/PPTX 用 Docling 标题；PDF 用 NativePdfPipeline 的文字层和页码，只在字号或稀疏章节行可靠时按标题分组，否则按页或长度分段并在章节中标明，不把后者称作按标题。每段正文仍不超过 12,000 字符，并作为普通 ready 资料进入原有导入与课程流程。父包不能直接导入。顺序和来源页码保留在章节正文的拆分依据里。其它超限、损坏、加密和扫描件整份拒绝，不静默截断。PDF 可带编辑/复制权限加密，只要无需打开密码即可读取；真正需要打开密码、扫描/无文字页、旧 Office、宏与加密 Office 暂不支持。公式保留原式及已有缓存，不执行或重算；缺缓存明确标注。
+
+个人与单位上传共用这一拆分分支。离线整理演示包时调用 `app.v3.split_policy.split_document`，说明见 [AUTO_SPLIT.md](AUTO_SPLIT.md)。已有的 `samples/yanan-policy-packs/` 人工包保持不动。
 
 `SourceDocument/SourceChunk` 复用原模型和行号/哈希契约。解析正文的标题携带 PDF 页码、DOCX 章节/段落/表号、XLSX 工作表/范围、PPTX 张号/形状。学习库新增 `source_files` 保存资料版本对应的原件相对位置及结构元信息，和 SourceDocument 在同一事务写入；原件按 SHA256 留存于 `learning/original-files`。教学引用仍是 chunk_id/source_id/source_version，通过行范围与 blocks 对应，不另建虚构引用。
 

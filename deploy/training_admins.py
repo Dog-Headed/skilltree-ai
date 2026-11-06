@@ -37,6 +37,7 @@ def strong_password(length=24):
 def ensure_unit(store, unit_id, unit_name):
     with store.connect() as conn:
         conn.execute('INSERT OR IGNORE INTO training_units VALUES (?,?)', (unit_id, unit_name))
+        conn.execute('UPDATE training_units SET name=? WHERE id=?', (unit_name, unit_id))
 
 
 def grant_admin(auth: AuthStore, store: TrainingStore, login: str, *, unit_id: str, unit_name: str,

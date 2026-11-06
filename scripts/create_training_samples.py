@@ -18,7 +18,7 @@ def create_samples(root):
     pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
     pdf = canvas.Canvas(str(root/'岗位手册.pdf'))
     for page, lines in enumerate([
-        ['中国电信延安分公司 · 岗位手册（全部为虚构示例）', '第一章 服务工单',
+        ['青禾研习社 · 岗位手册（全部为虚构示例）', '第一章 服务工单',
          '服务专员应在收到工单后 30 分钟内首次响应。', '一般工单须在 2 个工作日内完成处理。'],
         ['第二章 交接与复核', '每天 17:30 前完成当日工单交接。',
          '交接清单包括工单编号、处理状态、下一责任人。']],1):
@@ -30,7 +30,7 @@ def create_samples(root):
         pdf.showPage()
     pdf.save()
     doc = Document()
-    doc.add_heading('中国电信延安分公司学习制度（虚构示例）',0)
+    doc.add_heading('青禾研习社学习制度（虚构示例）',0)
     doc.add_heading('第一条 学习安排',1)
     doc.add_paragraph('每位新员工须在入职后 5 个工作日内完成基础制度学习。')
     doc.add_heading('第二条 记录与复核',1)
@@ -51,7 +51,7 @@ def create_samples(root):
     sheet.append(['记录保留',180,'天'])
     book.save(root/'岗位职责表.xlsx')
     deck=Presentation()
-    for title,lines in [('入职第 1 天',['中国电信延安分公司入职流程（虚构示例）','09:00 到综合服务台报到。','领取设备后核对资产编号。']),
+    for title,lines in [('入职第 1 天',['青禾研习社入职流程（虚构示例）','09:00 到综合服务台报到。','领取设备后核对资产编号。']),
                         ('入职第 2 天',['10:00 参加信息安全学习。','完成账号开通和双因素认证。']),
                         ('入职第 5 天',['17:00 前向导师提交学习记录。','导师核对基础制度学习完成情况。'])]:
         slide=deck.slides.add_slide(deck.slide_layouts[1])

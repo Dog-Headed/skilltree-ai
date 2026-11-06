@@ -18,6 +18,10 @@ class MaterialInputError(ValueError):
     pass
 
 
+class MaterialLimitExceeded(MaterialInputError):
+    """Existing page, slide, or extracted-text cap. Training upload may split instead of failing."""
+
+
 class ContextBudgetExceeded(ValueError):
     pass
 

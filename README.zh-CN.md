@@ -204,7 +204,7 @@ flowchart TD
 
 ## 最新进展
 
-**2026-11-06 · 单位学习对齐到当前 `main`。** GitHub `main` 为 `d948212`（PR #19 squash，父提交为 PR #18 `bbdb3bc`）：按已确认草稿发布，员工领取保留已发布标准，制度断言核对否定、主体和条件，PDF 只在标题可靠时按标题拆章。生产部署到这一 `main`。`/healthz` 返回的是 `SKILLTREE_COMMIT`，不是目录 `HEAD`；运维已按实际部署提交写回该变量。GitHub 与服务器已同步。Windows 本机仓未强制覆盖、待用户自行同步，未提交文件留在用户本机。真实模型浏览器闭环和三个正式库测试管理员仍未做。记录见 [docs/training-demo/FIX_REPORT.md](docs/training-demo/FIX_REPORT.md)。
+**2026-11-06 · 单位学习对齐到当前 `main`。** GitHub `main` 为 `d948212`（PR #19 squash，父提交为 PR #18 `bbdb3bc`）：按已确认草稿发布，员工领取保留已发布标准，制度断言核对否定、主体和条件，PDF 只在标题可靠时按标题拆章。生产部署到这一 `main`。`/healthz` 返回的是 `SKILLTREE_COMMIT`，不是目录 `HEAD`；运维已按实际部署提交写回该变量。GitHub 与服务器已同步。Windows 本机仓未强制覆盖、待用户自行同步，未提交文件留在用户本机。真实模型浏览器闭环（R08）仍待真实模型证据。三个正式库测试管理员（R09）已于 2026-11-06 由运维交付，密码不在本仓库。记录见 [docs/training-demo/FIX_REPORT.md](docs/training-demo/FIX_REPORT.md)。
 
 **2026-10-27 · 植物图鉴学习工作台。** 生长图谱、我的花园、学习台与结果反馈已接入真实 V3 后端。新树按多次学习规划；诊断上下文更紧凑，模型等待时间按任务设置，请求预算不变。更新后请重启服务。
 

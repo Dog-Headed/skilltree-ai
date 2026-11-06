@@ -27,18 +27,20 @@ Updated: 2026-11-06 (Asia/Shanghai). Owner: Grok Bot continuous implementation.
 
 本工作区于 2026-11-06 探测公网：`https://skilltree.goutouren.work/` 返回 303 到 `/learn#/garden`，`/login` 返回 200；公网 `/healthz` 仍被 Nginx 403，因此这里不把公网响应当成新的提交号探针。提交号以 GitHub `main` `d948212` 与运维写回的 `SKILLTREE_COMMIT` 为准。
 
+同日运维已交付 R09（三个测试管理员）。适用的生产代码仍是 PR #19 `d948212`；把 R09 写成「待运维」的文档在 PR #20 `a538f02`。密码不进 Git，见 [FIX_REPORT.md](FIX_REPORT.md)。R08 仍待真实模型证据。
+
 ## Status
 
 - [x] Day 2 fidelity offline + docs
 - [ ] Day 2 live model DOCX recheck（R06 真实模型首讲；本环境无模型密钥，未做）
-- [x] 4A registration + members（代码与离线测试；三个正式库测试管理员仍待运维，见 R09）
+- [x] 4A registration + members（代码与离线测试；三个正式库测试管理员已于 2026-11-06 交付，见 R09）
 - [x] Day 3 publish/assign + employee start（PR #18 起改为发布已确认草稿，并保留课程语义）
 - [x] Day 4 Dashboard
 - [x] Day 5 Full demo rehearsal (offline isolated)
 - [x] R06 离线检测（否定、主体、条件）；真实模型证据未补
 - [x] R07 PDF 拆章离线回归
-- [ ] R08 真实模型浏览器闭环（未做）
-- [ ] R09 生产三个测试管理员（未创建）
+- [ ] R08 真实模型浏览器闭环（未做，待真实模型证据）
+- [x] R09 生产三个测试管理员（2026-11-06 Asia/Shanghai 已交付；密码只在服务器私密文件）
 
 ## Tests
 
@@ -52,4 +54,3 @@ Updated: 2026-11-06 (Asia/Shanghai). Owner: Grok Bot continuous implementation.
 
 1. 用户自行同步 Windows 本机仓（保留未提交文件）
 2. R08：隔离实例上的真实模型浏览器闭环
-3. R09：运维在正式库创建三个测试管理员，密码只进私密文件

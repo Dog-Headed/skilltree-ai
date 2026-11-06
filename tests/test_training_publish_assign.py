@@ -8,6 +8,7 @@ import pytest
 from deploy import training_demo as demo
 from tests.test_training_demo import login
 from tests.test_v3_notes_outline import OutlineFake as GuidedFake
+from tests.training_publish_support import chain_nodes, confirm_draft, publish_payload
 
 
 @pytest.fixture
@@ -35,39 +36,29 @@ def test_publish_assign_idempotent_and_visibility(runtime):
     overview = client.get('/training/api/admin/overview', headers=admin).json()
     assert overview['publishing_available'] is True
     material_id = upload_unit_material(client, admin)
-    tree = {
-        'plan_version': 1,
-        'nodes': [
-            {'node_id': 'n1', 'title': '时限要求', 'objectives': []},
-            {'node_id': 'n2', 'title': '适用范围', 'objectives': []},
-            {'node_id': 'n3', 'title': '常见问题', 'objectives': []},
-        ],
-    }
+    draft = confirm_draft(
+        client, gateway, admin, material_id, '基础制度短课', chain_nodes(), ['choice_exact'])
     request = str(uuid4())
-    published = client.post('/training/api/admin/courses/publish', headers=admin, json={
-        'request_id': request, 'course_id': 'basic-policy', 'title': '基础制度短课',
-        'tree': tree, 'required_nodes': ['n1', 'n2', 'n3'],
-        'pass_rule': {'rule': 'all_required_nodes'},
-        'material_version_ids': [material_id],
-    })
+    body = publish_payload(
+        draft, title='基础制度短课', course_id='basic-policy', request_id=request,
+        required_nodes=['n1', 'n2', 'n3'])
+    published = client.post('/training/api/admin/courses/publish', headers=admin, json=body)
     assert published.status_code == 201, published.text
     course = published.json()
     assert course['created'] is True and course['version'] == 1
     assert course['material_version_ids'] == [material_id]
-    again = client.post('/training/api/admin/courses/publish', headers=admin, json={
-        'request_id': request, 'course_id': 'basic-policy', 'title': '基础制度短课',
-        'tree': tree, 'required_nodes': ['n1', 'n2', 'n3'],
-        'pass_rule': {'rule': 'all_required_nodes'},
-        'material_version_ids': [material_id],
-    })
+    assert course['tree']['published_from']['project_id'] == draft['project_id']
+    assert course['tree']['published_from']['draft_revision'] == draft['draft_revision']
+    again = client.post('/training/api/admin/courses/publish', headers=admin, json=body)
     assert again.status_code == 200 and again.json()['id'] == course['id']
     assert again.json()['created'] is False
 
     # Employees cannot publish.
     employee = login(client, 1)
     assert client.post('/training/api/admin/courses/publish', headers=employee, json={
-        'request_id': str(uuid4()), 'course_id': 'x', 'title': 'x', 'tree': tree,
-        'required_nodes': ['n1'], 'pass_rule': {'rule': 'all'}, 'material_version_ids': [material_id],
+        'request_id': str(uuid4()), 'course_id': 'x', 'title': 'x',
+        'draft_project_id': draft['project_id'], 'draft_revision': draft['draft_revision'],
+        'required_nodes': ['n1'], 'material_version_ids': [material_id],
     }).status_code == 403
 
     assign_req = str(uuid4())

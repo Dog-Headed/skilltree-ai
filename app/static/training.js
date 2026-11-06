@@ -35,7 +35,7 @@
       const details=node('details'),summary=node('summary','解析全文与来源位置');details.append(summary,node('pre',parsed.content,'material-text'));
       for(const block of parsed.blocks){details.append(node('h3',block.label+' · 正文行 '+block.line_start+'–'+block.line_end));if(block.rows){const table=node('table');for(const [index,row] of block.rows.entries()){const tr=node('tr');for(const value of row)tr.append(node(index===0?'th':'td',value));table.append(tr);}details.append(table);}}
       preview.append(details);
-      const start=node('form',null,'material-form'),goal=node('textarea'),prior=node('input'),button=node('button','用这份资料准备课程','button'),message=node('p');goal.name='goal';goal.required=true;goal.maxLength=4000;goal.value='依据《'+data.title+'》学习其中的核心规则、适用条件和操作步骤';goal.setAttribute('aria-label','学习目标');prior.name='prior';prior.placeholder='已有基础（可选）';prior.maxLength=4000;prior.setAttribute('aria-label','已有基础');button.type='submit';start.append(node('h3','你的学习目标'),goal,prior,button,message);preview.append(start);
+      const start=node('form',null,'material-form'),goal=node('textarea'),prior=node('input'),button=node('button','用这份资料准备课程','button'),message=node('p');goal.name='goal';goal.required=true;goal.maxLength=4000;goal.value='依据《'+data.title+'》学习其中的核心规则、适用条件和操作步骤';goal.setAttribute('aria-label','学习目标');prior.name='prior';prior.placeholder='已有基础（可选）';prior.maxLength=4000;prior.setAttribute('aria-label','已有基础');button.type='submit';start.append(node('h3','你的学习目标'),goal,prior,button,message);if(unit)start.append(node('p','Planner 生成并确认草稿后，回到「课程与发布」发布这一固定版本。手填节点不能代替这份草稿。','notice'));preview.append(start);
       start.addEventListener('submit',async event=>{event.preventDefault();button.disabled=true;message.textContent='正在创建课程并导入已核对资料…';try{const created=await post('/projects',{request_id:crypto.randomUUID(),intent:{goal:goal.value.trim(),prior_knowledge:prior.value.trim()}});await post(api+'/'+id+'/attach',{project_id:created.project_id,request_id:crypto.randomUUID()});location.assign('/learn#/p/'+encodeURIComponent(created.project_id)+'/learn');}catch(e){message.textContent=e.message;button.disabled=false;}});
       preview.scrollIntoView({block:'start',behavior:'smooth'});
     }
@@ -51,6 +51,77 @@
     input.name='login';input.required=true;input.maxLength=254;input.placeholder='user@example.test';input.setAttribute('aria-label','账号邮箱或 ID');submit.type='submit';status.setAttribute('role','status');
     form.append(input,submit,status);$('content').append(form,members);paint();
     form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;status.textContent='正在查找…';try{const q=input.value.trim();const found=await get('/training/api/admin/members/lookup?q='+encodeURIComponent(q));if(found.in_other_unit){status.textContent='该账号已属于其他单位，本版不能自动转移。';return;}if(found.in_this_unit){status.textContent='该账号已在本单位（'+found.role+'）。';return;}const added=await post('/training/api/admin/members',{login:found.login});if(!data.members.some(x=>x.account===added.account))data.members.push({account:added.account,display_name:added.display_name,role:added.role});data.members.sort((a,b)=>a.role===b.role?a.account.localeCompare(b.account):(a.role==='admin'?-1:1));paint();status.textContent=(added.created?'已加入 ':'已在本单位 ')+added.login;input.value='';}catch(err){status.textContent=err.message;}finally{submit.disabled=false;}});
+  }
+  function courseOptionLabel(course){return course.title+' · '+course.course_id+' · v'+course.version;}
+  async function coursesPage(){
+    const data=await get('/training/api/admin/overview');
+    const drafts=await get('/training/api/admin/course-drafts');
+    hero('课程与发布','确认草稿，再冻结这一版','发布引用 Planner 已生成并保存在服务端的草稿 revision。手填的占位节点不会成为课程。');
+    const publishable=(drafts.drafts||[]).filter(item=>item.publishable);
+    if(!publishable.length){
+      const box=node('section',null,'empty');
+      box.append(node('h2','还没有可发布的草稿'),node('p','先在学习资料页使用「用这份资料准备课程」。Planner 生成并确认目标、依赖和评价规则后，草稿会出现在这里。'),link('去准备资料','/training/admin/materials','button secondary'));
+      $('content').append(box);
+    }
+    const form=node('form',null,'material-form'),draftSelect=node('select'),title=node('input'),revise=node('select'),requiredBox=node('div'),preview=node('div'),submit=node('button','确认发布这一版本','button'),status=node('p','发布后不可原地改写。新主题请作为新课程发布；只有修订同一门课时才沿用课程身份。','material-status');
+    draftSelect.required=true;draftSelect.setAttribute('aria-label','课程草稿');draftSelect.append(node('option','选择已确认的草稿'));
+    for(const draft of publishable){const option=node('option',draft.title+' · revision '+draft.draft_revision);option.value=draft.project_id;draftSelect.append(option);}
+    title.required=true;title.maxLength=200;title.placeholder='课程标题';title.setAttribute('aria-label','课程标题');
+    revise.setAttribute('aria-label','课程身份');const freshCourse=node('option','发布为新课程');freshCourse.value='';revise.append(freshCourse);
+    const seen=new Map();
+    for(const course of data.courses){const prev=seen.get(course.course_id);if(!prev||course.version>prev.version)seen.set(course.course_id,course);}
+    for(const course of seen.values()){const option=node('option','修订：'+courseOptionLabel(course));option.value=course.course_id;revise.append(option);}
+    submit.type='submit';status.setAttribute('role','status');
+    form.append(draftSelect,title,revise,requiredBox,preview,submit,status);
+    if(publishable.length)$('content').append(form);
+    function paint(draft){
+      requiredBox.replaceChildren(node('p','必学节点（可取消不计入进度的节点；其前置仍会保留在学习计划中）'));
+      preview.replaceChildren();
+      if(!draft){title.value='';return;}
+      title.value=draft.title||'';
+      const open=link('在学习引擎中查看或调整此草稿','/learn#/p/'+encodeURIComponent(draft.project_id)+'/learn','button secondary');
+      preview.append(open);
+      const rules=new Map((draft.policy&&draft.policy.objective_rules||[]).map(rule=>[rule.objective_id,rule]));
+      if(draft.policy)preview.append(node('p','总分通过阈值 '+draft.policy.total_pass_threshold,'dim'));
+      for(const item of draft.nodes||[]){
+        const label=node('label',null,'remember'),box=node('input');
+        box.type='checkbox';box.checked=true;box.value=item.node_id;
+        label.append(box,document.createTextNode(' 必学 · '+item.title+' · 前置 '+(item.prerequisite_ids&&item.prerequisite_ids.length?item.prerequisite_ids.join('、'):'无')));
+        requiredBox.append(label);
+        const block=node('div',null,'member');
+        block.append(node('strong',item.node_id+' · '+item.title));
+        for(const objective of item.objectives||[]){
+          const rule=rules.get(objective.objective_id);
+          block.append(node('small',objective.observable_outcome));
+          block.append(node('small','目标 '+objective.objective_id+' · 能力 '+(objective.required_capability_ids||[]).join(',')+(objective.criterion_ids&&objective.criterion_ids.length?' · 标准 '+objective.criterion_ids.join(','):'')+(rule?' · 阈值 '+rule.pass_threshold:'')));
+        }
+        preview.append(block);
+      }
+    }
+    draftSelect.addEventListener('change',()=>{paint(publishable.find(item=>item.project_id===draftSelect.value)||null);});
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();submit.disabled=true;status.textContent='正在按服务端草稿发布…';
+      try{
+        const draft=publishable.find(item=>item.project_id===draftSelect.value);
+        if(!draft)throw new Error('请选择一份已确认的草稿。');
+        const required=[...requiredBox.querySelectorAll('input[type=checkbox]:checked')].map(box=>box.value);
+        if(!required.length)throw new Error('请至少选择一个必学节点。');
+        const payload={request_id:crypto.randomUUID(),draft_project_id:draft.project_id,draft_revision:draft.draft_revision,title:title.value.trim(),required_nodes:required,material_version_ids:draft.material_version_ids};
+        if(revise.value)payload.course_id=revise.value;
+        const result=await post('/training/api/admin/courses/publish',payload);
+        status.textContent='已发布 '+result.title+' · '+result.course_id+' · v'+result.version+'（'+result.id+'）';
+        location.reload();
+      }catch(error){status.textContent=error.message;submit.disabled=false;}
+    });
+    for(const draft of drafts.drafts||[]){
+      if(draft.publishable)continue;
+      const row=node('div',null,'member');
+      row.append(node('strong',draft.title),node('small','revision '+(draft.draft_revision||'')),node('small',draft.reason||'暂不能发布'),link('打开草稿','/learn#/p/'+encodeURIComponent(draft.project_id)+'/learn','button secondary'));
+      $('content').append(row);
+    }
+    heading('已发布课程','每门课有独立身份；修订才会增加版本');
+    if(!data.courses.length)$('content').append(node('p','还没有已发布课程。'));
+    else{const list=node('div',null,'members');for(const course of data.courses){const item=node('div',null,'member');item.append(node('strong',course.title),node('small',course.course_id),node('small','v'+course.version),node('small',course.id),node('small',course.published_at||''));list.append(item);}$('content').append(list);}
   }
   async function render(){
     session=await get('/session');const m=session.training,admin=m.role==='admin',guest=m.role==='guest',personal=m.role==='personal',path=location.pathname;
@@ -81,19 +152,7 @@
     }else if(path==='/training/materials'||path==='/training/admin/materials'){
       await materialsPage(path==='/training/admin/materials');
     }else if(path==='/training/admin/courses'){
-      const data=await get('/training/api/admin/overview');
-      const materials=await get('/training/api/admin/materials');
-      hero('课程与发布','一份课程，多人独立学习','先选择已解析的单位资料，发布冻结的课程版本。员工开始任务时会各自初始化独立学习项目。');
-      const form=node('form',null,'material-form'),title=node('input'),select=node('select'),nodes=node('input'),submit=node('button','发布课程版本','button'),status=node('p','发布后不可原地改写；修改请发新版本。','material-status');
-      title.required=true;title.maxLength=200;title.placeholder='课程标题';title.setAttribute('aria-label','课程标题');
-      select.required=true;select.setAttribute('aria-label','单位资料');select.append(node('option','选择一份 ready 资料'));
-      for(const m of materials.materials.filter(x=>x.status==='ready' && x.kind!=='pack')){const o=node('option',m.title+' · '+m.filename);o.value=m.id;select.append(o);}
-      nodes.required=true;nodes.value='时限要求,适用范围,常见问题';nodes.placeholder='必学节点，逗号分隔';nodes.setAttribute('aria-label','必学节点');
-      submit.type='submit';form.append(title,select,nodes,submit,status);$('content').append(form);
-      form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;status.textContent='正在发布…';try{const required=nodes.value.split(/[,，]/).map(s=>s.trim()).filter(Boolean);if(required.length<1)throw new Error('请至少填写一个必学节点。');const tree={plan_version:1,nodes:required.map((label,i)=>({node_id:'n'+(i+1),title:label,objectives:[]}))};const result=await post('/training/api/admin/courses/publish',{request_id:crypto.randomUUID(),course_id:'unit-course',title:title.value.trim(),tree,required_nodes:tree.nodes.map(n=>n.node_id),pass_rule:{rule:'all_required_nodes'},material_version_ids:[select.value]});status.textContent='已发布 '+(result.title)+' v'+result.version+'（'+result.id+'）';location.reload();}catch(e){status.textContent=e.message;submit.disabled=false;}});
-      heading('已发布课程','不可变版本');
-      if(!data.courses.length)empty('还没有已发布课程','上传单位资料后，可在上方发布短课程。');
-      else{const list=node('div',null,'members');for(const course of data.courses){const e=node('div',null,'member');e.append(node('strong',course.title),node('small','v'+course.version),node('small',course.id),node('small',course.published_at||''));list.append(e);}$('content').append(list);}
+      await coursesPage();
     }else if(path==='/training/admin/tasks'){
       const data=await get('/training/api/admin/overview');
       hero('任务下发','把课程送到需要的人手中','选择已发布课程和员工下发。每人独立学习，开始后不会复制其他人的进度。');

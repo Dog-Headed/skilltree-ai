@@ -67,11 +67,12 @@
 
 | 方法／地址 | 行为 |
 |---|---|
-| `POST /training/api/admin/courses/publish` | 仅管理员；冻结课程版本与资料关联；`request_id` 幂等 |
+| `POST /training/api/admin/courses/publish` | 仅管理员；发布当前账号有权访问的 Planner 草稿及明确 `draft_revision`。服务端读取该修订的计划、依赖、目标和评价阈值，不接受浏览器手填节点树。新课程省略 `course_id` 时由服务端分配独立身份；传入已有 `course_id` 才递增版本。校验失败不留下发布记录。`request_id` 幂等 |
+| `GET /training/api/admin/course-drafts` | 仅管理员；列出本人草稿、revision、依赖、目标、阈值和单位资料。过期或缺少评价配置的草稿标记为不可发布 |
 | `GET /training/api/admin/courses/{id}` | 仅管理员；读取已发布版本 |
 | `POST /training/api/admin/tasks/assign` | 仅管理员；创建任务与员工任务行；`request_id` 幂等 |
 | `GET /training/api/admin/tasks/{id}` | 仅管理员；任务与指派人 |
-| `POST /training/api/my-tasks/{employee_task_id}/start` | 仅任务所属员工；按发布课程初始化独立项目并冻结；不调用 Planner 改写目标；`request_id` 幂等 |
+| `POST /training/api/my-tasks/{employee_task_id}/start` | 仅任务所属员工。先确认该任务属于当前账号，再按操作者、操作类型 `start` 和目标任务复用 `request_id`。跨账号或跨任务复用同一编号会被拒绝，不会返回他人的项目。重复领取同一任务只保留一个项目，不重置进度。员工计划保留已发布的依赖、目标、`criterion_ids`、作答任务和评价阈值，并按资料锚点逐项映射到本人片段。历史课程若缺少这些配置则拒绝开课并保留原版本 |
 | `GET /training/api/my-tasks` | 成员任务列表；`learning_available=true`；已开课附真实必学节点进度 |
 
 发布后的课程版本与资料关联不可更新／删除。员工项目的 SourceChunk 在本项目内新建，不复制其他员工或管理员执行快照。

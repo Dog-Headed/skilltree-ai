@@ -14,7 +14,7 @@ from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 from fastapi.responses import FileResponse
 from app.v3.office_files import MAX_TEXT, parse_file
 from app.v3.materials import MaterialInputError, MaterialLimitExceeded, MaterialService
-from app.v3.split_policy import split_document
+from app.v3.split_policy import chapter_notice, split_document, split_notice
 from app.v3.execution import project_execution
 from app.v3.learning_repository import LearningRepository
 from app.v3.project_management import require_visible
@@ -176,11 +176,16 @@ class TrainingMaterials:
                 parsed = parse_file(raw, child_name)
                 if len(parsed['content']) > MAX_TEXT:
                     raise MaterialInputError('拆分章节仍超过 12,000 字符，未导入。')
-                parsed['warnings'].append('本章由超限原件按标题自动拆分，正文不超过 12,000 字符。')
+                parsed['warnings'].append(chapter_notice(chapter))
+                parsed['split_basis'] = chapter.split_basis
+                parsed['page_start'] = chapter.page_start
+                parsed['page_end'] = chapter.page_end
                 (folder/'original').write_bytes(raw)
                 (folder/'parsed.json').write_text(json.dumps(parsed,ensure_ascii=False),encoding='utf-8')
                 prepared.append({'id': child_id, 'title': _chapter_asset_title(title, chapter.title),
                     'filename': child_name, 'index': chapter.index, 'parsed': parsed,
+                    'split_basis': chapter.split_basis, 'page_start': chapter.page_start,
+                    'page_end': chapter.page_end,
                     'request_id': str(uuid5(NAMESPACE_URL, f'{request}:chapter:{chapter.index}')),
                     'fingerprint': sha256(raw).hexdigest()})
             folder = self.root / identity
@@ -188,10 +193,13 @@ class TrainingMaterials:
             (folder/'original').write_bytes(data)
             manifest = {'filename': filename, 'format': PurePath(filename).suffix.lower().lstrip('.'),
                 'original_sha256': sha256(data).hexdigest(), 'original_bytes': len(data),
-                'parser': 'docling HybridChunker/HierarchicalChunker',
-                'warnings': [f'原文件超过现有页数、幻灯片或 12,000 字符上限，已按标题自动拆分为 {len(prepared)} 个章节。各章仍不超过 12,000 字符，上限未提高。'],
+                'parser': 'docling NativePdfPipeline/HybridChunker',
+                'warnings': [split_notice(chapters)],
                 'blocks': [], 'content': '', 'auto_split': True, 'chapter_count': len(prepared),
-                'chapters': [{'id': item['id'], 'title': item['title'], 'index': item['index']} for item in prepared]}
+                'split_bases': sorted({chapter.split_basis for chapter in chapters}),
+                'chapters': [{'id': item['id'], 'title': item['title'], 'index': item['index'],
+                    'split_basis': item['split_basis'], 'page_start': item['page_start'], 'page_end': item['page_end']}
+                    for item in prepared]}
             (folder/'parsed.json').write_text(json.dumps(manifest,ensure_ascii=False),encoding='utf-8')
             with self.connect() as conn:
                 for item in prepared:

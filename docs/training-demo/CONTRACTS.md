@@ -103,7 +103,7 @@
 | `GET /projects/{id}/sources/{sid}/versions/{v}` | 原来源正文、片段，附 file 元信息和各片段重叠的 locations；私有测评来源继续禁止公开读取 |
 | `GET /projects/{id}/sources/{sid}/versions/{v}/original` | 同样检查项目归属、可见性后下载保留的原件；不暴露服务器路径 |
 
-四类办公原件最多 8 MiB，解析全文最多 12,000 字符；TXT/Markdown 仍最多 128 KiB。PDF 最多 10 页，PPTX 最多 15 张；XLSX 最多 8 表、总范围 500 单元格；单个 DOCX 表最多 500 单元格。Office ZIP 解压总量最多 8 MiB、512 项。这些上限不提高。PDF、PPTX、DOCX 超过页数、幻灯片或 12,000 字符时，不整份失败：Docling 的 HybridChunker（在 HierarchicalChunker 的标题结构上按字符预算合并或再拆）生成多条章节资料，挂在同一父包下。每章正文仍不超过 12,000 字符，并作为普通 ready 资料进入原有导入与课程流程。父包不能直接导入。其它超限、损坏、加密和扫描件整份拒绝，不静默截断。PDF 可带编辑/复制权限加密，只要无需打开密码即可读取；真正需要打开密码、扫描/无文字页、旧 Office、宏与加密 Office 暂不支持。公式保留原式及已有缓存，不执行或重算；缺缓存明确标注。
+四类办公原件最多 8 MiB，解析全文最多 12,000 字符；TXT/Markdown 仍最多 128 KiB。PDF 最多 10 页，PPTX 最多 15 张；XLSX 最多 8 表、总范围 500 单元格；单个 DOCX 表最多 500 单元格。Office ZIP 解压总量最多 8 MiB、512 项。这些上限不提高。PDF、PPTX、DOCX 超过页数、幻灯片或 12,000 字符时，不整份失败：DOCX/PPTX 用 Docling 标题；PDF 用 NativePdfPipeline 的文字层和页码，只在字号或稀疏章节行可靠时按标题分组，否则按页或长度分段并在章节中标明，不把后者称作按标题。每段正文仍不超过 12,000 字符，并作为普通 ready 资料进入原有导入与课程流程。父包不能直接导入。顺序和来源页码保留在章节正文的拆分依据里。其它超限、损坏、加密和扫描件整份拒绝，不静默截断。PDF 可带编辑/复制权限加密，只要无需打开密码即可读取；真正需要打开密码、扫描/无文字页、旧 Office、宏与加密 Office 暂不支持。公式保留原式及已有缓存，不执行或重算；缺缓存明确标注。
 
 个人与单位上传共用这一拆分分支。离线整理演示包时调用 `app.v3.split_policy.split_document`，说明见 [AUTO_SPLIT.md](AUTO_SPLIT.md)。已有的 `samples/yanan-policy-packs/` 人工包保持不动。
 

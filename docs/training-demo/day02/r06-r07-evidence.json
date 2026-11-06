@@ -1,0 +1,214 @@
+{
+  "recorded_at": "2026-11-06T04:06:51Z",
+  "prompt_version": "v3-day2-fidelity-2",
+  "live_model": {
+    "called": false,
+    "reason": "LLM_MODEL, LLM_API_KEY and LLM_BASE_URL are unset and the repo has no .env. No live tutor JSON was produced. This file does not invent one.",
+    "env_present": {
+      "LLM_MODEL": false,
+      "LLM_API_KEY": false,
+      "LLM_BASE_URL": false
+    }
+  },
+  "fictional_docx": {
+    "path": "docs/training-demo/samples/培训制度.docx",
+    "paragraphs": [
+      "青禾研习社学习制度（虚构示例）",
+      "第一条 学习安排",
+      "每位新员工须在入职后 5 个工作日内完成基础制度学习。",
+      "第二条 记录与复核",
+      "每周五 16:00 前提交学习记录，由直属导师复核。"
+    ]
+  },
+  "detector_cases": [
+    {
+      "id": "review-negated-fine",
+      "text": "未完成学习将面临罚款。",
+      "material": "本制度不设置罚款。",
+      "expect": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "id": "different-subject",
+      "text": "员工未完成学习将面临罚款。",
+      "material": "供应商逾期交货将被处以罚款。",
+      "expect": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "id": "different-condition",
+      "text": "未完成学习将面临罚款。",
+      "material": "连续旷课三次将处以罚款。",
+      "expect": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "id": "same-fine",
+      "text": "未完成学习将面临罚款。",
+      "material": "未完成学习将面临罚款。",
+      "expect": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "id": "hedged-hypothesis",
+      "text": "原文明确否定罚款。假设未完成学习会面临罚款，这只是假设，不是制度条文。",
+      "material": "本制度不设置罚款。",
+      "expect": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "id": "negated-approver",
+      "text": "延期须由直属导师审批。",
+      "material": "本制度不设置审批。",
+      "expect": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "id": "different-approver",
+      "text": "延期须由部门负责人审批。",
+      "material": "延期须由直属导师审批。",
+      "expect": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "id": "same-approver",
+      "text": "延期须由直属导师审批。",
+      "material": "延期须由直属导师审批。",
+      "expect": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "id": "negated-start",
+      "text": "这个时限从入职当天开始计算。",
+      "material": "学习时限不从入职当天起算。",
+      "expect": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "id": "negated-deadline",
+      "text": "最晚应在下周一前完成。",
+      "material": "制度不以下周一为截止日期。",
+      "expect": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "id": "docx-restatement",
+      "text": "青禾研习社学习制度（虚构示例）\n第一条 学习安排\n每位新员工须在入职后 5 个工作日内完成基础制度学习。\n第二条 记录与复核\n每周五 16:00 前提交学习记录，由直属导师复核。",
+      "material": "青禾研习社学习制度（虚构示例）\n第一条 学习安排\n每位新员工须在入职后 5 个工作日内完成基础制度学习。\n第二条 记录与复核\n每周五 16:00 前提交学习记录，由直属导师复核。",
+      "expect": false,
+      "actual": false,
+      "pass": true
+    },
+    {
+      "id": "historical-invented-start",
+      "text": "新员工须在入职后5个工作日内完成基础制度学习。这个时限从入职当天开始计算，包含工作日，不包含周末和法定节假日。例如，如果员工在周一入职，那么最晚应在下周一前完成学习。",
+      "material": "青禾研习社学习制度（虚构示例）\n第一条 学习安排\n每位新员工须在入职后 5 个工作日内完成基础制度学习。\n第二条 记录与复核\n每周五 16:00 前提交学习记录，由直属导师复核。",
+      "expect": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "id": "historical-followup-weekday",
+      "text": "周一入职最晚应在下周一前完成基础制度学习。",
+      "material": "青禾研习社学习制度（虚构示例）\n第一条 学习安排\n每位新员工须在入职后 5 个工作日内完成基础制度学习。\n第二条 记录与复核\n每周五 16:00 前提交学习记录，由直属导师复核。",
+      "expect": true,
+      "actual": true,
+      "pass": true
+    },
+    {
+      "id": "term-explanation",
+      "text": "罚款一般指交纳金钱，这里只解释词语。",
+      "material": "本制度不设置罚款。",
+      "expect": false,
+      "actual": false,
+      "pass": true
+    }
+  ],
+  "pdf_inputs": {
+    "oversize_pdf": "tests/test_training_split.py::oversize_pdf — 12 text pages. Pages 1-8 start with Chapter 1 and CHAPTERONE. Pages 9-12 start with Chapter 2 and CHAPTERTWO.",
+    "oversize_docx": "tests/test_training_split.py::oversize_docx — heading styles 第一章 服务响应 / 第二章 交接复核 / 第三章 记录留存.",
+    "plain_pdf": "12 pages, every line 11pt, no Chapter/第N章 pattern.",
+    "note_on_3_of_3_and_33_of_33": "No prior 3/3 or 33/33 claim is reused. The docx fixture below is 3 heading chapters. The pdf fixture is 3 segments because Chapter 1 exceeds 12000 characters and is continued by length. Page ranges can share the page where a length cut falls; source lines are not repeated."
+  },
+  "chapters": {
+    "oversize_pdf": [
+      {
+        "index": 1,
+        "title": "Chapter 1（1）",
+        "split_basis": "heading-length",
+        "page_start": 1,
+        "page_end": 7,
+        "chars": 11994,
+        "source_chars": 11932
+      },
+      {
+        "index": 2,
+        "title": "Chapter 1（2）",
+        "split_basis": "heading-length",
+        "page_start": 7,
+        "page_end": 8,
+        "chars": 2344,
+        "source_chars": 2282
+      },
+      {
+        "index": 3,
+        "title": "Chapter 2",
+        "split_basis": "heading",
+        "page_start": 9,
+        "page_end": 12,
+        "chars": 7141,
+        "source_chars": 7110
+      }
+    ],
+    "oversize_docx": [
+      {
+        "index": 1,
+        "title": "第一章 服务响应",
+        "split_basis": "heading",
+        "page_start": null,
+        "page_end": null,
+        "chars": 4020,
+        "source_chars": 4000
+      },
+      {
+        "index": 2,
+        "title": "第二章 交接复核",
+        "split_basis": "heading",
+        "page_start": null,
+        "page_end": null,
+        "chars": 4020,
+        "source_chars": 4000
+      },
+      {
+        "index": 3,
+        "title": "第三章 记录留存",
+        "split_basis": "heading",
+        "page_start": null,
+        "page_end": null,
+        "chars": 5020,
+        "source_chars": 5000
+      }
+    ],
+    "plain_pdf": [
+      {
+        "index": 1,
+        "title": "第1–12页",
+        "split_basis": "page",
+        "page_start": 1,
+        "page_end": 12,
+        "chars": 621,
+        "source_chars": 575
+      }
+    ]
+  }
+}

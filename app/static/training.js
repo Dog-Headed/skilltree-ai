@@ -16,7 +16,7 @@
   async function materialsPage(unit){
     const api=unit?'/training/api/admin/materials':'/training/api/materials';
     hero(unit?'单位资料库':'个人资料库',unit?'准备可靠的学习资料':'从自己的资料开始学习',unit?'上传原件，核对解析正文与来源位置，再用这份资料准备课程。':'上传后先核对原文，再建立属于自己的学习路线。个人资料仅当前身份可见。');
-    $('content').append(node('p','支持文字 PDF、DOCX、XLSX、PPTX、UTF-8 TXT / Markdown，办公文件不超过 8 MiB，TXT / Markdown 不超过 128 KiB。办公文件正文最多 12,000 字符；PDF 最多 10 页，PPTX 最多 15 张。超过该上限的 PDF、PPTX、DOCX 会按标题自动拆成多个章节，不提高上限。扫描件、旧版 Office、宏和需打开密码的文件暂不支持。Excel 公式仅展示，不执行。','notice'));
+    $('content').append(node('p','支持文字 PDF、DOCX、XLSX、PPTX、UTF-8 TXT / Markdown，办公文件不超过 8 MiB，TXT / Markdown 不超过 128 KiB。办公文件正文最多 12,000 字符；PDF 最多 10 页，PPTX 最多 15 张。超过该上限的 PDF、PPTX、DOCX 会自动拆成多个章节，不提高上限。能可靠识别标题时按标题拆；识别不了时按页或长度分段，并在章节里写明，不会把按页结果称作按标题。扫描件、旧版 Office、宏和需打开密码的文件暂不支持。Excel 公式仅展示，不执行。','notice'));
     const form=node('form',null,'material-form'),file=node('input'),title=node('input'),submit=node('button','上传并解析','button'),status=node('p','请选择一份资料。','material-status');
     file.type='file';file.name='file';file.required=true;file.accept='.pdf,.docx,.xlsx,.pptx,.txt,.md,.markdown';file.setAttribute('aria-label','选择学习资料');title.name='title';title.maxLength=256;title.required=true;title.placeholder='资料标题';title.setAttribute('aria-label','资料标题');submit.type='submit';status.setAttribute('role','status');
     file.addEventListener('change',()=>{title.value=file.files[0]?.name.replace(/\.[^.]+$/,'')||'';});form.append(file,title,submit,status);$('content').append(form);

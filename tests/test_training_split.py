@@ -9,7 +9,7 @@ from pptx import Presentation
 
 from app.v3.materials import MaterialLimitExceeded
 from app.v3.office_files import MAX_TEXT, parse_file
-from app.v3.split_policy import split_document
+from app.v3.split_policy import _convert, _pdf_source_lines, chapter_source_text, split_document
 from tests.test_training_demo import login, runtime, visit
 from tests.test_training_materials import SAMPLES
 
@@ -28,8 +28,11 @@ def text_pdf(pages):
     for lines in pages:
         commands = ['BT', '50 760 Td']
         for index, line in enumerate(lines):
-            size = 18 if index == 0 else 11
-            escaped = line.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)')
+            if isinstance(line, tuple):
+                text, size = line
+            else:
+                text, size = line, (18 if index == 0 else 11)
+            escaped = text.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)')
             commands.append(f'/F1 {size} Tf')
             commands.append(('0 -22 Td ' if index else '') + f'({escaped}) Tj')
         commands.append('ET')
@@ -110,6 +113,14 @@ def test_docx_headings_stay_inside_character_limit():
     assert '乙' in chapters[1].content and '丙' in chapters[2].content
 
 
+def _source_blob(chapters):
+    return '\n'.join(chapter_source_text(chapter.content) for chapter in chapters)
+
+
+def _pdf_text(data, filename):
+    return '\n'.join(line.text for line in _pdf_source_lines(_convert(data, filename)))
+
+
 def test_pdf_over_ten_pages_splits_into_chapters_inside_limit():
     data = oversize_pdf()
     with pytest.raises(MaterialLimitExceeded, match='10 页'):
@@ -120,6 +131,102 @@ def test_pdf_over_ten_pages_splits_into_chapters_inside_limit():
     assert any('CHAPTERONE' in chapter.content for chapter in chapters)
     assert any('CHAPTERTWO' in chapter.content for chapter in chapters)
     assert not any('CHAPTERONE' in chapter.content and 'CHAPTERTWO' in chapter.content for chapter in chapters)
+    assert all(chapter.split_basis.startswith('heading') for chapter in chapters)
+    assert all('拆分依据：标题' in chapter.content for chapter in chapters)
+    assert all(chapter.page_start and chapter.page_end for chapter in chapters)
+    assert [chapter.page_start for chapter in chapters] == sorted(chapter.page_start for chapter in chapters)
+    assert chapters[0].page_start == 1 and chapters[-1].page_end == 12
+    blob = _source_blob(chapters)
+    assert blob == _pdf_text(data, '办法.pdf')
+    assert blob.index('CHAPTERONE') < blob.index('CHAPTERTWO')
+
+
+def test_pdf_heading_split_across_pages_stays_one_chapter():
+    pages = [
+        [('Chapter 1', 18)],
+        [('Overview', 18), ('ALPHABODY stays with the first heading', 11)],
+        [('Chapter 2', 18), ('BETABODY starts the next heading', 11)],
+    ]
+    data = text_pdf(pages)
+    chapters = split_document(data, 'cross-page.pdf')
+    assert_within_limit(chapters)
+    first = next(chapter for chapter in chapters if 'ALPHABODY' in chapter.content)
+    second = next(chapter for chapter in chapters if 'BETABODY' in chapter.content)
+    assert first is not second
+    assert 'Chapter 1' in first.title and 'Overview' in first.title
+    assert 'BETABODY' not in first.content and 'ALPHABODY' not in second.content
+    assert first.split_basis.startswith('heading') and first.page_start == 1 and first.page_end == 2
+    assert second.page_start == 3
+    assert _source_blob(chapters) == _pdf_text(data, 'cross-page.pdf')
+
+
+def test_chinese_heading_continued_on_the_next_page_merges():
+    """PDF latin-1 fixtures cannot carry 第N章. The grouper itself must."""
+    from app.v3.split_policy import _SourceLine, _segment_source_lines
+    lines = [
+        _SourceLine('第一章', 1, 18),
+        _SourceLine('总则', 2, 18),
+        _SourceLine('甲正文', 2, 11),
+        _SourceLine('第二章', 3, 18),
+        _SourceLine('乙正文', 3, 11),
+    ]
+    segments = _segment_source_lines(lines)
+    assert segments[0].title == '第一章 总则' and segments[0].basis == 'heading'
+    assert [line.text for line in segments[0].lines] == ['第一章', '总则', '甲正文']
+    assert segments[1].title == '第二章'
+    assert [line.text for line in segments[1].lines] == ['第二章', '乙正文']
+
+
+def test_pdf_body_continues_until_the_next_heading():
+    pages = [
+        [('Chapter 1 Service', 18), ('KEEPONE alpha', 11)],
+        [('KEEPONE beta', 11)],
+        [('KEEPONE gamma', 11)],
+        [('Chapter 2 Review', 18), ('KEEPTWO only', 11)],
+    ]
+    data = text_pdf(pages)
+    chapters = split_document(data, 'body-continues.pdf')
+    assert_within_limit(chapters)
+    first = next(chapter for chapter in chapters if 'KEEPONE' in chapter.content)
+    assert 'KEEPONE alpha' in first.content and 'KEEPONE beta' in first.content and 'KEEPONE gamma' in first.content
+    assert 'KEEPTWO' not in first.content
+    assert first.page_start == 1 and first.page_end == 3
+    assert first.split_basis.startswith('heading')
+    assert _source_blob(chapters) == _pdf_text(data, 'body-continues.pdf')
+
+
+def test_pdf_without_reliable_headings_is_marked_page_or_length():
+    pages = [[('PLAINTEXT uniform line', 11), ('still no chapter pattern', 11)] for _ in range(12)]
+    data = text_pdf(pages)
+    chapters = split_document(data, '无标题.pdf')
+    assert_within_limit(chapters)
+    assert chapters
+    assert all(chapter.split_basis in {'page', 'length'} for chapter in chapters)
+    assert all('不是按标题拆章' in chapter.content for chapter in chapters)
+    assert all(not chapter.split_basis.startswith('heading') for chapter in chapters)
+    assert all('拆分依据：标题' not in chapter.content for chapter in chapters)
+    assert _source_blob(chapters) == _pdf_text(data, '无标题.pdf')
+    assert chapters[0].page_start == 1 and chapters[-1].page_end == 12
+
+
+def test_pdf_overlong_single_heading_stays_inside_limit():
+    token = 'LONGWORD '
+    body = token * 2000
+    cut_a, cut_b = len(token) * 400, len(token) * 800
+    pages = [
+        [('Chapter 1', 18), (body[:cut_a], 11)],
+        [(body[cut_a:cut_b], 11)],
+        [(body[cut_b:], 11)],
+    ]
+    data = text_pdf(pages)
+    chapters = split_document(data, '超长单章.pdf')
+    assert_within_limit(chapters)
+    assert len(chapters) >= 2
+    assert all(chapter.title.startswith('Chapter 1') for chapter in chapters)
+    assert all(chapter.split_basis == 'heading-length' for chapter in chapters)
+    assert all('未并入其他标题' in chapter.content for chapter in chapters)
+    assert _source_blob(chapters) == _pdf_text(data, '超长单章.pdf')
+    assert chapters[0].page_start == 1 and chapters[-1].page_end == 3
 
 
 def test_pptx_over_fifteen_slides_splits_by_title():

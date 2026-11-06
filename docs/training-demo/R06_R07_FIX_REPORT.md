@@ -60,4 +60,6 @@
 python -m pytest tests/test_v3_tutor_fidelity.py tests/test_v3_tutor.py tests/test_training_split.py -q --tb=line
 ```
 
-实现提交 `b95c1e40392f38ac9bd0ae6ba9e4a3ab453c44f7`。本次结果：**83 passed**，1 条 Starlette `BlockingPortal` 弃用警告，6.86 秒。未跑全量离线回归（R11 另开）。未改生产库，未部署。本表中的 SHA 在随后一次只改本文件的提交里写入，代码没有再变。
+实现提交 `b95c1e40392f38ac9bd0ae6ba9e4a3ab453c44f7`。本次结果：**83 passed**，1 条 Starlette `BlockingPortal` 弃用警告，6.86 秒。未跑全量离线回归（R11 另开）。未改生产库。本表中的 SHA 在随后一次只改本文件的提交里写入，代码没有再变。
+
+「未部署」只适用于写出本段的那次提交。2026-11-06：该实现以 PR #19 squash `d948212` 进入 `main`，生产按该 `main` 部署，`SKILLTREE_COMMIT` 已在运维侧写回。GitHub 与服务器已同步。Windows 本机仓未强制覆盖、待用户自行同步。汇总见 [FIX_REPORT.md](FIX_REPORT.md)。

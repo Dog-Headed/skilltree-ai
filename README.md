@@ -185,7 +185,7 @@ See the [development guide](docs/DEVELOPMENT.md) for the source map, API contrac
 - [x] Goal-first creation, optional materials and clearly labelled AI notes
 - [x] Botanical growth graph, learning desk and result page; long multi-session routes
 - [x] **Office materials (demo):** PDF / DOCX / XLSX / PPTX upload, parse preview, original download and source location (training Day 2)
-- [x] **Unit training demo loop:** publish/assign, employee start, admin progress board, isolated rehearsal (training Day 3–5; production deploy separate)
+- [x] **Unit training demo loop:** publish a confirmed draft, assign it, start employees on that same standard, admin progress board, isolated rehearsal (training Day 3–5 and PRs #18–#19). As of 2026-11-06, GitHub `main` `d948212` and the server are in sync; the Windows checkout was not force-updated and is left for the owner to sync. See [docs/training-demo/PROGRESS.md](docs/training-demo/PROGRESS.md). The 2026-11-05 note “production deploy separate / still on `80d53f4`” applied only to that day’s write-up.
 - [ ] **Planned for V4:** richer knowledge base / RAG over large corpora
 - [ ] **Planned for V4:** spoken examples for English and Japanese with speed control
 - [ ] **Planned for V4:** interactive charts inside lessons (function plots, data charts, sample candlesticks)
@@ -204,6 +204,8 @@ See the [development guide](docs/DEVELOPMENT.md) for the source map, API contrac
 </details>
 
 ## Latest development
+
+**2026-11-06 · Training demo on current `main`.** GitHub `main` is `d948212` (PR #19 squash; parent is PR #18 `bbdb3bc`): confirmed-draft publish, employee start keeps the published standard, policy-assertion checks, and PDF chapter splits that trust a heading only when it is reliable. Production is deployed to that `main`. `/healthz` reports `SKILLTREE_COMMIT`, not the directory HEAD; ops rewrote that variable so the marker matches the deployed commit. GitHub and the server are in sync. The Windows working copy was not force-overwritten; unsynced local files stay with the owner. Real-model browser rehearsal and the three production test admins are still open. Details: [docs/training-demo/FIX_REPORT.md](docs/training-demo/FIX_REPORT.md).
 
 **2026-10-27 · Botanical learning workbench.** The growth graph, garden home, learning desk and feedback now run on the live V3 backend. New trees support multi-session planning; diagnosis context is compacted and model timeouts are selected per task without raising request budgets. Restart the server after updating.
 

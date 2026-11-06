@@ -2,7 +2,7 @@
 
 日期：2026-11-06。代码基线：GitHub `main` `d9482127ef3e2de07a15886aa45e4a7f6ef339e7`（PR #19 squash；父提交为 PR #18 `bbdb3bce0d2d172f0c49c5378f67f0736c82f4fd`）。本文件是离线回归与文档对齐记录。独立 REVIEW 保持原结论，这里不把它改成独立验收通过。
 
-GitHub 与服务器已同步。生产部署目标为上述 `main`。回环 `/healthz` 的 `version` 来自环境变量 `SKILLTREE_COMMIT`（`deploy/update.sh` 写入 `/etc/skilltree/runtime.env`，`deploy/asgi.py` 原样返回），不是目录 `git HEAD`。此前目录与健康标记不一致的根因是这份变量滞后；运维侧已按实际部署提交写回。本工作区同日看到公网 `/` 为 303 到 `/learn#/garden`、`/login` 为 200，公网 `/healthz` 仍被 Nginx 403，因此不用公网响应充当提交号。Windows 本机仓未强制覆盖、待用户自行同步。没有为同步覆盖用户未提交文件，也没有创建生产账号，没有跑真实模型浏览器闭环。
+GitHub 与服务器已同步。生产部署目标为上述 `main`。回环 `/healthz` 的 `version` 来自环境变量 `SKILLTREE_COMMIT`（`deploy/update.sh` 写入 `/etc/skilltree/runtime.env`，`deploy/asgi.py` 原样返回），不是目录 `git HEAD`。此前目录与健康标记不一致的根因是这份变量滞后；运维侧已按实际部署提交写回。本工作区同日看到公网 `/` 为 303 到 `/learn#/garden`、`/login` 为 200，公网 `/healthz` 仍被 Nginx 403，因此不用公网响应充当提交号。Windows 本机仓未强制覆盖、待用户自行同步。那次同步没有覆盖用户未提交文件，也没有跑真实模型浏览器闭环。同日运维在已部署的 PR #19（`d948212`）上交付 R09；文档里的「待运维」出自随后的 PR #20（`a538f02`），本记录改为已交付。R08 仍为待真实模型证据。
 
 ## 汇总
 
@@ -16,9 +16,9 @@ GitHub 与服务器已同步。生产部署目标为上述 `main`。回环 `/hea
 | R06 | 已修（离线检测）；真实模型首讲待真实模型证据 | `d948212`（PR #19 squash；实现曾在 `b95c1e4`） | 同一次专项中 `tests/test_v3_tutor_fidelity.py` 30 项通过。未调用真实模型 | `docs/training-demo/day02/r06-r07-evidence.json`；`docs/training-demo/R06_R07_FIX_REPORT.md` | 检测器仍是分句规则。没有新的教学 JSON。旧超时记录保持原样 |
 | R07 | 已修 | 同上 | 同一次专项中 `tests/test_training_split.py` 10 项通过，含原先「同一章不得同时含 CHAPTERONE 与 CHAPTERTWO」 | 同上 JSON 的 `chapters` | 无可靠标题时按页或按长度，并写明不是按标题。扫描件仍不 OCR |
 | R08 | 待真实模型证据 | 无新提交 | 本轮未做真实模型浏览器闭环，没有整课通过、答错补弱或重启恢复的真实模型记录 | 无 | 隔离实例上的真实模型页面闭环仍缺 |
-| R09 | 待运维 | 无新提交 | 本轮未创建生产账号，未写密码文件，未改正式库 | `docs/training-demo/accounts/REPORT.md` 只保留脚本说明 | `admin.qa1@example.test`、`admin.qa2@example.test`、`admin.qa3@example.test` 的正式库交付仍待运维。密码不进 Git |
-| R10 | 已修文档；健康标记由运维写回 | 本文件所在提交 | 更新 PROGRESS、START、CONTRACTS、Day 1/3/5 与账号阶段报告、两份 README。历史「未部署／后续未实现／公网仍是 `80d53f4`」都标明了日期和当时提交 | 上述文档 | 公网 `/healthz` 仍 403，本工作区不能复读运行中的 `SKILLTREE_COMMIT`。Windows 本机仓待用户自行同步 |
-| R11 | 已记录 | 本文件所在提交 | 专项 66 passed / 0 failed / 0 skipped，40.96 秒。全量一次：11 failed / 1387 passed / 24 skipped，353.12 秒。失败原因见下，不与专项数字相加 | 本文件 | 全量那 11 项是本环境缺少 `pip` 模块，不是培训逻辑失败。补装 pip 后只重跑该文件，不把它算进上面的全量计数 |
+| R09 | 已交付 | 适用生产 `d948212`（PR #19）。此前「待运维」写在文档同步 `a538f02`（PR #20）。无新产品提交 | 2026-11-06（Asia/Shanghai）。只经后端 `python -m deploy.training_admins` 创建 `admin.qa1@example.test`、`admin.qa2@example.test`、`admin.qa3@example.test`，角色 admin，单位 `demo-qinghe`。原管理员保留（`admin@example.test`、既有 `1287203475@qq.com` 等）。重跑得到 `already_admin` / `reused_existing_password`，不重置已有密码。登录冒烟：`https://skilltree.goutouren.work/login` → `https://skilltree.goutouren.work/training/admin` | 服务器私密文件 mode 0600：`/home/admin/skilltree-secrets/qa-admins-20261106.json`（只记路径）。非机密说明：`/home/admin/skilltree-secrets/qa-admins-20261106.txt` | 密码、口令哈希与 `.env` 不进本仓库。重跑不会轮换已有密码。邮箱归属验证、邀请邮件、多单位仍未做 |
+| R10 | 已修文档；健康标记由运维写回 | `a538f02`（PR #20 文档同步） | 更新 PROGRESS、START、CONTRACTS、Day 1/3/5 与账号阶段报告、两份 README。历史「未部署／后续未实现／公网仍是 `80d53f4`」都标明了日期和当时提交 | 上述文档 | 公网 `/healthz` 仍 403，本工作区不能复读运行中的 `SKILLTREE_COMMIT`。Windows 本机仓待用户自行同步 |
+| R11 | 已记录 | `a538f02`（PR #20 文档同步） | 专项 66 passed / 0 failed / 0 skipped，40.96 秒。全量一次：11 failed / 1387 passed / 24 skipped，353.12 秒。失败原因见下，不与专项数字相加 | 本文件 | 全量那 11 项是本环境缺少 `pip` 模块，不是培训逻辑失败。补装 pip 后只重跑该文件，不把它算进上面的全量计数 |
 
 ## 专项（一次跑完，不拆开相加）
 
@@ -79,6 +79,18 @@ Astra 清单里 Windows、`edu_agent` 上那 8 个文件曾是 33 passed / 5 fai
 
 缺少 Docling 造成的失败同样不是产品逻辑失败。本次已安装 Docling，`tests/test_training_split.py` 的 10 项在专项里通过，其中包括原先服务器上失败的章节标记混合用例。不要把那次服务器失败改记成 Windows 缺包。
 
+## R09 生产测试管理员
+
+2026-11-06（Asia/Shanghai），生产代码为 PR #19 `d948212`。运维只执行后端 `python -m deploy.training_admins`。
+
+- 账号：`admin.qa1@example.test`、`admin.qa2@example.test`、`admin.qa3@example.test`。角色 admin，单位 `demo-qinghe`。
+- 原管理员保留，包括 `admin@example.test` 与既有 `1287203475@qq.com`。
+- 再次执行得到 `already_admin` / `reused_existing_password`，不重置已有密码。
+- 登录冒烟：`https://skilltree.goutouren.work/login`，进入 `https://skilltree.goutouren.work/training/admin`。
+- 密码只在服务器文件 `/home/admin/skilltree-secrets/qa-admins-20261106.json`（mode 0600）。非机密说明在 `/home/admin/skilltree-secrets/qa-admins-20261106.txt`。本记录只写路径。
+
+R08 仍为待真实模型证据。本补记没有新的模型输出。
+
 ## 自检
 
-自检通过
+自检通过。2026-11-06 补记只改文档：R09 改为已交付，R08 仍为待真实模型证据。未写入密码、口令哈希或 `.env`。

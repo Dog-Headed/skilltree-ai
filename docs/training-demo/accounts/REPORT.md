@@ -1,6 +1,6 @@
 # 4A 账号与成员管理交付
 
-更新日期：2026-11-05（Asia/Shanghai）。
+更新日期：2026-11-06（Asia/Shanghai）。下文「已实现」仍是 2026-11-05 的 4A 记录；生产上的三个测试管理员于 2026-11-06 补记为已交付。
 
 ## 已实现
 
@@ -30,7 +30,7 @@ python -m deploy.training_admins \
 
 - 密码只写入 `--private-out`（`work/` 已 gitignore），不进入 README／GitHub／聊天。
 - 重复执行幂等：已存在账号不改密码；已是管理员则报告 `already_admin`。
-- **生产实例**需在明确授权后对 `work/training-demo/production` 执行同一脚本，并单独保存私密文件。
+- 生产已于 2026-11-06（Asia/Shanghai）在已部署的 PR #19（`d948212`）上执行 `python -m deploy.training_admins`（只走后端）。三个账号为 admin，单位 `demo-qinghe`。原管理员保留（`admin@example.test`、既有 `1287203475@qq.com` 等）。重跑得到 `already_admin` / `reused_existing_password`，不重置已有密码。密码在服务器 mode 0600 文件 `/home/admin/skilltree-secrets/qa-admins-20261106.json`；非机密说明在 `/home/admin/skilltree-secrets/qa-admins-20261106.txt`。登录冒烟为 `https://skilltree.goutouren.work/login` → `https://skilltree.goutouren.work/training/admin`。详见 [FIX_REPORT.md](../FIX_REPORT.md) 的 R09。此前把这项写成「待运维」的文档是 PR #20 `a538f02`。
 
 ## 测试
 
@@ -44,6 +44,6 @@ python -m deploy.training_admins \
 
 2026-11-05 本节曾把下面三项写成「仍未实现（后续阶段）」：Day 3 课程发布与任务下发、Day 4 看板、Day 5 完整演练。它们已分别进入 `main`（PR #4 `a40004d`、PR #5 `f2998f3`、PR #6 `7baff8f`、PR #7 `3a98441`），不要再当成未实现。
 
-2026-11-06 仍然没有、本文也不宣称完成的是：邮箱归属验证、邀请邮件、多单位。三个测试管理员（`admin.qa1@example.test` 等）的正式库交付仍待运维，见 [FIX_REPORT.md](../FIX_REPORT.md) 的 R09。本记录不创建生产账号，不把密码写入 Git。
+2026-11-06 仍然没有、本文也不宣称完成的是：邮箱归属验证、邀请邮件、多单位。R09 的三个测试管理员已在正式库交付（见上文与 [FIX_REPORT.md](../FIX_REPORT.md)）。本记录不把密码、口令哈希或 `.env` 写入 Git。
 
 同日代码与服务器：GitHub 与服务器已同步到 `d948212`。Windows 本机仓未强制覆盖、待用户自行同步。见 [PROGRESS.md](../PROGRESS.md)。

@@ -21,13 +21,13 @@ Updated: 2026-11-06 (Asia/Shanghai). Owner: Grok Bot continuous implementation.
 
 ## 代码、运行标记与同步范围
 
-2026-11-06：GitHub 与服务器已同步。Windows 本机仓未强制覆盖、待用户自行同步。不要为对齐而覆盖用户未提交文件。
+2026-11-06：GitHub 与服务器已同步。Windows 本机仓已快进至同一代码线，保留未跟踪的交接与复验文档。
 
 生产健康检查的 `version` 不是目录里的 `git rev-parse HEAD`。`deploy/asgi.py` 的 `GET /healthz` 返回环境变量 `SKILLTREE_COMMIT`；`deploy/update.sh` 在快进部署时把该变量写入 `/etc/skilltree/runtime.env`。此前目录 HEAD（审查时为 `d38857b`）与回环 `/healthz`（`89f51f4`）不一致，根因是这份标记滞后，不是两套源码。运维侧已按实际部署提交写回 `SKILLTREE_COMMIT`。
 
 本工作区于 2026-11-06 探测公网：`https://skilltree.goutouren.work/` 返回 303 到 `/learn#/garden`，`/login` 返回 200；公网 `/healthz` 仍被 Nginx 403，因此这里不把公网响应当成新的提交号探针。提交号以 GitHub `main` `d948212` 与运维写回的 `SKILLTREE_COMMIT` 为准。
 
-同日运维已交付 R09（三个测试管理员）。适用的生产代码仍是 PR #19 `d948212`；把 R09 写成「待运维」的文档在 PR #20 `a538f02`。密码不进 Git，见 [FIX_REPORT.md](FIX_REPORT.md)。R08 仍待真实模型证据。
+同日运维已交付 R09（三个测试管理员）。适用的生产代码仍是 PR #19 `d948212`；把 R09 写成「待运维」的文档在 PR #20 `a538f02`。密码不进 Git，见 [FIX_REPORT.md](FIX_REPORT.md)。R08 已补真实模型 API 闭环与浏览器关键页证据，见 [R08 报告](R08_REPORT.md)。
 
 ## Status
 
@@ -39,7 +39,7 @@ Updated: 2026-11-06 (Asia/Shanghai). Owner: Grok Bot continuous implementation.
 - [x] Day 5 Full demo rehearsal (offline isolated)
 - [x] R06 离线检测（否定、主体、条件）；真实模型证据未补
 - [x] R07 PDF 拆章离线回归
-- [ ] R08 真实模型浏览器闭环（未做，待真实模型证据）
+- [x] R08 真实模型 API 闭环与浏览器关键页（乙补弱为真实历史回放）
 - [x] R09 生产三个测试管理员（2026-11-06 Asia/Shanghai 已交付；密码只在服务器私密文件）
 
 ## Tests
@@ -52,5 +52,4 @@ Updated: 2026-11-06 (Asia/Shanghai). Owner: Grok Bot continuous implementation.
 
 ## Next
 
-1. 用户自行同步 Windows 本机仓（保留未提交文件）
-2. R08：隔离实例上的真实模型浏览器闭环
+R08 的游客完整课程、注册保留、入单位前后归属待专项复验。公网 Docling 配置见 [DOCLING_MEMORY.md](DOCLING_MEMORY.md)。

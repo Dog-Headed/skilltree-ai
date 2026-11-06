@@ -2,7 +2,7 @@
 
 2026-11-06，GitHub `main` 为 `d9482127ef3e2de07a15886aa45e4a7f6ef339e7`（PR #19 squash；其父提交为 PR #18 `bbdb3bce0d2d172f0c49c5378f67f0736c82f4fd`）。Day 2–5 与 R01–R07 的代码都在这条 `main` 上。学习版仍是正式首页。旧学习数据保留，学习运行数据独立。
 
-2026-11-05 曾写「生产部署仍须另做备份与验收，不随代码合并自动切换」。那句只适用于当日文档，当时公网记录仍指向 `80d53f4`。2026-11-06 起，生产部署目标就是上述 `main`。回环 `/healthz` 的 `version` 来自 `SKILLTREE_COMMIT`，不是目录 `HEAD`；二者不一致的根因已在运维侧按实际部署提交写回。GitHub 与服务器已同步。Windows 本机仓未强制覆盖、待用户自行同步。不要为对齐而覆盖用户未提交文件。
+2026-11-05 曾写「生产部署仍须另做备份与验收，不随代码合并自动切换」。那句只适用于当日文档，当时公网记录仍指向 `80d53f4`。2026-11-06 起，生产部署目标就是上述 `main`。回环 `/healthz` 的 `version` 来自 `SKILLTREE_COMMIT`，不是目录 `HEAD`；二者不一致的根因已在运维侧按实际部署提交写回。GitHub 与服务器已同步。Windows 本机仓已快进并保留原有未提交文档。不要为对齐而覆盖用户未提交文件。
 
 对外改称“学习”，保留游客自主学习。Day 2 办公资料；4A 个人注册与成员管理；Day 3 发布/下发/员工开课；Day 4 管理看板；Day 5 隔离演练与演示脚本见 `day05/`。
 
@@ -99,3 +99,5 @@ Set-Location D:\SkillTree_AI\skilltree
 
 - 离线闭环：`pytest tests/test_training_day05_rehearsal.py -q`。
 - 公网生产目录不要用本脚本覆盖，也不要清空库。服务器代码更新走既有部署（备份、快进到 `main`、写回 `SKILLTREE_COMMIT`）。2026-11-06 的目标提交是 `d948212`。Windows 工作区里未提交的文件留在用户本机，不从这里强制同步。
+
+公网文件解析内存配置及回滚见 [DOCLING_MEMORY.md](DOCLING_MEMORY.md)。真实模型演练及浏览器截图见 [R08_REPORT.md](R08_REPORT.md)。

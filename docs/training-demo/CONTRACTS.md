@@ -1,6 +1,8 @@
 # 单位学习最小契约（Day 1–5）
 
-2026-11-05（Day 5）。身份、入口、个人注册、单位成员、资料解析、课程发布、任务下发、员工开课、进度看板与隔离演练均已实现。
+2026-11-05（Day 5）起，身份、入口、个人注册、单位成员、资料解析、课程发布、任务下发、员工开课、进度看板与隔离演练均已实现。2026-11-06，PR #18（`bbdb3bc`）把发布改为已确认草稿并在领取时保留课程语义；PR #19（squash `d948212`）补上制度断言的否定／主体／条件，以及 PDF 只在可靠标题时按标题拆章。下文接口描述适用该 `main`：`d9482127ef3e2de07a15886aa45e4a7f6ef339e7`。
+
+同日同步：GitHub 与服务器已同步到这一提交。`/healthz` 报告的是 `SKILLTREE_COMMIT`，运维侧已按部署提交写回，不再把目录更新误记成另一套旧 SHA。Windows 本机仓未强制覆盖、待用户自行同步。
 
 ## 关系与不变量
 
@@ -45,12 +47,12 @@
 | `POST /auth/register` | 开放个人注册；忽略客户端 role/unit_id；游客升级保留进度；返回个人账号会话 |
 | `GET /session` | account/login/csrf_token/guest/logout + training(unit_id, unit_name, account, display_name, role) |
 | `GET /training/api/me` | 当前成员或游客个人空间身份 |
-| `GET /training/api/admin/overview` | 仅管理员：本单位 members、courses、tasks；publishing_available=false |
+| `GET /training/api/admin/overview` | 仅管理员：本单位 members、courses、tasks；`publishing_available=true`（2026-11-05 以前的契约表曾写 false，那只表示 Day 3 发布接口尚未接通） |
 | `GET /training/api/admin/members/lookup?q=` | 仅管理员：按完整邮箱/账号 ID 查找已注册非游客；最少字段；不列目录 |
 | `POST /training/api/admin/members` | 仅管理员：加入本单位为 employee；幂等；跨单位 409；忽略客户端 role |
 | `POST /training/api/admin/members/remove` | 仅管理员：撤销员工成员身份，保留个人账号与学习数据；不能移除管理员 |
 | `GET /training/admin/members` | 仅管理员：成员管理页 |
-| `GET /training/api/my-tasks` | 当前成员的员工任务列表；learning_available=false；游客/个人账号 403 |
+| `GET /training/api/my-tasks` | 当前成员的员工任务列表；`learning_available=true`；游客/个人账号 403。2026-11-05 以前曾记为 false，表示员工开课尚未接通 |
 | `GET /training/admin[/materials\|/courses\|/tasks\|/dashboard]` | 仅管理员；`/materials` 已可上传／预览／下载单位资料；`/courses`、`/tasks`、`/dashboard` 已接通（无数据时为空状态） |
 | `GET /training/home`、`/training/materials` | 培训卡片与个人资料学习入口仍可直接打开（含办公四格式上传／预览）；不是默认进入页 |
 | `GET /training/tasks` | 成员真实空任务页；游客 403 |

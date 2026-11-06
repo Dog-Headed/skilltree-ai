@@ -25,7 +25,7 @@ def test_dashboard_progress_overdue_and_isolation(runtime):
     client, gateway, model = runtime
     admin = login(client, 0)
     a, b, c = demo.ACCOUNTS[1][0], demo.ACCOUNTS[2][0], demo.ACCOUNTS[3][0]
-    _, course, task = publish_and_assign(client, admin, [a, b])
+    _, course, task = publish_and_assign(client, gateway, admin, [a, b])
     # Force an overdue deadline via a fresh assign with past due.
     past = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
     overdue_task = client.post('/training/api/admin/tasks/assign', headers=admin, json={

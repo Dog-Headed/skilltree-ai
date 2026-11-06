@@ -9,6 +9,7 @@ import pytest
 from deploy import training_demo as demo
 from tests.test_training_demo import login, finish_request, visit
 from tests.test_training_employee_start import StartFlowFake
+from tests.training_publish_support import chain_nodes, confirm_draft, publish_payload
 from tests.day11_support import learning_event, private_quiz, answers_for_quiz
 
 
@@ -74,18 +75,14 @@ def test_day05_isolated_rehearsal_loop(rehearsal):
         'data_base64': base64.b64encode(b'MZ-not-office').decode()})
     assert bad.status_code in {400, 422} or bad.json().get('status') == 'failed'
 
-    # Publish short course; assign 甲乙 only.
+    # Publish the confirmed draft of the uploaded DOCX, not a hand-filled placeholder tree.
     docx_id = next(i for i, p in zip(material_ids, sorted(SAMPLES.iterdir())) if p.suffix == '.docx')
-    tree = {'plan_version': 1, 'nodes': [
-        {'node_id': 'n1', 'title': '时限要求', 'objectives': []},
-        {'node_id': 'n2', 'title': '适用范围', 'objectives': []},
-        {'node_id': 'n3', 'title': '常见问题', 'objectives': []},
-    ]}
-    course = client.post('/training/api/admin/courses/publish', headers=admin, json={
-        'request_id': str(uuid4()), 'course_id': 'day5-policy', 'title': 'Day5 制度短课',
-        'tree': tree, 'required_nodes': ['n1', 'n2', 'n3'],
-        'pass_rule': {'rule': 'all_required_nodes'}, 'material_version_ids': [docx_id],
-    }).json()
+    draft = confirm_draft(client, gateway, admin, docx_id, 'Day5 制度短课', chain_nodes(), ['choice_exact'])
+    published = client.post('/training/api/admin/courses/publish', headers=admin, json=publish_payload(
+        draft, title='Day5 制度短课', course_id='day5-policy', required_nodes=['n1', 'n2', 'n3']))
+    assert published.status_code == 201, published.text
+    course = published.json()
+    assert course['course_id'] == 'day5-policy' and course['material_version_ids'] == [docx_id]
     assign_req = str(uuid4())
     task = client.post('/training/api/admin/tasks/assign', headers=admin, json={
         'request_id': assign_req, 'course_version_id': course['id'],
@@ -155,16 +152,11 @@ def test_day05_restart_keeps_progress(tmp_path, monkeypatch):
         mid = client.post('/training/api/admin/materials', headers=admin, json={
             'request_id': str(uuid4()), 'filename': sample.name, 'title': sample.stem,
             'data_base64': base64.b64encode(sample.read_bytes()).decode()}).json()['id']
-        course = client.post('/training/api/admin/courses/publish', headers=admin, json={
-            'request_id': str(uuid4()), 'course_id': 'day5-restart', 'title': '重启课',
-            'tree': {'plan_version': 1, 'nodes': [
-                {'node_id': 'n1', 'title': '时限要求', 'objectives': []},
-                {'node_id': 'n2', 'title': '适用范围', 'objectives': []},
-                {'node_id': 'n3', 'title': '常见问题', 'objectives': []},
-            ]},
-            'required_nodes': ['n1', 'n2', 'n3'], 'pass_rule': {'rule': 'all_required_nodes'},
-            'material_version_ids': [mid],
-        }).json()
+        draft = confirm_draft(client, gateway, admin, mid, '重启课', chain_nodes(), ['choice_exact'])
+        published = client.post('/training/api/admin/courses/publish', headers=admin, json=publish_payload(
+            draft, title='重启课', course_id='day5-restart', required_nodes=['n1', 'n2', 'n3']))
+        assert published.status_code == 201, published.text
+        course = published.json()
         task = client.post('/training/api/admin/tasks/assign', headers=admin, json={
             'request_id': str(uuid4()), 'course_version_id': course['id'],
             'title': '重启任务', 'accounts': [a, b]}).json()

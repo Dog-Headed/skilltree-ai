@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .auth import AuthStore, normalize_login
-from .training_demo import UNIT_ID
+from .training_demo import UNIT_ID, UNIT_NAME
 from .training_store import TrainingStore
 
 
@@ -102,7 +102,7 @@ def main():
     parser.add_argument('--auth-db', type=Path, required=True)
     parser.add_argument('--training-db', type=Path, required=True)
     parser.add_argument('--unit-id', default=UNIT_ID)
-    parser.add_argument('--unit-name', default='中国电信延安分公司')
+    parser.add_argument('--unit-name', default=UNIT_NAME)
     parser.add_argument('--private-out', type=Path, required=True,
                         help='JSON file outside Git for newly generated passwords')
     parser.add_argument('--qa-admins', action='store_true',

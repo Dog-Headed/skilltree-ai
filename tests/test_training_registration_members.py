@@ -105,6 +105,7 @@ def test_fresh_personal_register_and_admin_add_member(runtime):
     session = client.get('/session', headers=member).json()
     assert session['training']['role'] == 'employee'
     assert session['training']['unit_id'] == demo.UNIT_ID
+    assert session['training']['unit_name'] == '中国电信延安分公司'
     assert client.get('/training/api/my-tasks', headers=member).status_code == 200
     assert client.get('/projects/' + pid, headers=member).status_code == 200
 

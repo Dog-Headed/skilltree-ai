@@ -28,7 +28,7 @@ from app.v3.contracts import (
 from app.v3.materials import ContextBudgetExceeded, json_data
 from app.v3.tutor_feedback import TutorFeedback
 
-TUTOR_PROMPT_VERSION = "v3-day2-fidelity-2"
+TUTOR_PROMPT_VERSION = "v3-day2-fidelity-3"
 TutorMode = Literal["normal", "qa", "remediate", "review", "exploration"]
 _MODES = {"normal", "qa", "remediate", "review", "exploration"}
 _REPAIR_RESERVE = 1200
@@ -99,6 +99,9 @@ _PENALTY_ASSERT = re.compile(
     r"(?:将|会|应|须)(?:受到|予以|给予|面临)(?:处罚|处分|罚款|警告|辞退|开除)|"
     r"不完成(?:将|会)(?:取消|开除|辞退|处罚)",
     re.IGNORECASE,
+)
+_PENALTY_AMOUNT = re.compile(
+    r"罚款\s*(?:\d+|[０-９]+|[一二三四五六七八九十百千万]+)\s*元"
 )
 _PENALTY_KINDS = ("开除", "辞退", "罚款", "处罚", "处分", "警告", "取消")
 _APPROVER_INVENT = re.compile(
@@ -244,7 +247,7 @@ def _deadline_ungrounded(clause: str, material: str) -> bool:
                 if _CALENDAR_DEADLINE_ASSERT.search(sentence):
                     supported = True
                     break
-            if not supported:
+            if not supported and not _rule_supports_deadline_token(clause, material, token):
                 return True
     return False
 
@@ -264,15 +267,19 @@ def _affirmative_penalty_sentences(material: str, kind: str) -> list[str]:
     for sentence in _sentences(material):
         if kind not in sentence or _mention_negated(sentence, kind):
             continue
-        if re.search(r"将|会|应|须|处以|给予|予以|受到|面临", sentence):
+        if re.search(r"将|会|应|须|处以|给予|予以|受到|面临", sentence) or (
+                kind == "罚款" and _PENALTY_AMOUNT.search(sentence)):
             found.append(sentence)
     return found
 
 
 def _penalty_ungrounded(clause: str, material: str) -> bool:
-    if not _PENALTY_ASSERT.search(clause):
+    amount = bool(_PENALTY_AMOUNT.search(clause))
+    if not _PENALTY_ASSERT.search(clause) and not amount:
         return False
     kinds = _asserted_penalty_kinds(clause)
+    if amount and "罚款" not in kinds and not _mention_negated(clause, "罚款"):
+        kinds.append("罚款")
     if not kinds:
         return False
     for kind in kinds:
@@ -313,6 +320,143 @@ def _approver_ungrounded(clause: str, material: str) -> bool:
     return True
 
 
+_OBLIGATORY_DEADLINE = re.compile(
+    r"(?:最迟|最晚|必须|应在|须在).{0,48}?(?P<prefix>下|本)?周(?P<day>[一二三四五六日天])"
+)
+_ORDINAL_DEADLINE = re.compile(
+    r"第\s*(?P<count>\d+)\s*个工作日(?:是|为|即)\s*(?P<prefix>下|本)?周(?P<day>[一二三四五六日天])"
+)
+_HIRE_DAY = re.compile(r"周(?P<day>[一二三四五六日天])入职")
+_COUNTING_ILLUSTRATION = re.compile(
+    r"若无节假日|若从|从[^。；]{0,12}算|一种理解|另一种|不能据此确定|未说明采用哪一种"
+)
+_OBLIGATORY_MARK = re.compile(r"最迟|最晚|必须|应在|须在")
+_START_SAME_DAY = re.compile(
+    r"从入职当天起算|自入职当天起算|入职当天开始计算|从入职当天开始|包含入职当天|计入入职当天|"
+    r"从当天起算|入职当日开始|从入职当日"
+)
+_START_NEXT_DAY = re.compile(
+    r"从入职次日起算|自入职次日起算|入职次日开始|从次日起算|从第二天起算|次日开始计算"
+)
+_WORK_WEEK = re.compile(r"周一至周五|星期一至星期五|不含周末|不包含周末|周末不计入|工作日为周一")
+_HOLIDAY_RULE = re.compile(
+    r"不含法定节假日|不包含法定节假日|法定节假日不计入|法定节假日除外|"
+    r"不含[^。]{0,8}法定节假日"
+)
+_WEEKDAY_INDEX = {name: index for index, name in enumerate("一二三四五六日")}
+_WEEKDAY_INDEX["天"] = 6
+_MON_FRI = {0, 1, 2, 3, 4}
+
+
+def _counting_illustration(clause: str) -> bool:
+    """A conditional count is not a rule when it does not impose one date."""
+    if _OBLIGATORY_MARK.search(clause):
+        return False
+    return bool(_COUNTING_ILLUSTRATION.search(clause))
+
+
+def _deadline_claims(clause: str) -> list[tuple[str | None, str]]:
+    found = []
+    for pattern in (_OBLIGATORY_DEADLINE, _ORDINAL_DEADLINE):
+        for match in pattern.finditer(clause):
+            found.append((match.group("prefix"), match.group("day")))
+    return found
+
+
+def _material_affirms_deadline(material: str, prefix: str | None, day: str) -> bool:
+    """True when the material itself states this weekday as a deadline."""
+    for sentence in _sentences(material):
+        if prefix == "下":
+            match = re.search(rf"下周{day}", sentence)
+        else:
+            match = re.search(rf"(?<!下)(?:本)?周{day}", sentence)
+        if match is None or _mention_negated(sentence, match.group(0)):
+            continue
+        if re.search(r"最迟|最晚|截止|前完成|第\s*\d+\s*个工作日", sentence):
+            return True
+    return False
+
+
+def _fixed_onboarding_rule(material: str) -> tuple[int, str] | None:
+    """Return (workday count, start) only when start and calendar are both fixed."""
+    count_match = re.search(r"入职后\s*(\d+)\s*个工作日", material)
+    if count_match is None:
+        return None
+    same = bool(_START_SAME_DAY.search(material))
+    nxt = bool(_START_NEXT_DAY.search(material))
+    if same == nxt or not _WORK_WEEK.search(material) or not _HOLIDAY_RULE.search(material):
+        return None
+    return int(count_match.group(1)), "same" if same else "next"
+
+
+def _hire_day_index(clause: str) -> int | None:
+    days = {match.group("day") for match in _HIRE_DAY.finditer(clause)}
+    if len(days) != 1:
+        return None
+    return _WEEKDAY_INDEX[days.pop()]
+
+
+def _workday_slot(hire_index: int, count: int, start: str) -> tuple[int, int]:
+    """Week offset and weekday index for a Mon–Fri calendar with no holiday inside the window."""
+    cursor = hire_index if start == "same" else hire_index + 1
+    collected = 0
+    while collected < count:
+        if cursor % 7 in _MON_FRI:
+            collected += 1
+            if collected == count:
+                break
+        cursor += 1
+    return cursor // 7, cursor % 7
+
+
+def _rule_supports_deadline_token(clause: str, material: str, token: str) -> bool:
+    """Allow a weekday the material's start rule and work calendar actually produce."""
+    rule = _fixed_onboarding_rule(material)
+    hire_index = _hire_day_index(clause)
+    match = re.fullmatch(r"(下|本)?周([一二三四五六日天])", token or "")
+    if rule is None or hire_index is None or match is None:
+        return False
+    return _deadline_matches_rule(match.group(1), match.group(2), hire_index, rule[0], rule[1])
+
+
+def _deadline_matches_rule(prefix: str | None, day: str, hire_index: int, count: int, start: str) -> bool:
+    week, day_index = _workday_slot(hire_index, count, start)
+    if _WEEKDAY_INDEX[day] != day_index:
+        return False
+    if week == 0:
+        return prefix in (None, "本")
+    if week == 1:
+        return prefix == "下"
+    return False
+
+
+def _resolved_deadline_ungrounded(clause: str, material: str) -> bool:
+    """Flag one calendar date drawn from an under-specified N-workday rule.
+
+    A reply may show both counting methods and say the material does not pick
+    one. It may also state the single date when the material fixes the start
+    day and the work calendar, and that date matches the rule. Stating a
+    different date, or one date when the material does not decide, is not
+    grounded. A weekday that the material itself sets as the deadline is
+    grounded even without a counting rule.
+    """
+    if _counting_illustration(clause):
+        return False
+    claims = _deadline_claims(clause)
+    if not claims:
+        return False
+    rule = _fixed_onboarding_rule(material)
+    hire_index = _hire_day_index(clause)
+    for prefix, day in claims:
+        if _material_affirms_deadline(material, prefix, day):
+            continue
+        if rule is not None and hire_index is not None and _deadline_matches_rule(
+                prefix, day, hire_index, rule[0], rule[1]):
+            continue
+        return True
+    return False
+
+
 def has_ungrounded_policy_assertion(text: str, material_text: str) -> bool:
     """Reject policy claims whose polarity, subject, or condition is unsupported.
 
@@ -333,6 +477,8 @@ def has_ungrounded_policy_assertion(text: str, material_text: str) -> bool:
         if _start_count_ungrounded(clause, material_text):
             return True
         if _deadline_ungrounded(clause, material_text):
+            return True
+        if _resolved_deadline_ungrounded(clause, material_text):
             return True
         if _penalty_ungrounded(clause, material_text):
             return True
@@ -507,6 +653,9 @@ review模式要说明错误与当前先修目标的关系。它们也是数据�
 资料写明“不设置罚款”“无需审批”“不从某日起算”等否定时，要复述该否定，不得改写成将面临罚款、须由某人审批或另一截止日期。
 资料没有写明的审批人、处罚、起算日和截止日期，要写“原文未规定”；资料明确否定时写“原文明确否定”。
 不能把未写明的细节说成制度要求。需要举例时，单独写成带“假设”的例子。
+只写了“N个工作日”、但没有写明从入职当天还是次日起算，也没有写明周末和法定节假日是否计入时，不得给出唯一的周几截止日。应同时写出两种起算对应的不同日期，并说明材料未说明采用哪一种，不能据此确定唯一截止日。
+资料已经写明起算规则和工作日历时，可以按该规则给出与之相符的确定日期，不得改成另一种起算得到的日期。
+资料写“不设置罚款”或没有写罚款金额时，不得写成罚款金额，例如“罚款100元”。
 引用存在只证明片段被提供，不证明你的延伸解释有依据。
 通用知识学习（非用户制度原文）仍可做有依据的概念讲解与例子，不要因此改成只会复述原文或拒答。
 不能宣称用户已经通过、完成测评、掌握课程或获得依赖解锁。学习模式由服务端决定。

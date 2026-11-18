@@ -91,6 +91,76 @@ Astra 清单里 Windows、`edu_agent` 上那 8 个文件曾是 33 passed / 5 fai
 
 本段为早期同步记录。R08 的后续真实模型与截图见 [R08_REPORT.md](R08_REPORT.md)。本补记没有新的模型输出。
 
+## 2026-11-18 复验反例（R02、R06）
+
+2026-11-18（北京时间）对 `22dab06eea00a189df72fb804d4871b37d00fb0b` 的独立复验没有签 11/11。R02、R06 各有产品反例。本节只记录这两处修改和本次重跑，不把 2026-11-06 的 66 passed、1387 passed / 11 failed / 24 skipped、以及补装 pip 后的 13 passed 加在一起。上面的汇总表保持当时的说法。
+
+### R02
+
+反例：同一草稿挂上两份合法单位资料 A、B，学习目标只引用 A。草稿列表 `publishable: true`，`material_version_ids` 却是两份。页面用该列表原样发布，得到 422 `material_mismatch`；只提交 A 则 201。
+
+原因：`list_drafts` 收集全部已挂载教学资料，`app/static/training.js` 把这个列表放进 `material_version_ids`，`publish_from_draft` 则按目标实际引用的 `source_id` 校验。
+
+修改：`deploy/training_course.py` 的 `referenced_material_version_ids` 同时给出预览和发布使用的引用集。`material_version_ids` 只含该集合。已挂载但目标未引用的资料放在 `unreferenced_material_version_ids` 和 `materials`（`referenced: false`）里。发布页单独显示后者，提交体仍然只送 `draft.material_version_ids`。来源锚点、内容哈希和“客户端集合与引用集不一致则 422”都保留。资料在确认草稿之后再挂上，仍因 `draft_revision` 变化而不可发布，原因仍是“资料已变化，请重新生成草稿。”
+
+回归：`tests/test_training_r02_material_set.py`。覆盖只引用一份、两份都引用、确认后新增资料必须重做计划，以及预览字段发布后员工领取到的来源就是引用集。
+
+### R06
+
+样例 `docs/training-demo/samples/培训制度.docx` 的 SHA-256 为 `820b1a41c487bd19b3a8aa7be52179a390053b13ab5786e2f016af53d82f9158`，与 [R08_REPORT.md](R08_REPORT.md) 里 2026-11-06 演练记录的哈希一致。正文有“入职后 5 个工作日”，没有写明从入职当天还是次日起算，也没有写周末和法定节假日口径。
+
+反例一句：“若某员工周一入职，则最迟应在下周一（入职后第5个工作日）前完成基础制度学习。”旧检测器返回 `false`。原因是截止日期模式只认“最晚/截止”，并且要求“周几”紧贴“前完成”；“最迟”和括号里的“第5个工作日”都绕过了它。另一条构造负例“本制度不设置罚款”对“未完成学习，罚款100元”也返回 `false`，因为罚款模式只认“将面临罚款”这类句式，不认金额。这句不是真实模型输出。
+
+修改在 `app/v3/tutor.py`，提示词版本 `v3-day2-fidelity-3`。检测器仍是分句规则，不是全文蕴含模型，也没有加大修复次数：
+
+- 把“N 个工作日”说成唯一周几时，若资料没有写明起算和工作日历，则拦截。同时写出当天起算得到本周五、次日起算得到下周一，并写明不能据此确定唯一截止日的回答不拦截。
+- 资料写明起算（当天或次日，只取一种）以及周一至周五、不含周末和法定节假日时，与该规则相符的周几可以通过；另一种起算得到的周几仍拦截。
+- “罚款100元”这类金额句按肯定罚款处理。资料写“不设置罚款”时拦截；资料自己写了同一金额时不拦截。
+
+仓库里没有 2026-11-18 的真实模型全文。本次环境 `LLM_MODEL`、`LLM_API_KEY`、`LLM_BASE_URL` 均未设置，也没有 `.env`。没有调用书生 intern-s2 或 DeepSeek，没有编造教学 JSON。离线检测覆盖上面三类材料。
+
+### 如何重跑
+
+相关用例：
+
+```bash
+python -m pytest \
+  tests/test_training_r02_material_set.py \
+  tests/test_v3_tutor_fidelity.py \
+  tests/test_v3_tutor.py \
+  tests/test_training_course_semantics.py \
+  tests/test_training_publish_assign.py \
+  tests/test_training_employee_start.py \
+  -q --tb=short
+```
+
+全量另一次跑，不与上面的数字相加：
+
+```bash
+python -m pytest -q -ra --tb=line
+```
+
+浏览器用例依赖 Playwright。本环境没有安装 Playwright 时，这些跳过要单独列出，不能并进一次全绿。
+
+### 本次测试记录
+
+环境：Linux，Python 3.12.3（`GCC 13.3.0`），虚拟环境安装仓库 `requirements.txt`（含 `docling==2.147.0` 与 `pip`）。无 `LLM_MODEL` / `LLM_API_KEY` / `LLM_BASE_URL`，无 `.env`，未安装 Playwright。未部署，未改生产库。仓库先前写明依赖在 Python 3.11 上验证过；这次机器是 3.12.3，结果按这次实际环境记录。
+
+相关用例（上面第一条命令）:**98 passed**，0 failed，0 skipped，1 条 Starlette `BlockingPortal` 弃用警告，13.83 秒。
+
+全量（上面第二条命令，另一次，不与 98 相加）:**1414 passed，0 failed，24 skipped**，3 条弃用警告，274.10 秒。24 项跳过都是因为没有 Playwright，不是产品失败：
+
+| 数量 | 位置 | 原因 |
+| --- | --- | --- |
+| 8 | `tests/test_day12_frontend.py` | Playwright is required for the real frontend regressions |
+| 6 | `tests/test_day13_private_reference_frontend.py` | Playwright is required for the real browser checks |
+| 8 | `tests/test_goal_first_browser.py` | Playwright required（含 Node/Playwright 检查） |
+| 2 | `tests/test_streaming_frontend.py` | Playwright is optional |
+
+没有浏览器或 Playwright 全程点击记录。上面的 1414 不能写成全绿。全量是在产品代码定稿、本节计数写入之前跑的。相关 98 项在记录 SHA 的最终提交上再跑一次；这两次之间没有产品代码差异。SHA 见拉取请求说明，也写在下一行补记里。
+
+测量提交：（补记）
+
 ## 自检
 
-自检通过。2026-11-06 补记只改文档：R09 改为已交付，本段为早期同步记录。R08 的后续真实模型与截图见 [R08_REPORT.md](R08_REPORT.md)。未写入密码、口令哈希或 `.env`。
+自检通过。2026-11-06 补记只改文档：R09 改为已交付，本段为早期同步记录。R08 的后续真实模型与截图见 [R08_REPORT.md](R08_REPORT.md)。未写入密码、口令哈希或 `.env`。2026-11-18 一节同样没有写入密钥或口令。

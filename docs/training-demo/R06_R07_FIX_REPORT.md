@@ -63,3 +63,9 @@ python -m pytest tests/test_v3_tutor_fidelity.py tests/test_v3_tutor.py tests/te
 实现提交 `b95c1e40392f38ac9bd0ae6ba9e4a3ab453c44f7`。本次结果：**83 passed**，1 条 Starlette `BlockingPortal` 弃用警告，6.86 秒。未跑全量离线回归（R11 另开）。未改生产库。本表中的 SHA 在随后一次只改本文件的提交里写入，代码没有再变。
 
 「未部署」只适用于写出本段的那次提交。2026-11-06：该实现以 PR #19 squash `d948212` 进入 `main`，生产按该 `main` 部署，`SKILLTREE_COMMIT` 已在运维侧写回。GitHub 与服务器已同步。Windows 本机仓未强制覆盖、待用户自行同步。汇总见 [FIX_REPORT.md](FIX_REPORT.md)。
+
+## 2026-11-18 补充
+
+独立复验在 `22dab06` 上把整段“若某员工周一入职，则最迟应在下周一（入职后第5个工作日）前完成基础制度学习”和样例原文交给当时的检测器，返回 `false`。样例 `docs/training-demo/samples/培训制度.docx` 的 SHA-256 为 `820b1a41c487bd19b3a8aa7be52179a390053b13ab5786e2f016af53d82f9158`，与 R08 演练记录一致。构造句“未完成学习，罚款100元”相对“本制度不设置罚款”同样返回 `false`。这句不是模型输出。
+
+`v3-day2-fidelity-3` 补上这两类句式。未写明起算和工作日历时，唯一周几被拦截；两种起算都写明且说明不能确定唯一截止日时不拦截；资料写明当天或次日起算，以及周一至周五、不含周末和法定节假日时，相符的周几可以通过。罚款金额按肯定句处理。检测器仍是分句规则。本次没有模型密钥，没有新的真实教学 JSON。计数见 [FIX_REPORT.md](FIX_REPORT.md) 的 2026-11-18 一节，不并入 2026-11-06 的 83 passed。

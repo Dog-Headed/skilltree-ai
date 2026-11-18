@@ -2,6 +2,9 @@
 
 from copy import deepcopy
 from hashlib import sha256
+from pathlib import Path
+from xml.etree import ElementTree
+from zipfile import ZipFile
 
 import pytest
 
@@ -121,6 +124,24 @@ SPECIFIED_START_OK = (
 )
 
 
+UNIQUE_MONDAY = "若某员工周一入职，则最迟应在下周一（入职后第5个工作日）前完成基础制度学习。"
+BOTH_COUNTS = (
+    "材料只规定入职后 5 个工作日。若无节假日，从周一当天算，第 5 个工作日是本周五；"
+    "若从次日算，则是下周一。材料未说明采用哪一种，不能据此确定唯一截止日。"
+)
+SPECIFIED_CALENDAR = (
+    "每位新员工须在入职后 5 个工作日内完成基础制度学习。"
+    "时限从入职当天起算，工作日为周一至周五，不含周末和法定节假日。"
+)
+SPECIFIED_ANSWER = "周一入职且该周没有额外节假日时，第5个工作日是本周五，最迟应在本周五前完成。"
+SPECIFIED_WRONG = "周一入职最迟应在下周一前完成基础制度学习。"
+NEXT_DAY_CALENDAR = (
+    "每位新员工须在入职后 5 个工作日内完成基础制度学习。"
+    "时限从入职次日起算，工作日为周一至周五，不含周末和法定节假日。"
+)
+NEXT_DAY_ANSWER = "周一入职，第5个工作日是下周一，最迟应在下周一前完成。"
+FINE_AMOUNT = "未完成学习，罚款100元。"
+
 NEGATED_FINE = "本制度不设置罚款。"
 DIFFERENT_SUBJECT = "供应商逾期交货将被处以罚款。"
 DIFFERENT_CONDITION = "连续旷课三次将处以罚款。"
@@ -161,6 +182,16 @@ SAME_DEADLINE = "周一入职最晚应在下周一前完成学习。"
         ("最晚应在下周一前完成。", NEGATED_DEADLINE, True),
         (SAME_DEADLINE, SAME_DEADLINE, False),
         ("罚款一般指交纳金钱，这里只解释词语。", NEGATED_FINE, False),
+        # 2026-11-18: a unique weekday from an unspecified 5-workday rule is blocked.
+        (UNIQUE_MONDAY, POLICY_SNIPPET, True),
+        (BOTH_COUNTS, POLICY_SNIPPET, False),
+        (SPECIFIED_ANSWER, SPECIFIED_CALENDAR, False),
+        (SPECIFIED_WRONG, SPECIFIED_CALENDAR, True),
+        (NEXT_DAY_ANSWER, NEXT_DAY_CALENDAR, False),
+        (SPECIFIED_ANSWER, NEXT_DAY_CALENDAR, True),
+        # An amount is still a fine when the source says there is no fine.
+        (FINE_AMOUNT, NEGATED_FINE, True),
+        (FINE_AMOUNT, FINE_AMOUNT, False),
     ],
 )
 def test_ungrounded_policy_detector(text, material, expected):
@@ -173,7 +204,9 @@ def test_system_prompt_requires_fact_explanation_hypothesis_split():
     system = model.messages[0][0].content
     assert "原文事实" in system and "带假设的例子" in system
     assert "起算日" in system
-    assert "v3-day2-fidelity-2" in system
+    assert "v3-day2-fidelity-3" in system
+    assert "不能据此确定唯一截止日" in system
+    assert "罚款100元" in system
     assert "不设置罚款" in system and "原文明确否定" in system
 
 
@@ -242,3 +275,57 @@ def test_material_corpus_joins_blocks():
         "blocks": [{"content": "AAA"}, {"content": "BBB"}],
     }])
     assert corpus == "AAA\nBBB"
+    assert "blocks" in parsed[0]
+
+
+def test_unique_monday_deadline_is_repaired_into_both_counts():
+    budget = ModelCallBudget()
+    model = FakeModel(reply(UNIQUE_MONDAY), reply(BOTH_COUNTS))
+    result = generate(model, budget=budget)
+    assert "不能据此确定唯一截止日" in result.text
+    assert budget.output_repair_count == 1 and len(model.messages) == 2
+
+
+def test_fine_amount_against_negated_source_is_rejected():
+    bad = reply(FINE_AMOUNT)
+    model = FakeModel(bad, bad)
+    budget = ModelCallBudget()
+    with pytest.raises(ModelOutputValidationError, match="处罚|假设|否定"):
+        generate(model, content=NEGATED_FINE, budget=budget)
+    assert budget.output_repair_count == 1 and len(model.messages) == 2
+
+
+def test_specified_calendar_allows_the_matching_weekday():
+    model = FakeModel(reply(SPECIFIED_ANSWER))
+    result = generate(model, content=SPECIFIED_CALENDAR)
+    assert "本周五" in result.text
+    assert len(model.messages) == 1
+
+
+_DOCX_NS = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+_SAMPLE_DOCX = Path("docs/training-demo/samples/培训制度.docx")
+# Recorded in docs/training-demo/R08_REPORT.md for the 2026-11-06 live drill.
+_R08_SAMPLE_SHA256 = "820b1a41c487bd19b3a8aa7be52179a390053b13ab5786e2f016af53d82f9158"
+
+
+def _docx_text(path: Path) -> str:
+    with ZipFile(path) as package:
+        root = ElementTree.fromstring(package.read("word/document.xml"))
+    paragraphs = []
+    for paragraph in root.findall(".//w:p", _DOCX_NS):
+        text = "".join(node.text or "" for node in paragraph.findall(".//w:t", _DOCX_NS)).strip()
+        if text:
+            paragraphs.append(text)
+    return "\n".join(paragraphs)
+
+
+def test_sample_docx_matches_r08_drill_and_blocks_the_unique_deadline():
+    """The 2026-11-18 counterexample, checked against the drill file hash."""
+    raw = _SAMPLE_DOCX.read_bytes()
+    assert sha256(raw).hexdigest() == _R08_SAMPLE_SHA256
+    material = _docx_text(_SAMPLE_DOCX)
+    assert "每位新员工须在入职后 5 个工作日内完成基础制度学习。" in material
+    assert "从入职当天" not in material and "从入职次日" not in material
+    assert has_ungrounded_policy_assertion(UNIQUE_MONDAY, material) is True
+    assert has_ungrounded_policy_assertion(BOTH_COUNTS, material) is False
+    assert has_ungrounded_policy_assertion(material, material) is False

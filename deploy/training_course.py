@@ -252,6 +252,41 @@ def employee_policy(course: dict, plan: LearningPlan) -> EvaluationPolicy:
         raise ValueError('course_needs_republish') from exc
 
 
+def referenced_material_version_ids(plan, chunks) -> list[str]:
+    """Source ids actually cited by the plan, in the form publish will store.
+
+    Preview and publish both use this set. A material that is only attached
+    to the draft is not included. A citation whose chunk is no longer in the
+    current teaching sources is an error, not a silent extra file.
+    """
+    by_id = {chunk['chunk_id']: chunk for chunk in chunks}
+    found = []
+    for node in plan.nodes:
+        for objective in node.objectives:
+            for chunk_id in objective.source_chunk_ids:
+                chunk = by_id.get(chunk_id)
+                if chunk is None:
+                    raise ValueError('invalid_course_source')
+                source_id = chunk['source_id']
+                if source_id not in found:
+                    found.append(source_id)
+    if not found:
+        raise ValueError('invalid_course_source')
+    return sorted(found)
+
+
+def _material_rows(chunks, referenced: list[str]) -> list[dict]:
+    titles = {}
+    for chunk in chunks:
+        titles.setdefault(chunk['source_id'], chunk.get('title') or chunk['source_id'])
+    cited = set(referenced)
+    return [{
+        'material_version_id': source_id,
+        'title': titles[source_id],
+        'referenced': source_id in cited,
+    } for source_id in sorted(titles)]
+
+
 def _policy_preview(policy: dict | None) -> dict | None:
     if not isinstance(policy, dict):
         return None
@@ -312,13 +347,23 @@ def list_drafts(paths, store, ownership, unit_id: str, account: str) -> dict:
                 chunks = teaching_chunks(repo, project_id)
             except Exception:
                 chunks = []
-            materials = sorted({chunk['source_id'] for chunk in chunks})
-            materials_ok = bool(materials) and all(store.material_version(unit_id, material_id) for material_id in materials)
+            try:
+                referenced = referenced_material_version_ids(plan, chunks)
+                source_gap = False
+            except ValueError:
+                referenced = []
+                source_gap = True
+            rows = _material_rows(chunks, referenced)
+            unreferenced = [row['material_version_id'] for row in rows if not row['referenced']]
+            materials_ok = bool(referenced) and all(
+                store.material_version(unit_id, material_id) for material_id in referenced)
             reason = None
             if project.get('requires_replan') or project.get('candidate_revision') != project.get('draft_revision'):
                 reason = '资料已变化，请重新生成草稿。'
             elif not policy:
                 reason = '草稿还没有可执行的评价配置。'
+            elif source_gap or not referenced:
+                reason = '草稿引用的资料不完整，请重新生成草稿。'
             elif not materials_ok:
                 reason = '草稿引用的资料不属于本单位。'
             drafts.append({
@@ -329,7 +374,9 @@ def list_drafts(paths, store, ownership, unit_id: str, account: str) -> dict:
                 'reason': reason,
                 'nodes': _node_preview(plan),
                 'policy': _policy_preview(policy),
-                'material_version_ids': materials,
+                'material_version_ids': referenced,
+                'unreferenced_material_version_ids': unreferenced,
+                'materials': rows,
             })
     return {'drafts': drafts}
 
@@ -370,7 +417,7 @@ def publish_from_draft(paths, store, ownership, unit_id: str, account: str, *, r
         except Exception as exc:
             raise ValueError('invalid_course') from exc
         rewritten = []
-        referenced = []
+        referenced_anchors = []
         for node in plan.nodes:
             raw = node.model_dump(mode='json')
             for objective in raw['objectives']:
@@ -381,13 +428,13 @@ def publish_from_draft(paths, store, ownership, unit_id: str, account: str, *, r
                         raise ValueError('invalid_course_source')
                     anchor = source_anchor(chunk['source_id'], chunk)
                     anchors.append(anchor)
-                    referenced.append((anchor, chunk))
+                    referenced_anchors.append((anchor, chunk))
                 objective['source_chunk_ids'] = anchors
             rewritten.append(raw)
+        materials = referenced_material_version_ids(plan, chunks)
     index = []
     seen = set()
-    materials = []
-    for anchor, chunk in referenced:
+    for anchor, chunk in referenced_anchors:
         if anchor in seen:
             continue
         seen.add(anchor)
@@ -398,8 +445,6 @@ def publish_from_draft(paths, store, ownership, unit_id: str, account: str, *, r
             'line_start': chunk['line_start'],
             'line_end': chunk['line_end'],
         })
-        materials.append(chunk['source_id'])
-    materials = sorted(set(materials))
     if material_version_ids is not None and set(material_version_ids) != set(materials):
         raise ValueError('material_mismatch')
     tree = {

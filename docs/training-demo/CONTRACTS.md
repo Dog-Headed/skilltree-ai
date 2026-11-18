@@ -70,7 +70,7 @@
 | 方法／地址 | 行为 |
 |---|---|
 | `POST /training/api/admin/courses/publish` | 仅管理员；发布当前账号有权访问的 Planner 草稿及明确 `draft_revision`。服务端读取该修订的计划、依赖、目标和评价阈值，不接受浏览器手填节点树。新课程省略 `course_id` 时由服务端分配独立身份；传入已有 `course_id` 才递增版本。校验失败不留下发布记录。`request_id` 幂等 |
-| `GET /training/api/admin/course-drafts` | 仅管理员；列出本人草稿、revision、依赖、目标、阈值和单位资料。过期或缺少评价配置的草稿标记为不可发布 |
+| `GET /training/api/admin/course-drafts` | 仅管理员；列出本人草稿、revision、依赖、目标、阈值和单位资料。`material_version_ids` 是学习目标实际引用的资料，发布请求应原样提交这一组。只挂到草稿、目标未引用的资料在 `unreferenced_material_version_ids` 和 `materials`（`referenced: false`）里单独列出，不进入发布。过期、引用不完整或缺少评价配置的草稿标记为不可发布 |
 | `GET /training/api/admin/courses/{id}` | 仅管理员；读取已发布版本 |
 | `POST /training/api/admin/tasks/assign` | 仅管理员；创建任务与员工任务行；`request_id` 幂等 |
 | `GET /training/api/admin/tasks/{id}` | 仅管理员；任务与指派人 |

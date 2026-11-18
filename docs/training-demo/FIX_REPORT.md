@@ -157,9 +157,7 @@ python -m pytest -q -ra --tb=line
 | 8 | `tests/test_goal_first_browser.py` | Playwright required（含 Node/Playwright 检查） |
 | 2 | `tests/test_streaming_frontend.py` | Playwright is optional |
 
-没有浏览器或 Playwright 全程点击记录。上面的 1414 不能写成全绿。全量是在产品代码定稿、本节计数写入之前跑的。相关 98 项在记录 SHA 的最终提交上再跑一次；这两次之间没有产品代码差异。SHA 见拉取请求说明，也写在下一行补记里。
-
-测量提交：（补记）
+没有浏览器或 Playwright 全程点击记录。上面的 1414 不能写成全绿。全量与第一次相关 98 项都跑在产品代码提交 `1422b8b39fb0dfcb47b9a762cd4f5c12d14c64df` 上；当时本节还没有写上这个 SHA。写入 SHA 的提交不改产品代码。相关 98 项在该文档提交上再跑一次，两次之间没有产品代码差异。
 
 ## 自检
 

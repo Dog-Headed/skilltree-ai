@@ -83,6 +83,11 @@
       preview.append(open);
       const rules=new Map((draft.policy&&draft.policy.objective_rules||[]).map(rule=>[rule.objective_id,rule]));
       if(draft.policy)preview.append(node('p','总分通过阈值 '+draft.policy.total_pass_threshold,'dim'));
+      const materialRows=draft.materials||[];
+      const cited=materialRows.filter(item=>item.referenced);
+      const extra=materialRows.filter(item=>!item.referenced);
+      if(cited.length)preview.append(node('p','本次发布引用：'+cited.map(item=>item.title).join('、'),'dim'));
+      if(extra.length)preview.append(node('p','已挂载但学习目标未引用，不会进入本次发布：'+extra.map(item=>item.title).join('、'),'notice'));
       for(const item of draft.nodes||[]){
         const label=node('label',null,'remember'),box=node('input');
         box.type='checkbox';box.checked=true;box.value=item.node_id;
